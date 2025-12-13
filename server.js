@@ -70,18 +70,28 @@ function imageToBase64(filePath) {
 
 // Resim URL'sini döndür (base64 varsa onu, yoksa dosya yolunu)
 function getImageUrl(product) {
+  // Önce base64 kontrolü
   if (product.resimBase64) {
     return product.resimBase64;
   }
+  
+  // Resim dosya adı varsa
   if (product.resim) {
+    // Eğer zaten base64 string ise (data:image ile başlıyorsa) direkt döndür
+    if (typeof product.resim === 'string' && product.resim.startsWith('data:image')) {
+      return product.resim;
+    }
+    
+    // Dosya sisteminde var mı kontrol et
     const filePath = path.join("public/uploads", product.resim);
     if (fs.existsSync(filePath)) {
       return `/uploads/${product.resim}`;
     }
-    // Dosya yoksa base64'e çevirmeyi dene
-    const base64 = imageToBase64(filePath);
-    if (base64) return base64;
+    
+    // Dosya yoksa ve base64 yoksa, boş string döndür
+    console.warn(`Resim dosyası bulunamadı: ${product.resim}`);
   }
+  
   return "";
 }
 
