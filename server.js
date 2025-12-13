@@ -53,21 +53,58 @@ const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/yapi_m
 const DB_NAME = "yapi_market";
 
 // MongoDB bağlantısı
+let mongoClient;
+
 async function connectToMongoDB() {
   try {
-    const client = new MongoClient(MONGODB_URI);
-    await client.connect();
-    db = client.db(DB_NAME);
+    if (!MONGODB_URI || MONGODB_URI === "mongodb://localhost:27017/yapi_market") {
+      console.log("⚠️  MONGODB_URI environment variable ayarlanmamış!");
+      console.log("⚠️  Render.com'da MONGODB_URI environment variable'ını ekleyin.");
+      return;
+    }
+
+    console.log("🔄 MongoDB bağlantısı deneniyor...");
+    console.log("📍 Connection String:", MONGODB_URI.replace(/:[^:@]+@/, ":****@"));
+    
+    mongoClient = new MongoClient(MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000, // 10 saniye timeout
+      connectTimeoutMS: 10000,
+    });
+    
+    await mongoClient.connect();
+    db = mongoClient.db(DB_NAME);
     productsCollection = db.collection("products");
     contactsCollection = db.collection("contacts");
+    
+    // Bağlantıyı test et
+    await db.admin().ping();
+    
     console.log("✅ MongoDB bağlantısı başarılı!");
+    console.log("📊 Database:", DB_NAME);
     
     // Index oluştur
-    await productsCollection.createIndex({ createdAt: -1 });
-    await contactsCollection.createIndex({ createdAt: -1 });
+    try {
+      await productsCollection.createIndex({ createdAt: -1 });
+      await contactsCollection.createIndex({ createdAt: -1 });
+      console.log("✅ Index'ler oluşturuldu");
+    } catch (indexError) {
+      console.log("⚠️  Index oluşturma hatası (önemsiz):", indexError.message);
+    }
   } catch (error) {
-    console.error("❌ MongoDB bağlantı hatası:", error);
+    console.error("❌ MongoDB bağlantı hatası:");
+    console.error("   Error:", error.message);
+    console.error("   Code:", error.code);
+    
+    if (error.message.includes("authentication")) {
+      console.error("   🔐 Authentication hatası: Kullanıcı adı veya şifre yanlış olabilir");
+    } else if (error.message.includes("timeout")) {
+      console.error("   ⏱️  Timeout hatası: Network Access ayarlarını kontrol edin");
+    } else if (error.message.includes("ENOTFOUND") || error.message.includes("getaddrinfo")) {
+      console.error("   🌐 DNS hatası: Connection string'i kontrol edin");
+    }
+    
     console.log("⚠️  MongoDB bağlantısı olmadan devam ediliyor...");
+    console.log("💡 Render.com'da MONGODB_URI environment variable'ını kontrol edin");
   }
 }
 
@@ -121,7 +158,11 @@ app.get("/admin.html", auth, (req, res) => {
 app.get("/api/products", auth, async (req, res) => {
   try {
     if (!productsCollection) {
-      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
+      console.error("❌ productsCollection tanımlı değil - MongoDB bağlantısı yok");
+      return res.status(500).json({ 
+        success: false, 
+        message: "Veritabanı bağlantısı yok. Lütfen MONGODB_URI environment variable'ını kontrol edin." 
+      });
     }
     
     const products = await productsCollection.find({}).sort({ createdAt: -1 }).toArray();
