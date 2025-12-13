@@ -901,7 +901,19 @@ app.get("/api/catalog/download", (req, res) => {
       }
     });
   } else {
-    res.status(404).json({ success: false, message: "Katalog bulunamadı." });
+    // Katalog dosyası yoksa bilgilendirme sayfasına yönlendir
+    res.redirect("/iletisim.html?katalog=yok");
   }
+});
+
+// Katalog bilgilendirme endpoint'i
+app.get("/api/catalog/info", (req, res) => {
+  const catalogPath = path.join(__dirname, "public", "catalog.pdf");
+  res.json({ 
+    exists: fs.existsSync(catalogPath),
+    message: fs.existsSync(catalogPath) 
+      ? "Katalog mevcut" 
+      : "Katalog henüz hazırlanmamış. Lütfen bizimle iletişime geçin."
+  });
 });
   
