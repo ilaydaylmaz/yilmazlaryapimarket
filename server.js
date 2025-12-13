@@ -66,9 +66,21 @@ async function connectToMongoDB() {
     console.log("🔄 MongoDB bağlantısı deneniyor...");
     console.log("📍 Connection String:", MONGODB_URI.replace(/:[^:@]+@/, ":****@"));
     
-    mongoClient = new MongoClient(MONGODB_URI, {
-      serverSelectionTimeoutMS: 10000, // 10 saniye timeout
-      connectTimeoutMS: 10000,
+    // Connection string'e SSL parametreleri ekle (eğer yoksa)
+    let connectionUri = MONGODB_URI;
+    if (connectionUri.includes('mongodb+srv://') && !connectionUri.includes('tls=')) {
+      // SSL parametrelerini ekle
+      const separator = connectionUri.includes('?') ? '&' : '?';
+      connectionUri += `${separator}tls=true&tlsAllowInvalidCertificates=false`;
+    }
+    
+    mongoClient = new MongoClient(connectionUri, {
+      serverSelectionTimeoutMS: 30000, // 30 saniye timeout
+      connectTimeoutMS: 30000,
+      tls: true,
+      tlsAllowInvalidCertificates: false,
+      retryWrites: true,
+      w: 'majority'
     });
     
     await mongoClient.connect();
