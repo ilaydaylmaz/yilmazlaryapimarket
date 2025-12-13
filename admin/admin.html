@@ -2,41 +2,129 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Ürün Yönetimi</title>
+  <link rel="stylesheet" href="/admin/admin.css">
 </head>
 <body>
 
-<h1>Ürün Yönetimi</h1>
-<a href="/logout">Çıkış Yap</a>
-<hr>
+<div class="container">
+  <div class="header">
+    <h1>📦 Ürün Yönetimi</h1>
+    <a href="/logout">🚪 Çıkış Yap</a>
+  </div>
 
-<label>Ürün Adı</label><br>
-<input id="ad"><br><br>
+  <div class="content">
+    <!-- Form Bölümü -->
+    <div class="form-section">
+      <h2>➕ Yeni Ürün Ekle / Düzenle</h2>
+      
+      <div id="secili-urun" class="selected-product-info">
+        <strong>Düzenleniyor:</strong> <span id="secili-urun-ad"></span>
+      </div>
 
-<label>Kategori</label><br>
-<input id="kategori"><br><br>
+      <form id="productForm" onsubmit="event.preventDefault(); seciliId ? guncelle() : ekle();">
+        <div class="form-group">
+          <label for="ad">Ürün Adı *</label>
+          <input type="text" id="ad" required placeholder="Örn: Sprey Boya 200ml">
+        </div>
 
-<label>Marka</label><br>
-<input id="marka"><br><br>
+        <div class="form-group">
+          <label for="kategori">Kategori</label>
+          <select id="kategori">
+            <option value="">Kategori Seçin</option>
+            <option value="Boya">Boya</option>
+            <option value="Hırdavat">Hırdavat</option>
+            <option value="Elektrik">Elektrik</option>
+            <option value="Tesisat">Tesisat</option>
+            <option value="Yapı Malzemeleri">Yapı Malzemeleri</option>
+            <option value="Aletler">Aletler</option>
+            <option value="Diğer">Diğer</option>
+          </select>
+          <div class="quick-categories">
+            <button type="button" class="category-chip" onclick="setKategori('Boya')">Boya</button>
+            <button type="button" class="category-chip" onclick="setKategori('Hırdavat')">Hırdavat</button>
+            <button type="button" class="category-chip" onclick="setKategori('Elektrik')">Elektrik</button>
+            <button type="button" class="category-chip" onclick="setKategori('Tesisat')">Tesisat</button>
+          </div>
+        </div>
 
-<label>Açıklama</label><br>
-<textarea id="aciklama"></textarea><br><br>
+        <div class="form-group">
+          <label for="marka">Marka</label>
+          <input type="text" id="marka" placeholder="Örn: Polisan, Bosch, etc.">
+        </div>
 
-<label>Ürün Resmi</label><br>
-<input type="file" id="resim" accept="image/*"><br><br>
+        <div class="form-group">
+          <label for="aciklama">Açıklama</label>
+          <textarea id="aciklama" placeholder="Ürün hakkında detaylı bilgi..."></textarea>
+        </div>
 
-<button onclick="ekle()">Yeni Ürün Ekle</button>
-<button onclick="guncelle()">Güncelle</button>
-<button onclick="temizle()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Temizle</button>
+        <div class="form-group">
+          <label for="resim">Ürün Resmi</label>
+          <input type="file" id="resim" accept="image/*" onchange="previewImage(this)">
+          <div class="image-preview" id="imagePreview">
+            <img id="previewImg" src="" alt="Önizleme">
+          </div>
+        </div>
 
-<div id="secili-urun" style="display: none; margin: 15px 0; padding: 10px; background: #e3f2fd; border-left: 4px solid #007bff; border-radius: 4px; font-weight: bold;"></div>
+        <div class="button-group">
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            ➕ Yeni Ürün Ekle
+          </button>
+          <button type="button" class="btn btn-success" id="updateBtn" onclick="guncelle()" style="display: none;">
+            💾 Güncelle
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="temizle()">
+            🗑️ Temizle
+          </button>
+        </div>
+      </form>
+    </div>
 
-<hr>
-<h2>Ürünler</h2>
-<ul id="liste"></ul>
+    <!-- Ürünler Listesi -->
+    <div class="products-section">
+      <h2>📋 Mevcut Ürünler (<span id="urun-sayisi">0</span>)</h2>
+      <div class="products-list" id="liste">
+        <div class="empty-state">Yükleniyor...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="success-message" id="successMessage"></div>
 
 <script>
 let seciliId = null;
+let allProducts = [];
+
+function setKategori(kat) {
+  document.getElementById("kategori").value = kat;
+}
+
+function previewImage(input) {
+  const preview = document.getElementById("imagePreview");
+  const previewImg = document.getElementById("previewImg");
+  
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImg.src = e.target.result;
+      preview.classList.add("show");
+    };
+    reader.readAsDataURL(input.files[0]);
+  } else {
+    preview.classList.remove("show");
+  }
+}
+
+function showSuccess(message) {
+  const msg = document.getElementById("successMessage");
+  msg.textContent = message;
+  msg.classList.add("show");
+  setTimeout(() => {
+    msg.classList.remove("show");
+  }, 3000);
+}
 
 function yukle() {
   fetch("/api/products")
@@ -45,105 +133,104 @@ function yukle() {
       return r.json();
     })
     .then(data => {
-      const ul = document.getElementById("liste");
-      ul.innerHTML = "";
+      allProducts = data;
+      const liste = document.getElementById("liste");
+      const sayac = document.getElementById("urun-sayisi");
+      
+      sayac.textContent = data.length;
+      
       if (data.length === 0) {
-        ul.innerHTML = "<li>Henüz ürün eklenmemiş.</li>";
+        liste.innerHTML = '<div class="empty-state">Henüz ürün eklenmemiş. Yukarıdaki formdan ekleyebilirsiniz.</div>';
         return;
       }
+      
+      liste.innerHTML = "";
       data.forEach(p => {
-        const li = document.createElement("li");
-        li.style.marginBottom = "10px";
-        li.style.padding = "10px";
-        li.style.border = "1px solid #ddd";
-        li.style.borderRadius = "5px";
+        const item = document.createElement("div");
+        item.className = "product-item";
+        item.dataset.id = p.id;
         
-        const productInfo = document.createElement("span");
-        productInfo.style.marginRight = "10px";
-        productInfo.textContent = `${p.ad || "İsimsiz"} ${p.kategori ? `(${p.kategori})` : ""}`;
+        item.innerHTML = `
+          <div class="product-info">
+            <h3>${p.ad || "İsimsiz Ürün"}</h3>
+            <p>${p.kategori ? `📁 ${p.kategori}` : ""} ${p.marka ? `• 🏷️ ${p.marka}` : ""}</p>
+          </div>
+          <div class="product-actions">
+            <button class="btn btn-primary btn-small" onclick="duzenle('${p.id}')">✏️ Düzenle</button>
+            <button class="btn btn-danger btn-small" onclick="sil('${p.id}')">🗑️ Sil</button>
+          </div>
+        `;
         
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Düzenle";
-        editBtn.style.marginRight = "5px";
-        editBtn.style.backgroundColor = "#007bff";
-        editBtn.style.color = "white";
-        editBtn.style.border = "none";
-        editBtn.style.padding = "5px 10px";
-        editBtn.style.borderRadius = "3px";
-        editBtn.style.cursor = "pointer";
-        editBtn.onclick = (e) => {
-          e.stopPropagation();
-          duzenle(p, e.target);
-        };
-        
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Sil";
-        deleteBtn.style.backgroundColor = "#dc3545";
-        deleteBtn.style.color = "white";
-        deleteBtn.onclick = () => {
-          if (confirm(`"${p.ad}" ürününü silmek istediğinize emin misiniz?`)) {
-            sil(p.id);
-          }
-        };
-        
-        li.appendChild(productInfo);
-        li.appendChild(editBtn);
-        li.appendChild(deleteBtn);
-        ul.appendChild(li);
+        liste.appendChild(item);
       });
     })
     .catch(error => {
       console.error("Yükleme hatası:", error);
-      alert("Ürünler yüklenirken bir hata oluştu!");
+      document.getElementById("liste").innerHTML = '<div class="empty-state">❌ Ürünler yüklenirken bir hata oluştu!</div>';
     });
 }
 
-function duzenle(p, eventElement) {
-  console.log("Düzenleme başlatılıyor:", p);
-  seciliId = String(p.id); // ID'yi string'e çevir
-  console.log("Seçili ID:", seciliId);
+function duzenle(id) {
+  const p = allProducts.find(pr => pr.id === id);
+  if (!p) return;
   
-  ad.value = p.ad || "";
-  kategori.value = p.kategori || "";
-  marka.value = p.marka || "";
-  aciklama.value = p.aciklama || "";
-  resim.value = ""; // Resim alanını temizle
+  seciliId = String(p.id);
+  
+  document.getElementById("ad").value = p.ad || "";
+  document.getElementById("kategori").value = p.kategori || "";
+  document.getElementById("marka").value = p.marka || "";
+  document.getElementById("aciklama").value = p.aciklama || "";
+  document.getElementById("resim").value = "";
   
   // Görsel geri bildirim
-  document.querySelectorAll("#liste li").forEach(li => {
-    li.style.backgroundColor = "";
-    li.style.border = "1px solid #ddd";
+  document.querySelectorAll(".product-item").forEach(item => {
+    item.classList.remove("selected");
   });
-  if (eventElement) {
-    const li = eventElement.closest("li");
-    if (li) {
-      li.style.backgroundColor = "#e3f2fd";
-      li.style.border = "2px solid #007bff";
-    }
+  const selectedItem = document.querySelector(`[data-id="${p.id}"]`);
+  if (selectedItem) {
+    selectedItem.classList.add("selected");
+    selectedItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
   
-  // Seçili ürünü göster
+  // Form butonlarını güncelle
+  document.getElementById("submitBtn").style.display = "none";
+  document.getElementById("updateBtn").style.display = "inline-flex";
+  
+  // Seçili ürün bilgisini göster
   const seciliInfo = document.getElementById("secili-urun");
-  if (seciliInfo) {
-    seciliInfo.textContent = `Düzenleniyor: ${p.ad || "İsimsiz"} (ID: ${seciliId})`;
-    seciliInfo.style.display = "block";
-  }
+  const seciliAd = document.getElementById("secili-urun-ad");
+  seciliInfo.classList.add("show");
+  seciliAd.textContent = p.ad || "İsimsiz";
+  
+  // Resim önizlemesini temizle
+  document.getElementById("imagePreview").classList.remove("show");
+  
+  // Forma scroll
+  document.querySelector(".form-section").scrollIntoView({ behavior: "smooth" });
 }
 
 function ekle() {
-  if (!ad.value.trim()) {
-    alert("Ürün adı zorunludur!");
+  const ad = document.getElementById("ad").value.trim();
+  if (!ad) {
+    alert("⚠️ Ürün adı zorunludur!");
     return;
   }
 
   const formData = new FormData();
-  formData.append("ad", ad.value || "");
-  formData.append("kategori", kategori.value || "");
-  formData.append("marka", marka.value || "");
-  formData.append("aciklama", aciklama.value || "");
-  if (resim.files[0]) {
-    formData.append("resim", resim.files[0]);
+  formData.append("ad", ad);
+  formData.append("kategori", document.getElementById("kategori").value || "");
+  formData.append("marka", document.getElementById("marka").value || "");
+  formData.append("aciklama", document.getElementById("aciklama").value || "");
+  
+  const resim = document.getElementById("resim").files[0];
+  if (resim) {
+    formData.append("resim", resim);
   }
+
+  const submitBtn = document.getElementById("submitBtn");
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = "⏳ Ekleniyor...";
 
   fetch("/api/products", {
     method: "POST",
@@ -158,55 +245,49 @@ function ekle() {
     return response.json();
   })
   .then(() => {
-    alert("Ürün başarıyla eklendi!");
+    showSuccess("✅ Ürün başarıyla eklendi!");
     temizle();
     yukle();
   })
   .catch(error => {
-    alert("Hata: " + error.message);
+    alert("❌ Hata: " + error.message);
     console.error("Ekleme hatası:", error);
+  })
+  .finally(() => {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
   });
 }
 
 function guncelle() {
   if (!seciliId) {
-    alert("Önce düzenlemek istediğiniz ürünü seçin!");
+    alert("⚠️ Önce düzenlemek istediğiniz ürünü seçin!");
     return;
   }
 
-  console.log("Güncelleme başlatılıyor, ID:", seciliId);
-  console.log("Form verileri:", {
-    ad: ad.value,
-    kategori: kategori.value,
-    marka: marka.value,
-    aciklama: aciklama.value,
-    resim: resim.files[0] ? resim.files[0].name : "yok"
-  });
-
   const formData = new FormData();
-  formData.append("ad", ad.value || "");
-  formData.append("kategori", kategori.value || "");
-  formData.append("marka", marka.value || "");
-  formData.append("aciklama", aciklama.value || "");
+  formData.append("ad", document.getElementById("ad").value || "");
+  formData.append("kategori", document.getElementById("kategori").value || "");
+  formData.append("marka", document.getElementById("marka").value || "");
+  formData.append("aciklama", document.getElementById("aciklama").value || "");
 
-  if (resim.files[0]) {
-    formData.append("resim", resim.files[0]);
+  const resim = document.getElementById("resim").files[0];
+  if (resim) {
+    formData.append("resim", resim);
   }
 
-  const url = "/api/products/" + encodeURIComponent(seciliId);
-  console.log("Request URL:", url);
+  const updateBtn = document.getElementById("updateBtn");
+  const originalText = updateBtn.innerHTML;
+  updateBtn.disabled = true;
+  updateBtn.innerHTML = "⏳ Güncelleniyor...";
 
-  fetch(url, {
+  fetch("/api/products/" + encodeURIComponent(seciliId), {
     method: "PUT",
     body: formData
   })
   .then(response => {
-    console.log("Response status:", response.status);
-    console.log("Response ok:", response.ok);
-    
     if (!response.ok) {
       return response.text().then(text => {
-        console.error("Error response:", text);
         let errorData;
         try {
           errorData = JSON.parse(text);
@@ -218,19 +299,29 @@ function guncelle() {
     }
     return response.json();
   })
-  .then(data => {
-    console.log("Başarılı response:", data);
-    alert("Ürün başarıyla güncellendi!");
+  .then(() => {
+    showSuccess("✅ Ürün başarıyla güncellendi!");
     temizle();
     yukle();
   })
   .catch(error => {
-    console.error("Güncelleme hatası detayları:", error);
-    alert("Hata: " + error.message + "\n\nLütfen tarayıcı konsolunu (F12) kontrol edin.");
+    alert("❌ Hata: " + error.message);
+    console.error("Güncelleme hatası:", error);
+  })
+  .finally(() => {
+    updateBtn.disabled = false;
+    updateBtn.innerHTML = originalText;
   });
 }
 
 function sil(id) {
+  const product = allProducts.find(p => p.id === id);
+  if (!product) return;
+  
+  if (!confirm(`"${product.ad}" ürününü silmek istediğinize emin misiniz?`)) {
+    return;
+  }
+
   fetch("/api/products/" + id, { method: "DELETE" })
     .then(response => {
       if (!response.ok) {
@@ -239,36 +330,46 @@ function sil(id) {
       return response.json();
     })
     .then(() => {
-      alert("Ürün başarıyla silindi!");
+      showSuccess("✅ Ürün başarıyla silindi!");
       yukle();
+      if (seciliId === id) {
+        temizle();
+      }
     })
     .catch(error => {
-      alert("Hata: " + error.message);
+      alert("❌ Hata: " + error.message);
       console.error("Silme hatası:", error);
     });
 }
 
 function temizle() {
   seciliId = null;
-  ad.value = "";
-  kategori.value = "";
-  marka.value = "";
-  aciklama.value = "";
-  resim.value = "";
+  document.getElementById("productForm").reset();
+  document.getElementById("imagePreview").classList.remove("show");
   
-  // Görsel geri bildirimi temizle
-  document.querySelectorAll("#liste li").forEach(li => {
-    li.style.backgroundColor = "";
-    li.style.border = "1px solid #ddd";
+  document.querySelectorAll(".product-item").forEach(item => {
+    item.classList.remove("selected");
   });
   
-  const seciliInfo = document.getElementById("secili-urun");
-  if (seciliInfo) {
-    seciliInfo.style.display = "none";
-  }
+  document.getElementById("secili-urun").classList.remove("show");
+  document.getElementById("submitBtn").style.display = "inline-flex";
+  document.getElementById("updateBtn").style.display = "none";
 }
 
+// Sayfa yüklendiğinde
 yukle();
+
+// Enter tuşu ile form gönderme
+document.getElementById("productForm").addEventListener("keypress", (e) => {
+  if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+    e.preventDefault();
+    if (seciliId) {
+      guncelle();
+    } else {
+      ekle();
+    }
+  }
+});
 </script>
 
 </body>

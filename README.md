@@ -26,12 +26,36 @@ cd yapi_market
 npm install
 ```
 
-3. Sunucuyu başlatın:
+3. MongoDB'yi başlatın (local MongoDB kullanıyorsanız):
+```bash
+# macOS
+brew services start mongodb-community
+
+# Linux
+sudo systemctl start mongod
+
+# Windows
+# MongoDB Compass veya MongoDB Community Server'ı başlatın
+```
+
+4. Environment değişkenlerini ayarlayın (opsiyonel):
+```bash
+# .env dosyası oluşturun (veya environment variable'ları ayarlayın)
+MONGODB_URI=mongodb://localhost:27017
+DB_NAME=yapi_market
+```
+
+5. Mevcut JSON verilerini MongoDB'ye aktarın (ilk kez):
+```bash
+node migrate-to-mongodb.js
+```
+
+6. Sunucuyu başlatın:
 ```bash
 npm start
 ```
 
-4. Tarayıcıda açın: `http://localhost:3000`
+7. Tarayıcıda açın: `http://localhost:3000`
 
 ## Admin Girişi
 
@@ -84,6 +108,10 @@ git push heroku main
 
 Production'da şu değişkenleri ayarlayın:
 
+- `MONGODB_URI`: MongoDB connection string (zorunlu)
+  - Local: `mongodb://localhost:27017`
+  - MongoDB Atlas: `mongodb+srv://username:password@cluster.mongodb.net/`
+- `DB_NAME`: Veritabanı adı (varsayılan: `yapi_market`)
 - `PORT`: Sunucu portu (genelde otomatik ayarlanır)
 - `SESSION_SECRET`: Session secret key (güvenlik için değiştirin)
 
@@ -91,8 +119,25 @@ Production'da şu değişkenleri ayarlayın:
 
 - **Backend**: Node.js, Express.js
 - **Frontend**: HTML, CSS, JavaScript
-- **Veri Depolama**: JSON dosyaları
+- **Veritabanı**: MongoDB
 - **File Upload**: Multer
+
+## MongoDB Kurulumu
+
+### Local MongoDB
+
+1. MongoDB Community Server'ı yükleyin: https://www.mongodb.com/try/download/community
+2. MongoDB'yi başlatın
+3. Connection string: `mongodb://localhost:27017`
+
+### MongoDB Atlas (Cloud - Önerilen)
+
+1. [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) hesabı oluşturun
+2. Ücretsiz cluster oluşturun
+3. Database Access'te kullanıcı oluşturun
+4. Network Access'te IP adresinizi ekleyin (0.0.0.0/0 tüm IP'ler için)
+5. Cluster'a tıklayın → "Connect" → "Connect your application"
+6. Connection string'i kopyalayın ve `MONGODB_URI` olarak ayarlayın
 
 ## Lisans
 
