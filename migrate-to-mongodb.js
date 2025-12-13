@@ -1,3 +1,4 @@
+require("dotenv").config();
 const fs = require("fs");
 const { getProductsCollection, getContactsCollection, connectDB, closeDB } = require("./db");
 
@@ -5,7 +6,14 @@ async function migrate() {
   try {
     console.log("MongoDB'ye veri aktarımı başlıyor...");
     
-    await connectDB();
+    const db = await connectDB();
+    if (!db) {
+      console.error("❌ MongoDB bağlantısı yapılamadı!");
+      console.log("💡 Lütfen .env dosyasında MONGODB_URI'yi ayarlayın:");
+      console.log("   MONGODB_URI=mongodb+srv://kullanici:sifre@cluster.mongodb.net/");
+      process.exit(1);
+    }
+    
     const productsCollection = await getProductsCollection();
     const contactsCollection = await getContactsCollection();
 

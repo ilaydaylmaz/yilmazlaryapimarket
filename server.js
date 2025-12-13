@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const fs = require("fs");
 const bodyParser = require("body-parser");
@@ -5,7 +6,7 @@ const session = require("express-session");
 const multer = require("multer");
 const path = require("path");
 const { ObjectId } = require("mongodb");
-const { getProductsCollection, getContactsCollection, connectDB } = require("./db");
+const { getProductsCollection, getContactsCollection, connectDB, isMongoDBEnabled } = require("./db");
 
 const app = express();
 
@@ -90,40 +91,61 @@ app.get("/admin.html", auth, (req, res) => {
 /* Liste */
 app.get("/api/products", auth, async (req, res) => {
   try {
-    const productsCollection = await getProductsCollection();
-    const products = await productsCollection.find({}).toArray();
-    // MongoDB ObjectId'yi string id'ye çevir
-    const formattedProducts = products.map(p => ({
-      id: p._id.toString(),
-      ad: p.ad,
-      kategori: p.kategori,
-      marka: p.marka,
-      aciklama: p.aciklama,
-      resim: p.resim
-    }));
-    res.json(formattedProducts);
+    if (isMongoDBEnabled()) {
+      const productsCollection = await getProductsCollection();
+      const products = await productsCollection.find({}).toArray();
+      const formattedProducts = products.map(p => ({
+        id: p._id.toString(),
+        ad: p.ad,
+        kategori: p.kategori,
+        marka: p.marka,
+        aciklama: p.aciklama,
+        resim: p.resim
+      }));
+      res.json(formattedProducts);
+    } else {
+      // JSON fallback
+      const data = JSON.parse(fs.readFileSync(DATA_FILE));
+      res.json(data);
+    }
   } catch (error) {
     console.error("Ürün listeleme hatası:", error);
-    res.status(500).json({ success: false, message: "Sunucu hatası" });
+    // Hata durumunda JSON'dan oku
+    try {
+      const data = JSON.parse(fs.readFileSync(DATA_FILE));
+      res.json(data);
+    } catch (jsonError) {
+      res.status(500).json({ success: false, message: "Sunucu hatası" });
+    }
   }
 });
 
 /* Ekle */
 app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
   try {
-    const productsCollection = await getProductsCollection();
-
     const urun = {
+      id: Date.now().toString(),
       ad: req.body.ad || "",
       kategori: req.body.kategori || "",
       marka: req.body.marka || "",
       aciklama: req.body.aciklama || "",
-      resim: req.file ? req.file.filename : "",
-      createdAt: new Date()
+      resim: req.file ? req.file.filename : ""
     };
 
-    const result = await productsCollection.insertOne(urun);
-    res.json({ success: true, id: result.insertedId.toString() });
+    if (isMongoDBEnabled()) {
+      const productsCollection = await getProductsCollection();
+      const mongoProduct = { ...urun };
+      delete mongoProduct.id;
+      mongoProduct.createdAt = new Date();
+      const result = await productsCollection.insertOne(mongoProduct);
+      res.json({ success: true, id: result.insertedId.toString() });
+    } else {
+      // JSON fallback
+      const products = JSON.parse(fs.readFileSync(DATA_FILE));
+      products.push(urun);
+      fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
+      res.json({ success: true, id: urun.id });
+    }
   } catch (error) {
     console.error("Ürün ekleme hatası:", error);
     res.status(500).json({ success: false, message: "Sunucu hatası" });
@@ -133,49 +155,51 @@ app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
 /* Güncelle */
 app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
   try {
-    console.log("PUT request alındı - ID:", req.params.id);
-    console.log("Request body:", req.body);
-    console.log("Request file:", req.file);
+    const productId = String(req.params.id);
     
-    const productsCollection = await getProductsCollection();
-    let productId = req.params.id;
-    
-    // ObjectId geçerli mi kontrol et
-    if (!ObjectId.isValid(productId)) {
-      return res.status(400).json({ success: false, message: "Geçersiz ürün ID'si" });
-    }
+    if (isMongoDBEnabled() && ObjectId.isValid(productId)) {
+      const productsCollection = await getProductsCollection();
+      const existingProduct = await productsCollection.findOne({ _id: new ObjectId(productId) });
+      
+      if (!existingProduct) {
+        return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
+      }
 
-    // Mevcut ürünü bul
-    const existingProduct = await productsCollection.findOne({ _id: new ObjectId(productId) });
-    
-    if (!existingProduct) {
-      console.error("Ürün bulunamadı! ID:", productId);
-      return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
-    }
+      const updateData = {
+        ad: req.body.ad || "",
+        kategori: req.body.kategori || "",
+        marka: req.body.marka || "",
+        aciklama: req.body.aciklama || "",
+        resim: req.file ? req.file.filename : existingProduct.resim,
+        updatedAt: new Date()
+      };
 
-    // Güncelleme verileri
-    const updateData = {
-      ad: req.body.ad || "",
-      kategori: req.body.kategori || "",
-      marka: req.body.marka || "",
-      aciklama: req.body.aciklama || "",
-      updatedAt: new Date()
-    };
-
-    // Resim değiştirildiyse güncelle
-    if (req.file) {
-      updateData.resim = req.file.filename;
+      await productsCollection.updateOne(
+        { _id: new ObjectId(productId) },
+        { $set: updateData }
+      );
+      res.json({ success: true, message: "Ürün başarıyla güncellendi" });
     } else {
-      updateData.resim = existingProduct.resim;
+      // JSON fallback
+      let products = JSON.parse(fs.readFileSync(DATA_FILE));
+      const index = products.findIndex(p => String(p.id) === productId);
+      
+      if (index === -1) {
+        return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
+      }
+
+      products[index] = {
+        id: productId,
+        ad: req.body.ad || "",
+        kategori: req.body.kategori || "",
+        marka: req.body.marka || "",
+        aciklama: req.body.aciklama || "",
+        resim: req.file ? req.file.filename : products[index].resim
+      };
+
+      fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
+      res.json({ success: true, message: "Ürün başarıyla güncellendi" });
     }
-
-    await productsCollection.updateOne(
-      { _id: new ObjectId(productId) },
-      { $set: updateData }
-    );
-
-    console.log("Ürün başarıyla güncellendi");
-    res.json({ success: true, message: "Ürün başarıyla güncellendi" });
   } catch (error) {
     console.error("Güncelleme hatası:", error);
     res.status(500).json({ success: false, message: "Sunucu hatası: " + error.message });
@@ -185,21 +209,29 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
 /* Sil */
 app.delete("/api/products/:id", auth, async (req, res) => {
   try {
-    const productsCollection = await getProductsCollection();
-    const productId = req.params.id;
+    const productId = String(req.params.id);
     
-    // ObjectId geçerli mi kontrol et
-    if (!ObjectId.isValid(productId)) {
-      return res.status(400).json({ success: false, message: "Geçersiz ürün ID'si" });
+    if (isMongoDBEnabled() && ObjectId.isValid(productId)) {
+      const productsCollection = await getProductsCollection();
+      const result = await productsCollection.deleteOne({ _id: new ObjectId(productId) });
+
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
+      }
+      res.json({ success: true, message: "Ürün başarıyla silindi" });
+    } else {
+      // JSON fallback
+      let products = JSON.parse(fs.readFileSync(DATA_FILE));
+      const beforeLength = products.length;
+      products = products.filter(p => String(p.id) !== productId);
+
+      if (products.length === beforeLength) {
+        return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
+      }
+
+      fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
+      res.json({ success: true, message: "Ürün başarıyla silindi" });
     }
-
-    const result = await productsCollection.deleteOne({ _id: new ObjectId(productId) });
-
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
-    }
-
-    res.json({ success: true, message: "Ürün başarıyla silindi" });
   } catch (error) {
     console.error("Silme hatası:", error);
     res.status(500).json({ success: false, message: "Sunucu hatası" });
@@ -211,65 +243,90 @@ app.delete("/api/products/:id", auth, async (req, res) => {
 ======================= */
 const PORT = process.env.PORT || 3000;
 
-// MongoDB bağlantısını başlat ve sunucuyu başlat
+// MongoDB bağlantısını dene (başarısız olursa JSON kullanılacak)
 connectDB()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Server çalışıyor → http://localhost:${PORT}`);
-      console.log("MongoDB bağlantısı aktif");
+      console.log(`✅ Server çalışıyor → http://localhost:${PORT}`);
+      if (isMongoDBEnabled()) {
+        console.log("✅ MongoDB bağlantısı aktif");
+      } else {
+        console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
+      }
     });
   })
   .catch((error) => {
-    console.error("MongoDB bağlantı hatası, sunucu başlatılamadı:", error);
-    process.exit(1);
+    // MongoDB bağlantısı yoksa da server'ı başlat
+    app.listen(PORT, () => {
+      console.log(`✅ Server çalışıyor → http://localhost:${PORT}`);
+      console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
+    });
   });
 
 /* PUBLIC PRODUCTS */
 app.get("/api/public/products", async (req, res) => {
   try {
-    const productsCollection = await getProductsCollection();
-    const products = await productsCollection.find({}).toArray();
-    // MongoDB ObjectId'yi string id'ye çevir
-    const formattedProducts = products.map(p => ({
-      id: p._id.toString(),
-      ad: p.ad,
-      kategori: p.kategori,
-      marka: p.marka,
-      aciklama: p.aciklama,
-      resim: p.resim
-    }));
-    res.json(formattedProducts);
+    if (isMongoDBEnabled()) {
+      const productsCollection = await getProductsCollection();
+      const products = await productsCollection.find({}).toArray();
+      const formattedProducts = products.map(p => ({
+        id: p._id.toString(),
+        ad: p.ad,
+        kategori: p.kategori,
+        marka: p.marka,
+        aciklama: p.aciklama,
+        resim: p.resim
+      }));
+      res.json(formattedProducts);
+    } else {
+      // JSON fallback
+      const data = JSON.parse(fs.readFileSync(DATA_FILE));
+      res.json(data);
+    }
   } catch (error) {
     console.error("Ürün listeleme hatası:", error);
-    res.status(500).json({ success: false, message: "Sunucu hatası" });
+    // Hata durumunda JSON'dan oku
+    try {
+      const data = JSON.parse(fs.readFileSync(DATA_FILE));
+      res.json(data);
+    } catch (jsonError) {
+      res.status(500).json({ success: false, message: "Sunucu hatası" });
+    }
   }
 });
   
 /* TEK ÜRÜN (PUBLIC) */
 app.get("/api/public/products/:id", async (req, res) => {
   try {
-    const productsCollection = await getProductsCollection();
     const productId = req.params.id;
     
-    // ObjectId geçerli mi kontrol et
-    if (!ObjectId.isValid(productId)) {
-      return res.status(400).json({ success: false, message: "Geçersiz ürün ID'si" });
+    if (isMongoDBEnabled() && ObjectId.isValid(productId)) {
+      const productsCollection = await getProductsCollection();
+      const urun = await productsCollection.findOne({ _id: new ObjectId(productId) });
+      
+      if (!urun) {
+        return res.status(404).json({ success: false });
+      }
+      
+      res.json({
+        id: urun._id.toString(),
+        ad: urun.ad,
+        kategori: urun.kategori,
+        marka: urun.marka,
+        aciklama: urun.aciklama,
+        resim: urun.resim
+      });
+    } else {
+      // JSON fallback
+      const products = JSON.parse(fs.readFileSync(DATA_FILE));
+      const urun = products.find(p => String(p.id) === String(productId));
+      
+      if (!urun) {
+        return res.status(404).json({ success: false });
+      }
+      
+      res.json(urun);
     }
-
-    const urun = await productsCollection.findOne({ _id: new ObjectId(productId) });
-  
-    if (!urun) {
-      return res.status(404).json({ success: false });
-    }
-  
-    res.json({
-      id: urun._id.toString(),
-      ad: urun.ad,
-      kategori: urun.kategori,
-      marka: urun.marka,
-      aciklama: urun.aciklama,
-      resim: urun.resim
-    });
   } catch (error) {
     console.error("Ürün detay hatası:", error);
     res.status(500).json({ success: false, message: "Sunucu hatası" });
@@ -296,15 +353,29 @@ app.post("/api/contact", async (req, res) => {
 
     // İletişim kaydı oluştur
     const contact = {
+      id: Date.now().toString(),
       adSoyad,
       email,
       telefon,
       mesaj,
-      tarih: new Date()
+      tarih: new Date().toISOString()
     };
 
-    const contactsCollection = await getContactsCollection();
-    await contactsCollection.insertOne(contact);
+    if (isMongoDBEnabled()) {
+      const contactsCollection = await getContactsCollection();
+      const mongoContact = { ...contact };
+      delete mongoContact.id;
+      mongoContact.tarih = new Date();
+      await contactsCollection.insertOne(mongoContact);
+    } else {
+      // JSON fallback
+      let contacts = [];
+      if (fs.existsSync(CONTACTS_FILE)) {
+        contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE));
+      }
+      contacts.push(contact);
+      fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2));
+    }
 
     res.json({ success: true, message: "Formunuz başarıyla gönderildi!" });
   } catch (error) {
