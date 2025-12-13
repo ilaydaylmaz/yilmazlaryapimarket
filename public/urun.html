@@ -256,6 +256,108 @@ function addReview(productId) {
     messageDiv.innerHTML = '<span style="color: #dc3545;">❌ Bir hata oluştu. Lütfen tekrar deneyin.</span>';
   });
 }
+
+// İlgili ürünleri yükle (aynı kategoriden, mevcut ürün hariç)
+function loadRelatedProducts(currentId, kategori, allProducts) {
+  const related = allProducts
+    .filter(p => p.id !== currentId && p.kategori === kategori)
+    .slice(0, 4); // En fazla 4 ürün
+  
+  const relatedDiv = document.getElementById("relatedProducts");
+  
+  if (related.length === 0) {
+    relatedDiv.innerHTML = '<p style="color: var(--text-light); grid-column: 1/-1;">Henüz ilgili ürün bulunmuyor.</p>';
+    return;
+  }
+  
+  relatedDiv.innerHTML = related.map(p => {
+    let resimUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="14" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
+    
+    if (p.resim) {
+      if (p.resim.startsWith('data:image')) {
+        resimUrl = p.resim;
+      } else if (!p.resim.startsWith('/')) {
+        resimUrl = `/uploads/${p.resim}`;
+      } else {
+        resimUrl = p.resim;
+      }
+    }
+    
+    return `
+      <div class="urun" onclick="window.location.href='/urun.html?id=${p.id}'" style="cursor: pointer;">
+        <div class="urun-image-wrapper">
+          <img src="${resimUrl}" alt="${p.ad}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'200\\' height=\\'200\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'200\\' height=\\'200\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'14\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
+          ${p.kategori ? `<span class="urun-badge">${p.kategori}</span>` : ''}
+        </div>
+        <div class="urun-content">
+          <h3 style="font-size: 0.95rem;">${p.ad || 'İsimsiz Ürün'}</h3>
+          ${p.marka ? `<p style="font-size: 0.85rem; color: var(--text-light); margin: 5px 0;">${p.marka}</p>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Son ziyaret edilen ürünleri yükle
+function loadRecentProducts(currentId, allProducts) {
+  const recentIds = JSON.parse(localStorage.getItem('recentProducts') || '[]')
+    .filter(id => id !== currentId)
+    .slice(0, 4); // En fazla 4 ürün
+  
+  const recent = recentIds
+    .map(id => allProducts.find(p => p.id === id))
+    .filter(p => p !== undefined);
+  
+  const recentDiv = document.getElementById("recentProducts");
+  
+  if (recent.length === 0) {
+    recentDiv.innerHTML = '<p style="color: var(--text-light); grid-column: 1/-1;">Henüz ziyaret edilen ürün yok.</p>';
+    return;
+  }
+  
+  recentDiv.innerHTML = recent.map(p => {
+    let resimUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="14" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
+    
+    if (p.resim) {
+      if (p.resim.startsWith('data:image')) {
+        resimUrl = p.resim;
+      } else if (!p.resim.startsWith('/')) {
+        resimUrl = `/uploads/${p.resim}`;
+      } else {
+        resimUrl = p.resim;
+      }
+    }
+    
+    return `
+      <div class="urun" onclick="window.location.href='/urun.html?id=${p.id}'" style="cursor: pointer;">
+        <div class="urun-image-wrapper">
+          <img src="${resimUrl}" alt="${p.ad}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'200\\' height=\\'200\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'200\\' height=\\'200\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'14\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
+          ${p.kategori ? `<span class="urun-badge">${p.kategori}</span>` : ''}
+        </div>
+        <div class="urun-content">
+          <h3 style="font-size: 0.95rem;">${p.ad || 'İsimsiz Ürün'}</h3>
+          ${p.marka ? `<p style="font-size: 0.85rem; color: var(--text-light); margin: 5px 0;">${p.marka}</p>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Bu ürünü son ziyaret edilenlere ekle
+function addToRecentProducts(productId) {
+  let recent = JSON.parse(localStorage.getItem('recentProducts') || '[]');
+  
+  // Mevcut ürünü listeden çıkar (tekrar eklemek için)
+  recent = recent.filter(id => id !== productId);
+  
+  // En başa ekle
+  recent.unshift(productId);
+  
+  // En fazla 10 ürün tut
+  recent = recent.slice(0, 10);
+  
+  localStorage.setItem('recentProducts', JSON.stringify(recent));
+}
 </script>
 
 </body>
