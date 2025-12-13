@@ -5,14 +5,21 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const multer = require("multer");
 const path = require("path");
-const { MongoClient, ObjectId } = require("mongodb");
+const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
-// MongoDB bağlantı değişkenleri
-let db;
-let productsCollection;
-let contactsCollection;
+// Supabase bağlantısı
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+let supabase;
+
+if (supabaseUrl && supabaseKey) {
+  supabase = createClient(supabaseUrl, supabaseKey);
+  console.log("✅ Supabase bağlantısı hazır!");
+} else {
+  console.log("⚠️  SUPABASE_URL ve SUPABASE_KEY environment variable'ları ayarlanmamış!");
+}
 
 /* =======================
    BODY & SESSION
@@ -47,80 +54,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 /* =======================
-   MONGODB CONNECTION
+   SUPABASE CONNECTION
 ======================= */
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/yapi_market";
-const DB_NAME = "yapi_market";
-
-// MongoDB bağlantısı
-let mongoClient;
-
-async function connectToMongoDB() {
-  try {
-    if (!MONGODB_URI || MONGODB_URI === "mongodb://localhost:27017/yapi_market") {
-      console.log("⚠️  MONGODB_URI environment variable ayarlanmamış!");
-      console.log("⚠️  Render.com'da MONGODB_URI environment variable'ını ekleyin.");
-      return;
-    }
-
-    console.log("🔄 MongoDB bağlantısı deneniyor...");
-    console.log("📍 Connection String:", MONGODB_URI.replace(/:[^:@]+@/, ":****@"));
-    
-    // Connection string'e SSL parametreleri ekle (eğer yoksa)
-    let connectionUri = MONGODB_URI;
-    if (connectionUri.includes('mongodb+srv://') && !connectionUri.includes('tls=')) {
-      // SSL parametrelerini ekle
-      const separator = connectionUri.includes('?') ? '&' : '?';
-      connectionUri += `${separator}tls=true&tlsAllowInvalidCertificates=false`;
-    }
-    
-    mongoClient = new MongoClient(connectionUri, {
-      serverSelectionTimeoutMS: 30000, // 30 saniye timeout
-      connectTimeoutMS: 30000,
-      tls: true,
-      tlsAllowInvalidCertificates: false,
-      retryWrites: true,
-      w: 'majority'
-    });
-    
-    await mongoClient.connect();
-    db = mongoClient.db(DB_NAME);
-    productsCollection = db.collection("products");
-    contactsCollection = db.collection("contacts");
-    
-    // Bağlantıyı test et
-    await db.admin().ping();
-    
-    console.log("✅ MongoDB bağlantısı başarılı!");
-    console.log("📊 Database:", DB_NAME);
-    
-    // Index oluştur
-    try {
-      await productsCollection.createIndex({ createdAt: -1 });
-      await contactsCollection.createIndex({ createdAt: -1 });
-      console.log("✅ Index'ler oluşturuldu");
-    } catch (indexError) {
-      console.log("⚠️  Index oluşturma hatası (önemsiz):", indexError.message);
-    }
-  } catch (error) {
-    console.error("❌ MongoDB bağlantı hatası:");
-    console.error("   Error:", error.message);
-    console.error("   Code:", error.code);
-    
-    if (error.message.includes("authentication")) {
-      console.error("   🔐 Authentication hatası: Kullanıcı adı veya şifre yanlış olabilir");
-    } else if (error.message.includes("timeout")) {
-      console.error("   ⏱️  Timeout hatası: Network Access ayarlarını kontrol edin");
-    } else if (error.message.includes("ENOTFOUND") || error.message.includes("getaddrinfo")) {
-      console.error("   🌐 DNS hatası: Connection string'i kontrol edin");
-    }
-    
-    console.log("⚠️  MongoDB bağlantısı olmadan devam ediliyor...");
-    console.log("💡 Render.com'da MONGODB_URI environment variable'ını kontrol edin");
-  }
-}
-
-connectToMongoDB();
+// Supabase bağlantısı yukarıda yapıldı
 
 // Uploads klasörünü kontrol et
 if (!fs.existsSync("./public/uploads")) {
@@ -169,24 +105,29 @@ app.get("/admin.html", auth, (req, res) => {
 /* Liste */
 app.get("/api/products", auth, async (req, res) => {
   try {
-    if (!productsCollection) {
-      console.error("❌ productsCollection tanımlı değil - MongoDB bağlantısı yok");
+    if (!supabase) {
       return res.status(500).json({ 
         success: false, 
-        message: "Veritabanı bağlantısı yok. Lütfen MONGODB_URI environment variable'ını kontrol edin." 
+        message: "Veritabanı bağlantısı yok. Lütfen SUPABASE_URL ve SUPABASE_KEY environment variable'larını kontrol edin." 
       });
     }
     
-    const products = await productsCollection.find({}).sort({ createdAt: -1 }).toArray();
-    // MongoDB _id'yi id'ye çevir (eski kod uyumluluğu için)
-    const formattedProducts = products.map(p => ({
-      id: p._id.toString(),
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    const formattedProducts = (data || []).map(p => ({
+      id: p.id,
       ad: p.ad || "",
       kategori: p.kategori || "",
       marka: p.marka || "",
       aciklama: p.aciklama || "",
       resim: p.resim || ""
     }));
+    
     res.json(formattedProducts);
   } catch (error) {
     console.error("Ürün listesi hatası:", error);
@@ -197,7 +138,7 @@ app.get("/api/products", auth, async (req, res) => {
 /* Ekle */
 app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
   try {
-    if (!productsCollection) {
+    if (!supabase) {
       return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
     }
     
@@ -206,13 +147,18 @@ app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
       kategori: req.body.kategori || "",
       marka: req.body.marka || "",
       aciklama: req.body.aciklama || "",
-      resim: req.file ? req.file.filename : "",
-      createdAt: new Date(),
-      updatedAt: new Date()
+      resim: req.file ? req.file.filename : ""
     };
 
-    const result = await productsCollection.insertOne(product);
-    res.json({ success: true, id: result.insertedId.toString() });
+    const { data, error } = await supabase
+      .from('products')
+      .insert([product])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    res.json({ success: true, id: data.id });
   } catch (error) {
     console.error("Ürün ekleme hatası:", error);
     res.status(500).json({ success: false, message: "Ürün eklenemedi" });
@@ -222,20 +168,20 @@ app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
 /* Güncelle */
 app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
   try {
-    if (!productsCollection) {
+    if (!supabase) {
       return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
     }
     
     const productId = req.params.id;
     
-    // ObjectId kontrolü
-    if (!ObjectId.isValid(productId)) {
-      return res.status(400).json({ success: false, message: "Geçersiz ürün ID" });
-    }
+    // Mevcut ürünü kontrol et
+    const { data: existingProduct, error: fetchError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .single();
     
-    const product = await productsCollection.findOne({ _id: new ObjectId(productId) });
-    
-    if (!product) {
+    if (fetchError || !existingProduct) {
       return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
     }
 
@@ -244,19 +190,21 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
       kategori: req.body.kategori || "",
       marka: req.body.marka || "",
       aciklama: req.body.aciklama || "",
-      updatedAt: new Date()
+      updated_at: new Date().toISOString()
     };
     
     if (req.file) {
       updateData.resim = req.file.filename;
     } else {
-      updateData.resim = product.resim || "";
+      updateData.resim = existingProduct.resim || "";
     }
 
-    await productsCollection.updateOne(
-      { _id: new ObjectId(productId) },
-      { $set: updateData }
-    );
+    const { error } = await supabase
+      .from('products')
+      .update(updateData)
+      .eq('id', productId);
+    
+    if (error) throw error;
     
     res.json({ success: true, message: "Ürün başarıyla güncellendi" });
   } catch (error) {
@@ -268,21 +216,22 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
 /* Sil */
 app.delete("/api/products/:id", auth, async (req, res) => {
   try {
-    if (!productsCollection) {
+    if (!supabase) {
       return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
     }
     
     const productId = req.params.id;
     
-    // ObjectId kontrolü
-    if (!ObjectId.isValid(productId)) {
-      return res.status(400).json({ success: false, message: "Geçersiz ürün ID" });
-    }
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', productId);
     
-    const result = await productsCollection.deleteOne({ _id: new ObjectId(productId) });
-    
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
+      }
+      throw error;
     }
 
     res.json({ success: true, message: "Ürün başarıyla silindi" });
@@ -304,48 +253,54 @@ app.listen(PORT, () => {
 /* PUBLIC PRODUCTS */
 app.get("/api/public/products", async (req, res) => {
   try {
-    if (!productsCollection) {
-      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
+    if (!supabase) {
+      return res.json([]); // Boş array döndür
     }
     
-    const products = await productsCollection.find({}).sort({ createdAt: -1 }).toArray();
-    const formattedProducts = products.map(p => ({
-      id: p._id.toString(),
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    const formattedProducts = (data || []).map(p => ({
+      id: p.id,
       ad: p.ad || "",
       kategori: p.kategori || "",
       marka: p.marka || "",
       aciklama: p.aciklama || "",
       resim: p.resim || ""
     }));
+    
     res.json(formattedProducts);
   } catch (error) {
     console.error("Public products hatası:", error);
-    res.status(500).json({ success: false, message: "Ürünler yüklenemedi" });
+    res.json([]); // Hata durumunda boş array
   }
 });
   
 /* TEK ÜRÜN (PUBLIC) */
 app.get("/api/public/products/:id", async (req, res) => {
   try {
-    if (!productsCollection) {
+    if (!supabase) {
       return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
     }
     
     const productId = req.params.id;
     
-    // ObjectId kontrolü
-    if (!ObjectId.isValid(productId)) {
-      return res.status(400).json({ success: false, message: "Geçersiz ürün ID" });
-    }
+    const { data: product, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .single();
     
-    const product = await productsCollection.findOne({ _id: new ObjectId(productId) });
-    
-    if (!product) {
+    if (error || !product) {
       return res.status(404).json({ success: false });
     }
     
     res.json({
-      id: product._id.toString(),
+      id: product.id,
       ad: product.ad || "",
       kategori: product.kategori || "",
       marka: product.marka || "",
@@ -363,7 +318,7 @@ app.get("/api/public/products/:id", async (req, res) => {
 ======================= */
 app.post("/api/contact", async (req, res) => {
   try {
-    if (!contactsCollection) {
+    if (!supabase) {
       return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
     }
     
@@ -382,15 +337,18 @@ app.post("/api/contact", async (req, res) => {
 
     // İletişim kaydı oluştur
     const contact = {
-      adSoyad,
+      ad_soyad: adSoyad,
       email,
       telefon,
-      mesaj,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      mesaj
     };
 
-    await contactsCollection.insertOne(contact);
+    const { error } = await supabase
+      .from('contacts')
+      .insert([contact]);
+    
+    if (error) throw error;
+    
     res.json({ success: true, message: "Formunuz başarıyla gönderildi!" });
   } catch (error) {
     console.error("Contact form error:", error);
