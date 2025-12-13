@@ -1,0 +1,3 @@
+# Bu dosya data klasörünün Git'te kalmasını sağlar
+# Veri dosyaları (products.json, contacts.json) Git'e commit edilmez
+

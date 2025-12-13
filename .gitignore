@@ -23,6 +23,7 @@ Thumbs.db
 # Uploads (optional - uncomment if you don't want to track uploads)
 # public/uploads/
 
-# Data files (optional - uncomment if you want to keep data private)
-# data/
+# Data files - veri dosyaları git'e commit edilmemeli
+data/products.json
+data/contacts.json
 
