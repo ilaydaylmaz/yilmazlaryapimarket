@@ -12,11 +12,19 @@ const app = express();
 // Supabase bağlantısı
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY; // RLS bypass için (opsiyonel)
 let supabase;
+let supabaseAdmin; // Admin işlemleri için
 
 if (supabaseUrl && supabaseKey) {
   supabase = createClient(supabaseUrl, supabaseKey);
   console.log("✅ Supabase bağlantısı hazır!");
+  
+  // Service role key varsa admin client oluştur
+  if (supabaseServiceKey) {
+    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    console.log("✅ Supabase Admin client hazır (RLS bypass)!");
+  }
 } else {
   console.log("⚠️  SUPABASE_URL ve SUPABASE_KEY environment variable'ları ayarlanmamış!");
 }
@@ -157,7 +165,10 @@ app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
 
     console.log("📝 Eklenen ürün:", product);
 
-    const { data, error } = await supabase
+    // Admin işlemleri için service role key kullan (RLS bypass)
+    const clientToUse = supabaseAdmin || supabase;
+    
+    const { data, error } = await clientToUse
       .from('products')
       .insert([product])
       .select()
@@ -217,7 +228,10 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
       updateData.resim = existingProduct.resim || "";
     }
 
-    const { error } = await supabase
+    // Admin işlemleri için service role key kullan
+    const clientToUse = supabaseAdmin || supabase;
+    
+    const { error } = await clientToUse
       .from('products')
       .update(updateData)
       .eq('id', productId);
@@ -240,7 +254,10 @@ app.delete("/api/products/:id", auth, async (req, res) => {
     
     const productId = req.params.id;
     
-    const { error } = await supabase
+    // Admin işlemleri için service role key kullan
+    const clientToUse = supabaseAdmin || supabase;
+    
+    const { error } = await clientToUse
       .from('products')
       .delete()
       .eq('id', productId);
