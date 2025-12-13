@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Yılmazlar Yapı Market - Blog ve Haberler">
+  <title>Blog - Yılmazlar Yapı Market</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <div class="navbar">
+    <img src="/logo.png" alt="Yılmazlar Yapı Market Logo">
+    <nav>
+      <a href="/">Ana Sayfa</a>
+      <a href="/urunler.html">Ürünler</a>
+      <a href="/hakkimizda.html">Hakkımızda</a>
+      <a href="/iletisim.html">İletişim</a>
+      <a href="/blog.html" class="active">Blog</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="page-header">
+    <h1>📰 Blog & Haberler</h1>
+    <p class="page-intro">Yapı sektöründen haberler, ipuçları ve güncel gelişmeler</p>
+  </div>
+
+  <div id="blogPosts" class="blog-grid">
+    <div style="text-align: center; padding: 40px; color: var(--text-light);">
+      <p>Yükleniyor...</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <h3>Yılmazlar Yapı Market</h3>
+      <p>Kaliteli ürün, güvenilir hizmet</p>
+    </div>
+    <div>
+      <h3>Hızlı Erişim</h3>
+      <p><a href="/" class="footer-link">Ana Sayfa</a></p>
+      <p><a href="/urunler.html" class="footer-link">Ürünler</a></p>
+      <p><a href="/hakkimizda.html" class="footer-link">Hakkımızda</a></p>
+      <p><a href="/iletisim.html" class="footer-link">İletişim</a></p>
+      <p><a href="/blog.html" class="footer-link">Blog</a></p>
+    </div>
+    <div>
+      <h3>İletişim</h3>
+      <p>📍 Kırklareli / Vize</p>
+      <p>📞 0536 719 13 08</p>
+      <p>✉️ yilmazlarvize@gmail.com</p>
+      <p><a href="https://instagram.com/yilmazlarvize" target="_blank" rel="noopener noreferrer" class="instagram-link"><span class="instagram-icon"></span></a></p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2025 Yılmazlar Yapı Market. Tüm hakları saklıdır.
+  </div>
+</footer>
+
+<script>
+fetch("/api/blog")
+  .then(r => r.json())
+  .then(posts => {
+    const blogPosts = document.getElementById("blogPosts");
+    
+    if (posts.length === 0) {
+      blogPosts.innerHTML = '<div style="text-align: center; padding: 40px;"><p style="color: var(--text-light);">Henüz blog yazısı yok.</p></div>';
+      return;
+    }
+    
+    blogPosts.innerHTML = posts.map(post => {
+      const tarih = new Date(post.tarih).toLocaleDateString('tr-TR', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      
+      return `
+        <div class="blog-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); transition: transform 0.3s;">
+          ${post.resim ? `<img src="${post.resim}" alt="${post.baslik}" style="width: 100%; height: 200px; object-fit: cover;">` : ''}
+          <div style="padding: 25px;">
+            <h3 style="margin-bottom: 10px; color: var(--text-dark);">
+              <a href="/blog-detay.html?id=${post.id}" style="color: inherit; text-decoration: none;">${post.baslik}</a>
+            </h3>
+            <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 15px;">${tarih} • ${post.yazar}</p>
+            ${post.ozet ? `<p style="color: var(--text-light); line-height: 1.6; margin-bottom: 15px;">${post.ozet}</p>` : ''}
+            <a href="/blog-detay.html?id=${post.id}" class="btn btn-primary" style="display: inline-block;">Devamını Oku →</a>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    // Blog kartlarına hover efekti
+    document.querySelectorAll('.blog-card').forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        card.style.transform = 'translateY(-5px)';
+        card.style.boxShadow = 'var(--shadow-lg)';
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'translateY(0)';
+        card.style.boxShadow = 'var(--shadow)';
+      });
+    });
+  })
+  .catch(err => {
+    console.error("Blog yükleme hatası:", err);
+    document.getElementById("blogPosts").innerHTML = '<div style="text-align: center; padding: 40px;"><p style="color: #dc3545;">Blog yazıları yüklenirken bir hata oluştu.</p></div>';
+  });
+</script>
+
+<style>
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  margin-top: 30px;
+}
+
+@media (max-width: 768px) {
+  .blog-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+</body>
+</html>
+

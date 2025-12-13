@@ -15,6 +15,7 @@
       <a href="/">Ana Sayfa</a>
       <a href="/urunler.html">Ürünler</a>
       <a href="/hakkimizda.html">Hakkımızda</a>
+      <a href="/blog.html">Blog</a>
       <a href="/iletisim.html">İletişim</a>
     </nav>
   </div>
@@ -109,7 +110,46 @@ fetch("/api/public/products")
             </div>
           </div>
         </div>
+        
+        <!-- Yorumlar Bölümü -->
+        <div class="reviews-section" style="margin-top: 50px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
+          <h2 style="margin-bottom: 30px;">💬 Müşteri Yorumları</h2>
+          <div id="reviewsList" style="margin-bottom: 30px;">
+            <p style="color: var(--text-light);">Yorumlar yükleniyor...</p>
+          </div>
+          
+          <!-- Yorum Formu -->
+          <div class="review-form" style="background: var(--light-bg); padding: 25px; border-radius: 12px;">
+            <h3 style="margin-bottom: 20px;">Yorumunuzu Yazın</h3>
+            <form id="reviewForm" onsubmit="event.preventDefault(); addReview('${p.id}');">
+              <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Adınız *</label>
+                <input type="text" id="reviewName" required style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
+              </div>
+              <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Puanınız *</label>
+                <select id="reviewRating" required style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
+                  <option value="">Seçiniz</option>
+                  <option value="5">5 ⭐⭐⭐⭐⭐</option>
+                  <option value="4">4 ⭐⭐⭐⭐</option>
+                  <option value="3">3 ⭐⭐⭐</option>
+                  <option value="2">2 ⭐⭐</option>
+                  <option value="1">1 ⭐</option>
+                </select>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Yorumunuz *</label>
+                <textarea id="reviewText" required rows="4" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; resize: vertical;"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Yorumu Gönder</button>
+              <div id="reviewMessage" style="margin-top: 15px;"></div>
+            </form>
+          </div>
+        </div>
       `;
+      
+      // Yorumları yükle
+      loadReviews(p.id);
     })
     .catch(err => {
     document.getElementById("detay").innerHTML = `
@@ -119,6 +159,77 @@ fetch("/api/public/products")
           <a href="/urunler.html" class="btn btn-primary">Ürünlere Dön</a>
         </div>
     `;
+  });
+}
+
+// Yorumları yükle
+function loadReviews(productId) {
+  fetch(`/api/products/${productId}/reviews`)
+    .then(r => r.json())
+    .then(reviews => {
+      const reviewsList = document.getElementById("reviewsList");
+      if (reviews.length === 0) {
+        reviewsList.innerHTML = '<p style="color: var(--text-light);">Henüz yorum yapılmamış. İlk yorumu siz yapın!</p>';
+        return;
+      }
+      
+      reviewsList.innerHTML = reviews.map(r => {
+        const tarih = new Date(r.tarih).toLocaleDateString('tr-TR');
+        const stars = '⭐'.repeat(r.puan) + '☆'.repeat(5 - r.puan);
+        return `
+          <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--primary-color);">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+              <div>
+                <strong>${r.ad}</strong>
+                <div style="color: #ffa500; margin-top: 5px;">${stars}</div>
+              </div>
+              <span style="color: var(--text-light); font-size: 0.9rem;">${tarih}</span>
+            </div>
+            <p style="margin: 0; line-height: 1.6;">${r.yorum.replace(/\n/g, '<br>')}</p>
+          </div>
+        `;
+      }).join('');
+    })
+    .catch(err => {
+      console.error("Yorum yükleme hatası:", err);
+      document.getElementById("reviewsList").innerHTML = '<p style="color: var(--text-light);">Yorumlar yüklenirken bir hata oluştu.</p>';
+    });
+}
+
+// Yorum ekle
+function addReview(productId) {
+  const ad = document.getElementById("reviewName").value.trim();
+  const puan = document.getElementById("reviewRating").value;
+  const yorum = document.getElementById("reviewText").value.trim();
+  const messageDiv = document.getElementById("reviewMessage");
+  
+  if (!ad || !puan || !yorum) {
+    messageDiv.innerHTML = '<span style="color: #dc3545;">Lütfen tüm alanları doldurun.</span>';
+    return;
+  }
+  
+  fetch(`/api/products/${productId}/reviews`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ ad, puan, yorum })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      messageDiv.innerHTML = '<span style="color: #28a745;">✅ ' + data.message + '</span>';
+      document.getElementById("reviewForm").reset();
+      setTimeout(() => {
+        loadReviews(productId);
+      }, 1000);
+    } else {
+      messageDiv.innerHTML = '<span style="color: #dc3545;">❌ ' + (data.message || 'Bir hata oluştu.') + '</span>';
+    }
+  })
+  .catch(err => {
+    console.error("Yorum ekleme hatası:", err);
+    messageDiv.innerHTML = '<span style="color: #dc3545;">❌ Bir hata oluştu. Lütfen tekrar deneyin.</span>';
   });
 }
 </script>

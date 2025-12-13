@@ -75,11 +75,29 @@ async function getContactsCollection() {
   return database.collection("contacts");
 }
 
+async function getReviewsCollection() {
+  const database = await connectDB();
+  if (!database) {
+    throw new Error("MongoDB bağlantısı yok");
+  }
+  return database.collection("reviews");
+}
+
+async function getBlogCollection() {
+  const database = await connectDB();
+  if (!database) {
+    throw new Error("MongoDB bağlantısı yok");
+  }
+  return database.collection("blog");
+}
+
 module.exports = {
   connectDB,
   closeDB,
   getProductsCollection,
   getContactsCollection,
+  getReviewsCollection,
+  getBlogCollection,
   isMongoDBEnabled
 };
 

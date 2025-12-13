@@ -7,7 +7,7 @@ const multer = require("multer");
 const path = require("path");
 const { ObjectId } = require("mongodb");
 const nodemailer = require("nodemailer");
-const { getProductsCollection, getContactsCollection, connectDB, isMongoDBEnabled } = require("./db");
+const { getProductsCollection, getContactsCollection, getReviewsCollection, getBlogCollection, connectDB, isMongoDBEnabled } = require("./db");
 
 const app = express();
 
@@ -689,6 +689,219 @@ Yılmazlar Yapı Market - Kırklareli / Vize
   } catch (error) {
     console.error("Cevap gönderme hatası:", error);
     res.status(500).json({ success: false, message: "Cevap gönderilemedi." });
+  }
+});
+
+/* =======================
+   PRODUCT REVIEWS
+======================= */
+
+// Ürün yorumlarını getir
+app.get("/api/products/:id/reviews", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (isMongoDBEnabled()) {
+      const reviewsCollection = await getReviewsCollection();
+      const reviews = await reviewsCollection.find({ productId: id, onaylandı: true }).sort({ tarih: -1 }).toArray();
+      res.json(reviews.map(r => ({
+        id: r._id.toString(),
+        productId: r.productId,
+        ad: r.ad,
+        yorum: r.yorum,
+        puan: r.puan,
+        tarih: r.tarih ? r.tarih.toISOString() : new Date().toISOString()
+      })));
+    } else {
+      // JSON fallback
+      const reviewsFile = "./data/reviews.json";
+      let reviews = [];
+      if (fs.existsSync(reviewsFile)) {
+        reviews = JSON.parse(fs.readFileSync(reviewsFile));
+      }
+      reviews = reviews.filter(r => r.productId === id && r.onaylandı !== false);
+      res.json(reviews);
+    }
+  } catch (error) {
+    console.error("Yorum getirme hatası:", error);
+    res.status(500).json({ success: false, message: "Yorumlar yüklenemedi." });
+  }
+});
+
+// Yorum ekle
+app.post("/api/products/:id/reviews", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { ad, yorum, puan } = req.body;
+    
+    if (!ad || !yorum || !puan) {
+      return res.status(400).json({ success: false, message: "Tüm alanlar doldurulmalıdır." });
+    }
+    
+    if (puan < 1 || puan > 5) {
+      return res.status(400).json({ success: false, message: "Puan 1-5 arası olmalıdır." });
+    }
+    
+    const review = {
+      productId: id,
+      ad: ad.trim(),
+      yorum: yorum.trim(),
+      puan: parseInt(puan),
+      tarih: new Date(),
+      onaylandı: false // Admin onayı bekliyor
+    };
+    
+    if (isMongoDBEnabled()) {
+      const reviewsCollection = await getReviewsCollection();
+      await reviewsCollection.insertOne(review);
+    } else {
+      // JSON fallback
+      const reviewsFile = "./data/reviews.json";
+      let reviews = [];
+      if (fs.existsSync(reviewsFile)) {
+        reviews = JSON.parse(fs.readFileSync(reviewsFile));
+      }
+      review.id = Date.now().toString();
+      reviews.push(review);
+      fs.writeFileSync(reviewsFile, JSON.stringify(reviews, null, 2));
+    }
+    
+    res.json({ success: true, message: "Yorumunuz gönderildi. Onaylandıktan sonra yayınlanacaktır." });
+  } catch (error) {
+    console.error("Yorum ekleme hatası:", error);
+    res.status(500).json({ success: false, message: "Yorum eklenemedi." });
+  }
+});
+
+/* =======================
+   BLOG
+======================= */
+
+// Blog yazılarını getir
+app.get("/api/blog", async (req, res) => {
+  try {
+    if (isMongoDBEnabled()) {
+      const blogCollection = await getBlogCollection();
+      const posts = await blogCollection.find({}).sort({ tarih: -1 }).toArray();
+      res.json(posts.map(p => ({
+        id: p._id.toString(),
+        baslik: p.baslik,
+        ozet: p.ozet,
+        icerik: p.icerik,
+        resim: p.resim,
+        tarih: p.tarih ? p.tarih.toISOString() : new Date().toISOString(),
+        yazar: p.yazar || "Yılmazlar Yapı Market"
+      })));
+    } else {
+      // JSON fallback
+      const blogFile = "./data/blog.json";
+      let posts = [];
+      if (fs.existsSync(blogFile)) {
+        posts = JSON.parse(fs.readFileSync(blogFile));
+      }
+      res.json(posts);
+    }
+  } catch (error) {
+    console.error("Blog getirme hatası:", error);
+    res.status(500).json({ success: false, message: "Blog yazıları yüklenemedi." });
+  }
+});
+
+// Blog yazısı getir
+app.get("/api/blog/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (isMongoDBEnabled()) {
+      const blogCollection = await getBlogCollection();
+      const post = await blogCollection.findOne({ _id: new ObjectId(id) });
+      if (!post) {
+        return res.status(404).json({ success: false, message: "Yazı bulunamadı." });
+      }
+      res.json({
+        id: post._id.toString(),
+        baslik: post.baslik,
+        ozet: post.ozet,
+        icerik: post.icerik,
+        resim: post.resim,
+        tarih: post.tarih ? post.tarih.toISOString() : new Date().toISOString(),
+        yazar: post.yazar || "Yılmazlar Yapı Market"
+      });
+    } else {
+      // JSON fallback
+      const blogFile = "./data/blog.json";
+      let posts = [];
+      if (fs.existsSync(blogFile)) {
+        posts = JSON.parse(fs.readFileSync(blogFile));
+      }
+      const post = posts.find(p => p.id === id);
+      if (!post) {
+        return res.status(404).json({ success: false, message: "Yazı bulunamadı." });
+      }
+      res.json(post);
+    }
+  } catch (error) {
+    console.error("Blog yazısı getirme hatası:", error);
+    res.status(500).json({ success: false, message: "Yazı yüklenemedi." });
+  }
+});
+
+// Blog yazısı ekle (admin)
+app.post("/api/blog", auth, async (req, res) => {
+  try {
+    const { baslik, ozet, icerik, resim } = req.body;
+    
+    if (!baslik || !icerik) {
+      return res.status(400).json({ success: false, message: "Başlık ve içerik zorunludur." });
+    }
+    
+    const post = {
+      baslik: baslik.trim(),
+      ozet: ozet ? ozet.trim() : "",
+      icerik: icerik.trim(),
+      resim: resim || "",
+      tarih: new Date(),
+      yazar: "Yılmazlar Yapı Market"
+    };
+    
+    if (isMongoDBEnabled()) {
+      const blogCollection = await getBlogCollection();
+      await blogCollection.insertOne(post);
+    } else {
+      // JSON fallback
+      const blogFile = "./data/blog.json";
+      let posts = [];
+      if (fs.existsSync(blogFile)) {
+        posts = JSON.parse(fs.readFileSync(blogFile));
+      }
+      post.id = Date.now().toString();
+      posts.push(post);
+      fs.writeFileSync(blogFile, JSON.stringify(posts, null, 2));
+    }
+    
+    res.json({ success: true, message: "Blog yazısı eklendi!" });
+  } catch (error) {
+    console.error("Blog ekleme hatası:", error);
+    res.status(500).json({ success: false, message: "Blog yazısı eklenemedi." });
+  }
+});
+
+/* =======================
+   PDF CATALOG
+======================= */
+
+// PDF katalog indirme
+app.get("/api/catalog/download", (req, res) => {
+  const catalogPath = path.join(__dirname, "public", "catalog.pdf");
+  if (fs.existsSync(catalogPath)) {
+    res.download(catalogPath, "Yilmazlar_Yapi_Market_Katalog.pdf", (err) => {
+      if (err) {
+        console.error("PDF indirme hatası:", err);
+        res.status(500).json({ success: false, message: "Katalog indirilemedi." });
+      }
+    });
+  } else {
+    res.status(404).json({ success: false, message: "Katalog bulunamadı." });
   }
 });
   
