@@ -27,6 +27,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .header h1 {
@@ -34,7 +36,33 @@ body {
   font-weight: 700;
 }
 
-.header a {
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-tab {
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-tab:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.btn-tab.active {
+  background: rgba(255,255,255,0.4);
+  font-weight: 600;
+}
+
+.btn-logout {
   color: white;
   text-decoration: none;
   padding: 10px 20px;
@@ -43,7 +71,7 @@ body {
   transition: background 0.3s;
 }
 
-.header a:hover {
+.btn-logout:hover {
   background: rgba(255,255,255,0.3);
 }
 
@@ -320,5 +348,226 @@ body {
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+/* Messages Section */
+.messages-section {
+  padding: 25px;
+}
+
+.messages-section h2 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.messages-list {
+  max-height: 700px;
+  overflow-y: auto;
+}
+
+.message-item {
+  background: #f8f9fa;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+  transition: all 0.3s;
+}
+
+.message-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.message-item.new {
+  border-left: 4px solid #28a745;
+}
+
+.message-item.replied {
+  border-left: 4px solid #6c757d;
+  opacity: 0.8;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.message-meta h3 {
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.message-date {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+
+.badge-new {
+  background: #28a745;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge-replied {
+  background: #6c757d;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.message-body {
+  margin-bottom: 15px;
+}
+
+.message-body p {
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.message-body a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.message-body a:hover {
+  text-decoration: underline;
+}
+
+.message-content {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 10px;
+  border-left: 3px solid #667eea;
+}
+
+.message-content p {
+  margin: 10px 0 0;
+  line-height: 1.6;
+}
+
+.reply-content {
+  background: #e8f5e9;
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 15px;
+  border-left: 3px solid #28a745;
+}
+
+.reply-content p {
+  margin: 10px 0 0;
+  line-height: 1.6;
+}
+
+.message-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s;
+}
+
+.modal-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.message-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.message-info p {
+  margin: 5px 0;
+  color: #555;
+}
+
+.original-message {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 10px;
+  border-left: 3px solid #667eea;
+}
+
+.original-message p {
+  margin: 10px 0 0;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: flex-end;
 }
 

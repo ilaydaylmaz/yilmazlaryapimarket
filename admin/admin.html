@@ -10,13 +10,25 @@
 
 <div class="container">
   <div class="header">
-    <h1>📦 Ürün Yönetimi</h1>
-    <a href="/logout">🚪 Çıkış Yap</a>
+    <h1>📦 Admin Panel</h1>
+    <div class="header-actions">
+      <button class="btn-tab" id="productsTab" onclick="showTab('products')">📦 Ürünler</button>
+      <button class="btn-tab active" id="messagesTab" onclick="showTab('messages')">💬 Mesajlar</button>
+      <a href="/logout" class="btn-logout">🚪 Çıkış Yap</a>
+    </div>
   </div>
 
   <div class="content">
+    <!-- Mesajlar Bölümü -->
+    <div id="messagesSection" class="messages-section" style="display: none;">
+      <h2>💬 İletişim Formu Mesajları (<span id="mesaj-sayisi">0</span>)</h2>
+      <div class="messages-list" id="messagesList">
+        <div class="empty-state">Yükleniyor...</div>
+      </div>
+    </div>
+
     <!-- Form Bölümü -->
-    <div class="form-section">
+    <div id="productsSection" class="form-section">
       <h2>➕ Yeni Ürün Ekle / Düzenle</h2>
       
       <div id="secili-urun" class="selected-product-info">
@@ -86,6 +98,27 @@
       <h2>📋 Mevcut Ürünler (<span id="urun-sayisi">0</span>)</h2>
       <div class="products-list" id="liste">
         <div class="empty-state">Yükleniyor...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cevap Modal -->
+<div id="replyModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>💬 Mesaja Cevap Ver</h3>
+      <button class="modal-close" onclick="closeReplyModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="replyMessageInfo" class="message-info"></div>
+      <div class="form-group">
+        <label for="replyText">Cevabınız *</label>
+        <textarea id="replyText" rows="6" placeholder="Mesaja cevabınızı yazın..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="sendReply()">📧 Cevabı Gönder</button>
+        <button class="btn btn-secondary" onclick="closeReplyModal()">İptal</button>
       </div>
     </div>
   </div>
@@ -355,6 +388,168 @@ function temizle() {
   document.getElementById("submitBtn").style.display = "inline-flex";
   document.getElementById("updateBtn").style.display = "none";
 }
+
+// Tab değiştirme
+let currentTab = 'products';
+function showTab(tab) {
+  currentTab = tab;
+  if (tab === 'products') {
+    document.getElementById('productsSection').style.display = 'block';
+    document.getElementById('messagesSection').style.display = 'none';
+    document.getElementById('productsTab').classList.add('active');
+    document.getElementById('messagesTab').classList.remove('active');
+    yukle();
+  } else {
+    document.getElementById('productsSection').style.display = 'none';
+    document.getElementById('messagesSection').style.display = 'block';
+    document.getElementById('productsTab').classList.remove('active');
+    document.getElementById('messagesTab').classList.add('active');
+    yukleMesajlar();
+  }
+}
+
+// Mesajları yükle
+let allMessages = [];
+let selectedMessageId = null;
+
+function yukleMesajlar() {
+  fetch("/api/contacts")
+    .then(r => {
+      if (!r.ok) throw new Error("Mesajlar yüklenemedi");
+      return r.json();
+    })
+    .then(data => {
+      allMessages = data;
+      const liste = document.getElementById("messagesList");
+      const sayac = document.getElementById("mesaj-sayisi");
+      
+      sayac.textContent = data.length;
+      
+      if (data.length === 0) {
+        liste.innerHTML = '<div class="empty-state">Henüz mesaj yok.</div>';
+        return;
+      }
+      
+      liste.innerHTML = "";
+      data.forEach(m => {
+        const item = document.createElement("div");
+        item.className = `message-item ${m.cevaplandı ? 'replied' : 'new'}`;
+        item.dataset.id = m.id;
+        
+        const tarih = new Date(m.tarih).toLocaleString('tr-TR');
+        const cevapTarihi = m.cevapTarihi ? new Date(m.cevapTarihi).toLocaleString('tr-TR') : null;
+        
+        item.innerHTML = `
+          <div class="message-header">
+            <div class="message-meta">
+              <h3>${m.adSoyad || 'İsimsiz'}</h3>
+              <p class="message-date">📅 ${tarih}</p>
+            </div>
+            ${m.cevaplandı ? '<span class="badge-replied">✓ Cevaplandı</span>' : '<span class="badge-new">Yeni</span>'}
+          </div>
+          <div class="message-body">
+            <p><strong>📧 E-posta:</strong> <a href="mailto:${m.email}">${m.email}</a></p>
+            <p><strong>📞 Telefon:</strong> <a href="tel:${m.telefon}">${m.telefon}</a></p>
+            <div class="message-content">
+              <strong>💬 Mesaj:</strong>
+              <p>${m.mesaj.replace(/\n/g, '<br>')}</p>
+            </div>
+            ${m.cevaplandı ? `
+              <div class="reply-content">
+                <strong>📧 Cevabınız (${cevapTarihi}):</strong>
+                <p>${m.cevap.replace(/\n/g, '<br>')}</p>
+              </div>
+            ` : ''}
+          </div>
+          <div class="message-actions">
+            ${!m.cevaplandı ? `<button class="btn btn-primary btn-small" onclick="openReplyModal('${m.id}')">💬 Cevap Ver</button>` : ''}
+          </div>
+        `;
+        
+        liste.appendChild(item);
+      });
+    })
+    .catch(error => {
+      console.error("Mesaj yükleme hatası:", error);
+      document.getElementById("messagesList").innerHTML = '<div class="empty-state">❌ Mesajlar yüklenirken bir hata oluştu!</div>';
+    });
+}
+
+function openReplyModal(id) {
+  const message = allMessages.find(m => m.id === id);
+  if (!message) return;
+  
+  selectedMessageId = id;
+  const infoDiv = document.getElementById("replyMessageInfo");
+  infoDiv.innerHTML = `
+    <p><strong>Gönderen:</strong> ${message.adSoyad}</p>
+    <p><strong>E-posta:</strong> ${message.email}</p>
+    <p><strong>Telefon:</strong> ${message.telefon}</p>
+    <div class="original-message">
+      <strong>Orijinal Mesaj:</strong>
+      <p>${message.mesaj.replace(/\n/g, '<br>')}</p>
+    </div>
+  `;
+  document.getElementById("replyText").value = "";
+  document.getElementById("replyModal").style.display = "flex";
+}
+
+function closeReplyModal() {
+  document.getElementById("replyModal").style.display = "none";
+  selectedMessageId = null;
+  document.getElementById("replyText").value = "";
+}
+
+function sendReply() {
+  if (!selectedMessageId) return;
+  
+  const cevap = document.getElementById("replyText").value.trim();
+  if (!cevap) {
+    alert("⚠️ Lütfen cevap metnini yazın!");
+    return;
+  }
+  
+  const btn = event.target;
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = "⏳ Gönderiliyor...";
+  
+  fetch(`/api/contacts/${selectedMessageId}/reply`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ cevap })
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {
+        throw new Error(err.message || "Cevap gönderilemedi!");
+      });
+    }
+    return response.json();
+  })
+  .then(() => {
+    showSuccess("✅ Cevap başarıyla gönderildi!");
+    closeReplyModal();
+    yukleMesajlar();
+  })
+  .catch(error => {
+    alert("❌ Hata: " + error.message);
+    console.error("Cevap gönderme hatası:", error);
+  })
+  .finally(() => {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  });
+}
+
+// Modal dışına tıklanınca kapat
+document.getElementById("replyModal")?.addEventListener("click", (e) => {
+  if (e.target.id === "replyModal") {
+    closeReplyModal();
+  }
+});
 
 // Sayfa yüklendiğinde
 yukle();

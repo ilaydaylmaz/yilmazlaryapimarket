@@ -7,8 +7,9 @@ Modern ve profesyonel yapı market web sitesi.
 - 🏠 Modern ve responsive tasarım
 - 📦 Ürün kataloğu ve detay sayfaları
 - 🔍 Gelişmiş ürün arama ve filtreleme
-- 📝 İletişim formu
-- 🔐 Admin paneli (ürün yönetimi)
+- 📝 İletişim formu (mail bildirimi ile)
+- 🔐 Admin paneli (ürün yönetimi + mesaj yönetimi)
+- 💬 Mesajlara cevap verme ve mail gönderme
 - 📱 Mobil uyumlu
 
 ## Kurulum
@@ -43,6 +44,14 @@ sudo systemctl start mongod
 # .env dosyası oluşturun (veya environment variable'ları ayarlayın)
 MONGODB_URI=mongodb://localhost:27017
 DB_NAME=yapi_market
+
+# Mail ayarları (opsiyonel - mail göndermek için)
+ADMIN_EMAIL=yilmazlarvize@gmail.com
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
 ```
 
 5. Mevcut JSON verilerini MongoDB'ye aktarın (ilk kez):
@@ -114,6 +123,24 @@ Production'da şu değişkenleri ayarlayın:
 - `DB_NAME`: Veritabanı adı (varsayılan: `yapi_market`)
 - `PORT`: Sunucu portu (genelde otomatik ayarlanır)
 - `SESSION_SECRET`: Session secret key (güvenlik için değiştirin)
+
+### Mail Ayarları (Opsiyonel)
+
+İletişim formu mesajlarının mail olarak gelmesi ve mesajlara cevap verme için:
+
+- `ADMIN_EMAIL`: Yeni mesajların gönderileceği e-posta adresi (varsayılan: `yilmazlarvize@gmail.com`)
+- `SMTP_HOST`: SMTP sunucu adresi (Gmail için: `smtp.gmail.com`)
+- `SMTP_PORT`: SMTP portu (genelde `587` veya `465`)
+- `SMTP_SECURE`: SSL/TLS kullanımı (`true` veya `false`)
+- `SMTP_USER`: SMTP kullanıcı adı (e-posta adresiniz)
+- `SMTP_PASS`: SMTP şifresi (Gmail için App Password kullanın)
+
+**Gmail için App Password oluşturma:**
+1. Google Hesabınız → Güvenlik → 2 Adımlı Doğrulama (açık olmalı)
+2. "Uygulama şifreleri" → "Uygulama seç" → "Mail" → "Cihaz seç" → "Oluştur"
+3. Oluşturulan 16 haneli şifreyi `SMTP_PASS` olarak kullanın
+
+**Not:** Mail ayarları yoksa, formlar yine de kaydedilir ancak mail gönderilmez.
 
 ## Teknolojiler
 

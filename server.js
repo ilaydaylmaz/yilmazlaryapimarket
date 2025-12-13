@@ -6,6 +6,7 @@ const session = require("express-session");
 const multer = require("multer");
 const path = require("path");
 const { ObjectId } = require("mongodb");
+const nodemailer = require("nodemailer");
 const { getProductsCollection, getContactsCollection, connectDB, isMongoDBEnabled } = require("./db");
 
 const app = express();
@@ -471,6 +472,7 @@ app.post("/api/contact", async (req, res) => {
       const mongoContact = { ...contact };
       delete mongoContact.id;
       mongoContact.tarih = new Date();
+      mongoContact.cevaplandı = false;
       await contactsCollection.insertOne(mongoContact);
     } else {
       // JSON fallback
@@ -478,14 +480,215 @@ app.post("/api/contact", async (req, res) => {
       if (fs.existsSync(CONTACTS_FILE)) {
         contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE));
       }
+      contact.cevaplandı = false;
       contacts.push(contact);
       fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2));
     }
+
+    // Mail gönder (admin'e bildirim)
+    const adminEmail = process.env.ADMIN_EMAIL || "yilmazlarvize@gmail.com";
+    const emailSubject = `Yeni İletişim Formu: ${adSoyad}`;
+    const emailHtml = `
+      <h2>Yeni İletişim Formu Mesajı</h2>
+      <p><strong>Ad Soyad:</strong> ${adSoyad}</p>
+      <p><strong>E-posta:</strong> ${email}</p>
+      <p><strong>Telefon:</strong> ${telefon}</p>
+      <p><strong>Mesaj:</strong></p>
+      <p>${mesaj.replace(/\n/g, '<br>')}</p>
+      <hr>
+      <p><small>Bu mesaj ${new Date().toLocaleString('tr-TR')} tarihinde gönderilmiştir.</small></p>
+    `;
+    const emailText = `
+Yeni İletişim Formu Mesajı
+
+Ad Soyad: ${adSoyad}
+E-posta: ${email}
+Telefon: ${telefon}
+
+Mesaj:
+${mesaj}
+
+---
+Bu mesaj ${new Date().toLocaleString('tr-TR')} tarihinde gönderilmiştir.
+    `;
+    
+    // Mail göndermeyi arka planda yap (hata olsa bile form kaydedilsin)
+    sendEmail(adminEmail, emailSubject, emailHtml, emailText).catch(err => {
+      console.error("Mail gönderme hatası (form kaydedildi):", err);
+    });
 
     res.json({ success: true, message: "Formunuz başarıyla gönderildi!" });
   } catch (error) {
     console.error("Contact form error:", error);
     res.status(500).json({ success: false, message: "Bir hata oluştu. Lütfen tekrar deneyin." });
+  }
+});
+
+/* =======================
+   ADMIN - CONTACTS
+======================= */
+
+// Mesajları listele
+app.get("/api/contacts", auth, async (req, res) => {
+  try {
+    let contacts = [];
+    
+    if (isMongoDBEnabled()) {
+      const contactsCollection = await getContactsCollection();
+      contacts = await contactsCollection.find({}).sort({ tarih: -1 }).toArray();
+      // MongoDB'den gelen verileri formatla
+      contacts = contacts.map(c => ({
+        id: c._id.toString(),
+        adSoyad: c.adSoyad,
+        email: c.email,
+        telefon: c.telefon,
+        mesaj: c.mesaj,
+        tarih: c.tarih ? c.tarih.toISOString() : new Date().toISOString(),
+        cevaplandı: c.cevaplandı || false,
+        cevap: c.cevap || null,
+        cevapTarihi: c.cevapTarihi ? c.cevapTarihi.toISOString() : null
+      }));
+    } else {
+      // JSON fallback
+      if (fs.existsSync(CONTACTS_FILE)) {
+        contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE));
+        // Tarihe göre sırala (en yeni önce)
+        contacts.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+      }
+    }
+    
+    res.json(contacts);
+  } catch (error) {
+    console.error("Mesaj listeleme hatası:", error);
+    res.status(500).json({ success: false, message: "Mesajlar yüklenemedi." });
+  }
+});
+
+// Mesaja cevap ver
+app.post("/api/contacts/:id/reply", auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { cevap } = req.body;
+    
+    if (!cevap || !cevap.trim()) {
+      return res.status(400).json({ success: false, message: "Cevap metni boş olamaz." });
+    }
+    
+    if (isMongoDBEnabled()) {
+      const contactsCollection = await getContactsCollection();
+      const contact = await contactsCollection.findOne({ _id: new ObjectId(id) });
+      
+      if (!contact) {
+        return res.status(404).json({ success: false, message: "Mesaj bulunamadı." });
+      }
+      
+      // Mesajı güncelle
+      await contactsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: {
+            cevaplandı: true,
+            cevap: cevap.trim(),
+            cevapTarihi: new Date()
+          }
+        }
+      );
+      
+      // Mail gönder
+      const emailSubject = `Yılmazlar Yapı Market - Mesajınıza Cevap`;
+      const emailHtml = `
+        <h2>Merhaba ${contact.adSoyad},</h2>
+        <p>Size gönderdiğiniz mesajınıza cevap vermek istiyoruz:</p>
+        <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p><strong>Orijinal Mesajınız:</strong></p>
+          <p>${contact.mesaj.replace(/\n/g, '<br>')}</p>
+        </div>
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p><strong>Cevabımız:</strong></p>
+          <p>${cevap.replace(/\n/g, '<br>')}</p>
+        </div>
+        <hr>
+        <p><small>Bu mesaj ${new Date().toLocaleString('tr-TR')} tarihinde gönderilmiştir.</small></p>
+        <p><small>Yılmazlar Yapı Market - Kırklareli / Vize</small></p>
+      `;
+      const emailText = `
+Merhaba ${contact.adSoyad},
+
+Size gönderdiğiniz mesajınıza cevap vermek istiyoruz:
+
+Orijinal Mesajınız:
+${contact.mesaj}
+
+Cevabımız:
+${cevap}
+
+---
+Bu mesaj ${new Date().toLocaleString('tr-TR')} tarihinde gönderilmiştir.
+Yılmazlar Yapı Market - Kırklareli / Vize
+      `;
+      
+      await sendEmail(contact.email, emailSubject, emailHtml, emailText);
+      
+      res.json({ success: true, message: "Cevap başarıyla gönderildi!" });
+    } else {
+      // JSON fallback
+      let contacts = [];
+      if (fs.existsSync(CONTACTS_FILE)) {
+        contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE));
+      }
+      
+      const contactIndex = contacts.findIndex(c => c.id === id);
+      if (contactIndex === -1) {
+        return res.status(404).json({ success: false, message: "Mesaj bulunamadı." });
+      }
+      
+      contacts[contactIndex].cevaplandı = true;
+      contacts[contactIndex].cevap = cevap.trim();
+      contacts[contactIndex].cevapTarihi = new Date().toISOString();
+      
+      fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2));
+      
+      // Mail gönder
+      const contact = contacts[contactIndex];
+      const emailSubject = `Yılmazlar Yapı Market - Mesajınıza Cevap`;
+      const emailHtml = `
+        <h2>Merhaba ${contact.adSoyad},</h2>
+        <p>Size gönderdiğiniz mesajınıza cevap vermek istiyoruz:</p>
+        <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p><strong>Orijinal Mesajınız:</strong></p>
+          <p>${contact.mesaj.replace(/\n/g, '<br>')}</p>
+        </div>
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p><strong>Cevabımız:</strong></p>
+          <p>${cevap.replace(/\n/g, '<br>')}</p>
+        </div>
+        <hr>
+        <p><small>Bu mesaj ${new Date().toLocaleString('tr-TR')} tarihinde gönderilmiştir.</small></p>
+        <p><small>Yılmazlar Yapı Market - Kırklareli / Vize</small></p>
+      `;
+      const emailText = `
+Merhaba ${contact.adSoyad},
+
+Size gönderdiğiniz mesajınıza cevap vermek istiyoruz:
+
+Orijinal Mesajınız:
+${contact.mesaj}
+
+Cevabımız:
+${cevap}
+
+---
+Bu mesaj ${new Date().toLocaleString('tr-TR')} tarihinde gönderilmiştir.
+Yılmazlar Yapı Market - Kırklareli / Vize
+      `;
+      
+      await sendEmail(contact.email, emailSubject, emailHtml, emailText);
+      
+      res.json({ success: true, message: "Cevap başarıyla gönderildi!" });
+    }
+  } catch (error) {
+    console.error("Cevap gönderme hatası:", error);
+    res.status(500).json({ success: false, message: "Cevap gönderilemedi." });
   }
 });
   
