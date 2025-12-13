@@ -145,10 +145,35 @@ fetch("/api/public/products")
             </form>
           </div>
         </div>
+        
+        <!-- Bu Ürüne Bakanlar Bunlara da Baktı -->
+        <div class="related-products" style="margin-top: 50px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
+          <h2 style="margin-bottom: 30px;">👀 Bu Ürüne Bakanlar Bunlara da Baktı</h2>
+          <div id="relatedProducts" class="urunler" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+            <p style="color: var(--text-light); grid-column: 1/-1;">Yükleniyor...</p>
+          </div>
+        </div>
+        
+        <!-- Son Ziyaret Edilen Ürünler -->
+        <div class="recent-products" style="margin-top: 50px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
+          <h2 style="margin-bottom: 30px;">🕒 Son Ziyaret Edilen Ürünler</h2>
+          <div id="recentProducts" class="urunler" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+            <p style="color: var(--text-light); grid-column: 1/-1;">Yükleniyor...</p>
+          </div>
+        </div>
       `;
       
       // Yorumları yükle
       loadReviews(p.id);
+      
+      // İlgili ürünleri yükle
+      loadRelatedProducts(p.id, p.kategori, data);
+      
+      // Son ziyaret edilen ürünleri yükle
+      loadRecentProducts(p.id, data);
+      
+      // Bu ürünü son ziyaret edilenlere ekle
+      addToRecentProducts(p.id);
     })
     .catch(err => {
     document.getElementById("detay").innerHTML = `
