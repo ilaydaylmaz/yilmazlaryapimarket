@@ -27,11 +27,14 @@ npm install
 ```
 
 3. MongoDB Atlas Kurulumu (Ücretsiz):
-   - [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) hesabı oluşturun
+   - Detaylı kurulum için `MONGODB_KURULUM.md` dosyasına bakın
+   - Kısaca: [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) hesabı oluşturun
    - "Build a Database" → "Free" seçin
    - Cluster oluşturun (birkaç dakika sürebilir)
+   - Database kullanıcısı oluşturun
+   - Network Access ayarlayın (0.0.0.0/0)
    - "Connect" → "Connect your application" seçin
-   - Connection string'i kopyalayın (örnek: `mongodb+srv://username:password@cluster.mongodb.net/database_name`)
+   - Connection string'i kopyalayın ve düzenleyin
 
 4. Environment Variable Ayarlayın:
    - `.env` dosyası oluşturun (proje kök dizininde)
