@@ -31,9 +31,15 @@ app.use("/admin", express.static("admin"));
 /* =======================
    MULTER (RESİM UPLOAD)
 ======================= */
+// Resimleri hem dosya sistemine hem de base64 olarak kaydet
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "public/uploads");
+    // Klasör yoksa oluştur
+    const uploadDir = "public/uploads";
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -41,7 +47,43 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage });
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
+// Resmi base64'e çevir
+function imageToBase64(filePath) {
+  try {
+    if (fs.existsSync(filePath)) {
+      const imageBuffer = fs.readFileSync(filePath);
+      const base64 = imageBuffer.toString('base64');
+      const ext = path.extname(filePath).slice(1).toLowerCase(); // .png -> png
+      const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'jpeg' : ext === 'svg' ? 'svg+xml' : ext;
+      return `data:image/${mimeType};base64,${base64}`;
+    }
+  } catch (error) {
+    console.error("Base64 dönüştürme hatası:", error);
+  }
+  return null;
+}
+
+// Resim URL'sini döndür (base64 varsa onu, yoksa dosya yolunu)
+function getImageUrl(product) {
+  if (product.resimBase64) {
+    return product.resimBase64;
+  }
+  if (product.resim) {
+    const filePath = path.join("public/uploads", product.resim);
+    if (fs.existsSync(filePath)) {
+      return `/uploads/${product.resim}`;
+    }
+    // Dosya yoksa base64'e çevirmeyi dene
+    const base64 = imageToBase64(filePath);
+    if (base64) return base64;
+  }
+  return "";
+}
 
 /* =======================
    DATA
@@ -100,20 +142,29 @@ app.get("/api/products", auth, async (req, res) => {
         kategori: p.kategori,
         marka: p.marka,
         aciklama: p.aciklama,
-        resim: p.resim
+        resim: getImageUrl(p)
       }));
       res.json(formattedProducts);
     } else {
       // JSON fallback
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
-      res.json(data);
+      // JSON'daki resimleri de kontrol et
+      const formattedData = data.map(p => ({
+        ...p,
+        resim: getImageUrl(p)
+      }));
+      res.json(formattedData);
     }
   } catch (error) {
     console.error("Ürün listeleme hatası:", error);
     // Hata durumunda JSON'dan oku
     try {
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
-      res.json(data);
+      const formattedData = data.map(p => ({
+        ...p,
+        resim: getImageUrl(p)
+      }));
+      res.json(formattedData);
     } catch (jsonError) {
       res.status(500).json({ success: false, message: "Sunucu hatası" });
     }
@@ -123,13 +174,25 @@ app.get("/api/products", auth, async (req, res) => {
 /* Ekle */
 app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
   try {
+    let resimData = "";
+    let resimBase64 = null;
+    
+    // Resim varsa hem dosya adını hem de base64'ü kaydet
+    if (req.file) {
+      resimData = req.file.filename;
+      // Base64'e çevir (Render'da kalıcı olması için)
+      const filePath = path.join("public/uploads", req.file.filename);
+      resimBase64 = imageToBase64(filePath);
+    }
+    
     const urun = {
       id: Date.now().toString(),
       ad: req.body.ad || "",
       kategori: req.body.kategori || "",
       marka: req.body.marka || "",
       aciklama: req.body.aciklama || "",
-      resim: req.file ? req.file.filename : ""
+      resim: resimData,
+      resimBase64: resimBase64 // MongoDB'ye base64 olarak kaydet
     };
 
     if (isMongoDBEnabled()) {
@@ -165,12 +228,23 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
         return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
       }
 
+      let resimData = existingProduct.resim;
+      let resimBase64 = existingProduct.resimBase64 || null;
+      
+      // Yeni resim yüklendiyse
+      if (req.file) {
+        resimData = req.file.filename;
+        const filePath = path.join("public/uploads", req.file.filename);
+        resimBase64 = imageToBase64(filePath);
+      }
+      
       const updateData = {
         ad: req.body.ad || "",
         kategori: req.body.kategori || "",
         marka: req.body.marka || "",
         aciklama: req.body.aciklama || "",
-        resim: req.file ? req.file.filename : existingProduct.resim,
+        resim: resimData,
+        resimBase64: resimBase64,
         updatedAt: new Date()
       };
 
@@ -188,13 +262,23 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
         return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
       }
 
+      let resimData = products[index].resim;
+      let resimBase64 = products[index].resimBase64 || null;
+      
+      if (req.file) {
+        resimData = req.file.filename;
+        const filePath = path.join("public/uploads", req.file.filename);
+        resimBase64 = imageToBase64(filePath);
+      }
+      
       products[index] = {
         id: productId,
         ad: req.body.ad || "",
         kategori: req.body.kategori || "",
         marka: req.body.marka || "",
         aciklama: req.body.aciklama || "",
-        resim: req.file ? req.file.filename : products[index].resim
+        resim: resimData,
+        resimBase64: resimBase64
       };
 
       fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
@@ -275,20 +359,28 @@ app.get("/api/public/products", async (req, res) => {
         kategori: p.kategori,
         marka: p.marka,
         aciklama: p.aciklama,
-        resim: p.resim
+        resim: getImageUrl(p)
       }));
       res.json(formattedProducts);
     } else {
       // JSON fallback
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
-      res.json(data);
+      const formattedData = data.map(p => ({
+        ...p,
+        resim: getImageUrl(p)
+      }));
+      res.json(formattedData);
     }
   } catch (error) {
     console.error("Ürün listeleme hatası:", error);
     // Hata durumunda JSON'dan oku
     try {
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
-      res.json(data);
+      const formattedData = data.map(p => ({
+        ...p,
+        resim: getImageUrl(p)
+      }));
+      res.json(formattedData);
     } catch (jsonError) {
       res.status(500).json({ success: false, message: "Sunucu hatası" });
     }
@@ -314,7 +406,7 @@ app.get("/api/public/products/:id", async (req, res) => {
         kategori: urun.kategori,
         marka: urun.marka,
         aciklama: urun.aciklama,
-        resim: urun.resim
+        resim: getImageUrl(urun)
       });
     } else {
       // JSON fallback
@@ -325,7 +417,10 @@ app.get("/api/public/products/:id", async (req, res) => {
         return res.status(404).json({ success: false });
       }
       
-      res.json(urun);
+      res.json({
+        ...urun,
+        resim: getImageUrl(urun)
+      });
     }
   } catch (error) {
     console.error("Ürün detay hatası:", error);
