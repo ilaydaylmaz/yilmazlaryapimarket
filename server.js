@@ -138,8 +138,13 @@ app.get("/api/products", auth, async (req, res) => {
 /* Ekle */
 app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
   try {
+    console.log("📦 Ürün ekleme isteği alındı");
+    console.log("Request body:", req.body);
+    console.log("File:", req.file);
+    
     if (!supabase) {
-      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
+      console.error("❌ Supabase bağlantısı yok!");
+      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok. SUPABASE_URL ve SUPABASE_KEY kontrol edin." });
     }
     
     const product = {
@@ -150,18 +155,31 @@ app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
       resim: req.file ? req.file.filename : ""
     };
 
+    console.log("📝 Eklenen ürün:", product);
+
     const { data, error } = await supabase
       .from('products')
       .insert([product])
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error("❌ Supabase hatası:", error);
+      console.error("Error code:", error.code);
+      console.error("Error message:", error.message);
+      console.error("Error details:", error.details);
+      throw error;
+    }
     
+    console.log("✅ Ürün başarıyla eklendi:", data);
     res.json({ success: true, id: data.id });
   } catch (error) {
-    console.error("Ürün ekleme hatası:", error);
-    res.status(500).json({ success: false, message: "Ürün eklenemedi" });
+    console.error("❌ Ürün ekleme hatası:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Ürün eklenemedi: " + (error.message || "Bilinmeyen hata"),
+      error: error.message
+    });
   }
 });
 

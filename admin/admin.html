@@ -136,6 +136,15 @@ function ekle() {
     return;
   }
 
+  console.log("🔄 Ürün ekleme başlatılıyor...");
+  console.log("Form verileri:", {
+    ad: ad.value,
+    kategori: kategori.value,
+    marka: marka.value,
+    aciklama: aciklama.value,
+    resim: resim.files[0] ? resim.files[0].name : "yok"
+  });
+
   const formData = new FormData();
   formData.append("ad", ad.value || "");
   formData.append("kategori", kategori.value || "");
@@ -150,21 +159,23 @@ function ekle() {
     body: formData
   })
   .then(response => {
-    if (!response.ok) {
-      return response.json().then(err => {
-        throw new Error(err.message || "Ekleme başarısız!");
-      });
-    }
-    return response.json();
+    console.log("Response status:", response.status);
+    return response.json().then(data => {
+      if (!response.ok) {
+        throw new Error(data.message || data.error || "Ekleme başarısız!");
+      }
+      return data;
+    });
   })
-  .then(() => {
+  .then((data) => {
+    console.log("✅ Başarılı response:", data);
     alert("Ürün başarıyla eklendi!");
     temizle();
     yukle();
   })
   .catch(error => {
-    alert("Hata: " + error.message);
-    console.error("Ekleme hatası:", error);
+    console.error("❌ Ekleme hatası:", error);
+    alert("Hata: " + error.message + "\n\nLütfen tarayıcı konsolunu (F12) kontrol edin.");
   });
 }
 
