@@ -1,33 +1,11 @@
-require("dotenv").config();
 const express = require("express");
 const fs = require("fs");
 const bodyParser = require("body-parser");
 const session = require("express-session");
 const multer = require("multer");
 const path = require("path");
-const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
-
-// Supabase bağlantısı
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY; // RLS bypass için (opsiyonel)
-let supabase;
-let supabaseAdmin; // Admin işlemleri için
-
-if (supabaseUrl && supabaseKey) {
-  supabase = createClient(supabaseUrl, supabaseKey);
-  console.log("✅ Supabase bağlantısı hazır!");
-  
-  // Service role key varsa admin client oluştur
-  if (supabaseServiceKey) {
-    supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-    console.log("✅ Supabase Admin client hazır (RLS bypass)!");
-  }
-} else {
-  console.log("⚠️  SUPABASE_URL ve SUPABASE_KEY environment variable'ları ayarlanmamış!");
-}
 
 /* =======================
    BODY & SESSION
@@ -62,14 +40,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 /* =======================
-   SUPABASE CONNECTION
+   DATA
 ======================= */
-// Supabase bağlantısı yukarıda yapıldı
-
-// Uploads klasörünü kontrol et
-if (!fs.existsSync("./public/uploads")) {
-  fs.mkdirSync("./public/uploads", { recursive: true });
-}
+const DATA_FILE = "./data/products.json";
+const CONTACTS_FILE = "./data/contacts.json";
 
 /* =======================
    AUTH MIDDLEWARE
@@ -111,133 +85,63 @@ app.get("/admin.html", auth, (req, res) => {
 ======================= */
 
 /* Liste */
-app.get("/api/products", auth, async (req, res) => {
-  try {
-    if (!supabase) {
-      return res.status(500).json({ 
-        success: false, 
-        message: "Veritabanı bağlantısı yok. Lütfen SUPABASE_URL ve SUPABASE_KEY environment variable'larını kontrol edin." 
-      });
-    }
-    
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    
-    const formattedProducts = (data || []).map(p => ({
-      id: p.id,
-      ad: p.ad || "",
-      kategori: p.kategori || "",
-      marka: p.marka || "",
-      aciklama: p.aciklama || "",
-      resim: p.resim || ""
-    }));
-    
-    res.json(formattedProducts);
-  } catch (error) {
-    console.error("Ürün listesi hatası:", error);
-    res.status(500).json({ success: false, message: "Ürünler yüklenemedi" });
-  }
+app.get("/api/products", auth, (req, res) => {
+  const data = JSON.parse(fs.readFileSync(DATA_FILE));
+  res.json(data);
 });
 
 /* Ekle */
-app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
-  try {
-    console.log("📦 Ürün ekleme isteği alındı");
-    console.log("Request body:", req.body);
-    console.log("File:", req.file);
-    
-    if (!supabase) {
-      console.error("❌ Supabase bağlantısı yok!");
-      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok. SUPABASE_URL ve SUPABASE_KEY kontrol edin." });
-    }
-    
-    const product = {
-      ad: req.body.ad || "",
-      kategori: req.body.kategori || "",
-      marka: req.body.marka || "",
-      aciklama: req.body.aciklama || "",
-      resim: req.file ? req.file.filename : ""
-    };
+app.post("/api/products", auth, upload.single("resim"), (req, res) => {
+  const products = JSON.parse(fs.readFileSync(DATA_FILE));
 
-    console.log("📝 Eklenen ürün:", product);
+  const urun = {
+    id: Date.now().toString(),
+    ad: req.body.ad,
+    kategori: req.body.kategori,
+    marka: req.body.marka,
+    aciklama: req.body.aciklama,
+    resim: req.file ? req.file.filename : ""
+  };
 
-    // Admin işlemleri için service role key kullan (RLS bypass)
-    const clientToUse = supabaseAdmin || supabase;
-    
-    const { data, error } = await clientToUse
-      .from('products')
-      .insert([product])
-      .select()
-      .single();
-    
-    if (error) {
-      console.error("❌ Supabase hatası:", error);
-      console.error("Error code:", error.code);
-      console.error("Error message:", error.message);
-      console.error("Error details:", error.details);
-      throw error;
-    }
-    
-    console.log("✅ Ürün başarıyla eklendi:", data);
-    res.json({ success: true, id: data.id });
-  } catch (error) {
-    console.error("❌ Ürün ekleme hatası:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Ürün eklenemedi: " + (error.message || "Bilinmeyen hata"),
-      error: error.message
-    });
-  }
+  products.push(urun);
+  fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
+
+  res.json({ success: true });
 });
 
 /* Güncelle */
-app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
+app.put("/api/products/:id", auth, upload.single("resim"), (req, res) => {
   try {
-    if (!supabase) {
-      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
-    }
+    console.log("PUT request alındı - ID:", req.params.id);
+    console.log("Request body:", req.body);
+    console.log("Request file:", req.file);
     
-    const productId = req.params.id;
+    let products = JSON.parse(fs.readFileSync(DATA_FILE));
+    const productId = String(req.params.id); // ID'yi string'e çevir
     
-    // Mevcut ürünü kontrol et
-    const { data: existingProduct, error: fetchError } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', productId)
-      .single();
+    console.log("Aranan ID:", productId);
+    console.log("Mevcut ürünler:", products.map(p => ({ id: p.id, ad: p.ad })));
     
-    if (fetchError || !existingProduct) {
+    const index = products.findIndex(p => String(p.id) === productId);
+
+    if (index === -1) {
+      console.error("Ürün bulunamadı! ID:", productId);
       return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
     }
 
-    const updateData = {
+    console.log("Ürün bulundu, index:", index);
+
+    products[index] = {
+      id: productId,
       ad: req.body.ad || "",
       kategori: req.body.kategori || "",
       marka: req.body.marka || "",
       aciklama: req.body.aciklama || "",
-      updated_at: new Date().toISOString()
+      resim: req.file ? req.file.filename : products[index].resim
     };
-    
-    if (req.file) {
-      updateData.resim = req.file.filename;
-    } else {
-      updateData.resim = existingProduct.resim || "";
-    }
 
-    // Admin işlemleri için service role key kullan
-    const clientToUse = supabaseAdmin || supabase;
-    
-    const { error } = await clientToUse
-      .from('products')
-      .update(updateData)
-      .eq('id', productId);
-    
-    if (error) throw error;
-    
+    fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
+    console.log("Ürün başarıyla güncellendi");
     res.json({ success: true, message: "Ürün başarıyla güncellendi" });
   } catch (error) {
     console.error("Güncelleme hatası:", error);
@@ -246,29 +150,19 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
 });
 
 /* Sil */
-app.delete("/api/products/:id", auth, async (req, res) => {
+app.delete("/api/products/:id", auth, (req, res) => {
   try {
-    if (!supabase) {
-      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
-    }
+    let products = JSON.parse(fs.readFileSync(DATA_FILE));
+    const productId = String(req.params.id); // ID'yi string'e çevir
     
-    const productId = req.params.id;
-    
-    // Admin işlemleri için service role key kullan
-    const clientToUse = supabaseAdmin || supabase;
-    
-    const { error } = await clientToUse
-      .from('products')
-      .delete()
-      .eq('id', productId);
-    
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
-      }
-      throw error;
+    const beforeLength = products.length;
+    products = products.filter(p => String(p.id) !== productId);
+
+    if (products.length === beforeLength) {
+      return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
     }
 
+    fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
     res.json({ success: true, message: "Ürün başarıyla silindi" });
   } catch (error) {
     console.error("Silme hatası:", error);
@@ -286,77 +180,28 @@ app.listen(PORT, () => {
 });
 
 /* PUBLIC PRODUCTS */
-app.get("/api/public/products", async (req, res) => {
-  try {
-    if (!supabase) {
-      return res.json([]); // Boş array döndür
-    }
-    
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    
-    const formattedProducts = (data || []).map(p => ({
-      id: p.id,
-      ad: p.ad || "",
-      kategori: p.kategori || "",
-      marka: p.marka || "",
-      aciklama: p.aciklama || "",
-      resim: p.resim || ""
-    }));
-    
-    res.json(formattedProducts);
-  } catch (error) {
-    console.error("Public products hatası:", error);
-    res.json([]); // Hata durumunda boş array
-  }
-});
+app.get("/api/public/products", (req, res) => {
+    const data = JSON.parse(fs.readFileSync(DATA_FILE));
+    res.json(data);
+  });
   
 /* TEK ÜRÜN (PUBLIC) */
-app.get("/api/public/products/:id", async (req, res) => {
-  try {
-    if (!supabase) {
-      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
-    }
-    
-    const productId = req.params.id;
-    
-    const { data: product, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', productId)
-      .single();
-    
-    if (error || !product) {
+app.get("/api/public/products/:id", (req, res) => {
+    const products = JSON.parse(fs.readFileSync(DATA_FILE));
+    const urun = products.find(p => p.id === req.params.id);
+  
+    if (!urun) {
       return res.status(404).json({ success: false });
     }
-    
-    res.json({
-      id: product.id,
-      ad: product.ad || "",
-      kategori: product.kategori || "",
-      marka: product.marka || "",
-      aciklama: product.aciklama || "",
-      resim: product.resim || ""
-    });
-  } catch (error) {
-    console.error("Tek ürün hatası:", error);
-    res.status(500).json({ success: false, message: "Ürün bulunamadı" });
-  }
-});
+  
+    res.json(urun);
+  });
 
 /* =======================
    CONTACT FORM
 ======================= */
-app.post("/api/contact", async (req, res) => {
+app.post("/api/contact", (req, res) => {
   try {
-    if (!supabase) {
-      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
-    }
-    
     const { adSoyad, email, telefon, mesaj } = req.body;
 
     // Validasyon
@@ -372,18 +217,24 @@ app.post("/api/contact", async (req, res) => {
 
     // İletişim kaydı oluştur
     const contact = {
-      ad_soyad: adSoyad,
+      id: Date.now().toString(),
+      adSoyad,
       email,
       telefon,
-      mesaj
+      mesaj,
+      tarih: new Date().toISOString()
     };
 
-    const { error } = await supabase
-      .from('contacts')
-      .insert([contact]);
-    
-    if (error) throw error;
-    
+    // Dosyayı oku veya oluştur
+    let contacts = [];
+    if (fs.existsSync(CONTACTS_FILE)) {
+      contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE));
+    }
+
+    // Yeni kaydı ekle
+    contacts.push(contact);
+    fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2));
+
     res.json({ success: true, message: "Formunuz başarıyla gönderildi!" });
   } catch (error) {
     console.error("Contact form error:", error);

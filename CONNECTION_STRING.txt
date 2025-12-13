@@ -1,6 +1,0 @@
-MongoDB Connection String (Düzenlenmiş):
-
-mongodb+srv://ilayda39ilayda_db_user:WBXxnGyGEkuMRPiw@cluster0.6mndhaz.mongodb.net/yapi_market?retryWrites=true&w=majority
-
-NOT: Bu connection string'i Render.com'da MONGODB_URI environment variable olarak ekleyin.
-

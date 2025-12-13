@@ -26,30 +26,12 @@ cd yapi_market
 npm install
 ```
 
-3. MongoDB Atlas Kurulumu (Ücretsiz):
-   - Detaylı kurulum için `MONGODB_KURULUM.md` dosyasına bakın
-   - Kısaca: [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) hesabı oluşturun
-   - "Build a Database" → "Free" seçin
-   - Cluster oluşturun (birkaç dakika sürebilir)
-   - Database kullanıcısı oluşturun
-   - Network Access ayarlayın (0.0.0.0/0)
-   - "Connect" → "Connect your application" seçin
-   - Connection string'i kopyalayın ve düzenleyin
-
-4. Environment Variable Ayarlayın:
-   - `.env` dosyası oluşturun (proje kök dizininde)
-   - İçine şunu ekleyin:
-   ```
-   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/yapi_market
-   ```
-   - `username`, `password` ve `cluster` bilgilerini kendi MongoDB Atlas bilgilerinizle değiştirin
-
-5. Sunucuyu başlatın:
+3. Sunucuyu başlatın:
 ```bash
 npm start
 ```
 
-6. Tarayıcıda açın: `http://localhost:3000`
+4. Tarayıcıda açın: `http://localhost:3000`
 
 ## Admin Girişi
 
@@ -102,27 +84,17 @@ git push heroku main
 
 Production'da şu değişkenleri ayarlayın:
 
-- `MONGODB_URI`: MongoDB bağlantı string'i (zorunlu)
 - `PORT`: Sunucu portu (genelde otomatik ayarlanır)
 - `SESSION_SECRET`: Session secret key (güvenlik için değiştirin)
-
-### Render.com'da Environment Variables
-
-1. Render Dashboard → Service → Environment
-2. "Add Environment Variable" tıklayın
-3. `MONGODB_URI` ekleyin ve MongoDB Atlas connection string'inizi yapıştırın
-4. Deploy edin
 
 ## Teknolojiler
 
 - **Backend**: Node.js, Express.js
 - **Frontend**: HTML, CSS, JavaScript
-- **Veritabanı**: MongoDB (MongoDB Atlas)
-- **ODM**: Mongoose
+- **Veri Depolama**: JSON dosyaları
 - **File Upload**: Multer
 
 ## Lisans
 
 ISC
 
- 

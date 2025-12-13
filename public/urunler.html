@@ -24,7 +24,7 @@
 <div class="container">
   <div class="page-header">
     <div class="page-header-content">
-      <h1>Ürünlerimiz</h1>
+  <h1>Ürünlerimiz</h1>
       <p>Geniş ürün yelpazemizden ihtiyacınıza uygun ürünü bulun</p>
     </div>
     <div class="view-controls">
@@ -205,8 +205,8 @@ function listele(data) {
     const resimUrl = p.resim ? `/uploads/${p.resim}` : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="300"%3E%3Crect fill="%23f0f0f0" width="300" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="16" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
     
     if (currentView === 'grid') {
-      div.innerHTML += `
-        <div class="urun" onclick="detay('${p.id}')">
+    div.innerHTML += `
+      <div class="urun" onclick="detay('${p.id}')">
           <div class="urun-image-wrapper">
             <img src="${resimUrl}" alt="${p.ad}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'300\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'300\\' height=\\'300\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'16\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
             ${p.kategori ? `<span class="urun-badge">${p.kategori}</span>` : ''}
@@ -240,8 +240,8 @@ function listele(data) {
               <span class="urun-link">Detayları Gör →</span>
             </div>
           </div>
-        </div>
-      `;
+      </div>
+    `;
     }
   });
 }

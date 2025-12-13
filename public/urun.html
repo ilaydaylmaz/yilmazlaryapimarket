@@ -63,10 +63,10 @@ if (!id) {
     </div>
   `;
 } else {
-  fetch("/api/public/products")
-    .then(r => r.json())
-    .then(data => {
-      const p = data.find(x => x.id === id);
+fetch("/api/public/products")
+  .then(r => r.json())
+  .then(data => {
+    const p = data.find(x => x.id === id);
       
       if (!p) {
         document.getElementById("detay").innerHTML = `
@@ -100,14 +100,14 @@ if (!id) {
       `;
     })
     .catch(err => {
-      document.getElementById("detay").innerHTML = `
+    document.getElementById("detay").innerHTML = `
         <div style="text-align: center; padding: 40px;">
           <h1>Hata Oluştu</h1>
           <p style="margin: 20px 0;">Ürün bilgileri yüklenirken bir hata oluştu.</p>
           <a href="/urunler.html" class="btn btn-primary">Ürünlere Dön</a>
         </div>
-      `;
-    });
+    `;
+  });
 }
 </script>
 
