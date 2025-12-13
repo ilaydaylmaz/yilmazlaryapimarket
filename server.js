@@ -1,9 +1,14 @@
+require("dotenv").config();
 const express = require("express");
 const fs = require("fs");
 const bodyParser = require("body-parser");
 const session = require("express-session");
 const multer = require("multer");
 const path = require("path");
+const mongoose = require("mongoose");
+
+const Product = require("./models/Product");
+const Contact = require("./models/Contact");
 
 const app = express();
 
@@ -40,10 +45,23 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 /* =======================
-   DATA
+   MONGODB CONNECTION
 ======================= */
-const DATA_FILE = "./data/products.json";
-const CONTACTS_FILE = "./data/contacts.json";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/yapi_market";
+
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log("✅ MongoDB bağlantısı başarılı!");
+  })
+  .catch((error) => {
+    console.error("❌ MongoDB bağlantı hatası:", error);
+    console.log("⚠️  MongoDB bağlantısı olmadan devam ediliyor...");
+  });
+
+// Uploads klasörünü kontrol et
+if (!fs.existsSync("./public/uploads")) {
+  fs.mkdirSync("./public/uploads", { recursive: true });
+}
 
 /* =======================
    AUTH MIDDLEWARE
@@ -85,63 +103,65 @@ app.get("/admin.html", auth, (req, res) => {
 ======================= */
 
 /* Liste */
-app.get("/api/products", auth, (req, res) => {
-  const data = JSON.parse(fs.readFileSync(DATA_FILE));
-  res.json(data);
+app.get("/api/products", auth, async (req, res) => {
+  try {
+    const products = await Product.find().sort({ createdAt: -1 });
+    // MongoDB _id'yi id'ye çevir (eski kod uyumluluğu için)
+    const formattedProducts = products.map(p => ({
+      id: p._id.toString(),
+      ad: p.ad,
+      kategori: p.kategori,
+      marka: p.marka,
+      aciklama: p.aciklama,
+      resim: p.resim
+    }));
+    res.json(formattedProducts);
+  } catch (error) {
+    console.error("Ürün listesi hatası:", error);
+    res.status(500).json({ success: false, message: "Ürünler yüklenemedi" });
+  }
 });
 
 /* Ekle */
-app.post("/api/products", auth, upload.single("resim"), (req, res) => {
-  const products = JSON.parse(fs.readFileSync(DATA_FILE));
-
-  const urun = {
-    id: Date.now().toString(),
-    ad: req.body.ad,
-    kategori: req.body.kategori,
-    marka: req.body.marka,
-    aciklama: req.body.aciklama,
-    resim: req.file ? req.file.filename : ""
-  };
-
-  products.push(urun);
-  fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
-
-  res.json({ success: true });
-});
-
-/* Güncelle */
-app.put("/api/products/:id", auth, upload.single("resim"), (req, res) => {
+app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
   try {
-    console.log("PUT request alındı - ID:", req.params.id);
-    console.log("Request body:", req.body);
-    console.log("Request file:", req.file);
-    
-    let products = JSON.parse(fs.readFileSync(DATA_FILE));
-    const productId = String(req.params.id); // ID'yi string'e çevir
-    
-    console.log("Aranan ID:", productId);
-    console.log("Mevcut ürünler:", products.map(p => ({ id: p.id, ad: p.ad })));
-    
-    const index = products.findIndex(p => String(p.id) === productId);
-
-    if (index === -1) {
-      console.error("Ürün bulunamadı! ID:", productId);
-      return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
-    }
-
-    console.log("Ürün bulundu, index:", index);
-
-    products[index] = {
-      id: productId,
+    const product = new Product({
       ad: req.body.ad || "",
       kategori: req.body.kategori || "",
       marka: req.body.marka || "",
       aciklama: req.body.aciklama || "",
-      resim: req.file ? req.file.filename : products[index].resim
-    };
+      resim: req.file ? req.file.filename : ""
+    });
 
-    fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
-    console.log("Ürün başarıyla güncellendi");
+    await product.save();
+    res.json({ success: true, id: product._id.toString() });
+  } catch (error) {
+    console.error("Ürün ekleme hatası:", error);
+    res.status(500).json({ success: false, message: "Ürün eklenemedi" });
+  }
+});
+
+/* Güncelle */
+app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
+  try {
+    const productId = req.params.id;
+    
+    const product = await Product.findById(productId);
+    
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
+    }
+
+    product.ad = req.body.ad || "";
+    product.kategori = req.body.kategori || "";
+    product.marka = req.body.marka || "";
+    product.aciklama = req.body.aciklama || "";
+    
+    if (req.file) {
+      product.resim = req.file.filename;
+    }
+
+    await product.save();
     res.json({ success: true, message: "Ürün başarıyla güncellendi" });
   } catch (error) {
     console.error("Güncelleme hatası:", error);
@@ -150,19 +170,16 @@ app.put("/api/products/:id", auth, upload.single("resim"), (req, res) => {
 });
 
 /* Sil */
-app.delete("/api/products/:id", auth, (req, res) => {
+app.delete("/api/products/:id", auth, async (req, res) => {
   try {
-    let products = JSON.parse(fs.readFileSync(DATA_FILE));
-    const productId = String(req.params.id); // ID'yi string'e çevir
+    const productId = req.params.id;
     
-    const beforeLength = products.length;
-    products = products.filter(p => String(p.id) !== productId);
-
-    if (products.length === beforeLength) {
+    const product = await Product.findByIdAndDelete(productId);
+    
+    if (!product) {
       return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
     }
 
-    fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
     res.json({ success: true, message: "Ürün başarıyla silindi" });
   } catch (error) {
     console.error("Silme hatası:", error);
@@ -180,27 +197,51 @@ app.listen(PORT, () => {
 });
 
 /* PUBLIC PRODUCTS */
-app.get("/api/public/products", (req, res) => {
-    const data = JSON.parse(fs.readFileSync(DATA_FILE));
-    res.json(data);
-  });
+app.get("/api/public/products", async (req, res) => {
+  try {
+    const products = await Product.find().sort({ createdAt: -1 });
+    const formattedProducts = products.map(p => ({
+      id: p._id.toString(),
+      ad: p.ad,
+      kategori: p.kategori,
+      marka: p.marka,
+      aciklama: p.aciklama,
+      resim: p.resim
+    }));
+    res.json(formattedProducts);
+  } catch (error) {
+    console.error("Public products hatası:", error);
+    res.status(500).json({ success: false, message: "Ürünler yüklenemedi" });
+  }
+});
   
 /* TEK ÜRÜN (PUBLIC) */
-app.get("/api/public/products/:id", (req, res) => {
-    const products = JSON.parse(fs.readFileSync(DATA_FILE));
-    const urun = products.find(p => p.id === req.params.id);
-  
-    if (!urun) {
+app.get("/api/public/products/:id", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    
+    if (!product) {
       return res.status(404).json({ success: false });
     }
-  
-    res.json(urun);
-  });
+    
+    res.json({
+      id: product._id.toString(),
+      ad: product.ad,
+      kategori: product.kategori,
+      marka: product.marka,
+      aciklama: product.aciklama,
+      resim: product.resim
+    });
+  } catch (error) {
+    console.error("Tek ürün hatası:", error);
+    res.status(500).json({ success: false, message: "Ürün bulunamadı" });
+  }
+});
 
 /* =======================
    CONTACT FORM
 ======================= */
-app.post("/api/contact", (req, res) => {
+app.post("/api/contact", async (req, res) => {
   try {
     const { adSoyad, email, telefon, mesaj } = req.body;
 
@@ -216,25 +257,14 @@ app.post("/api/contact", (req, res) => {
     }
 
     // İletişim kaydı oluştur
-    const contact = {
-      id: Date.now().toString(),
+    const contact = new Contact({
       adSoyad,
       email,
       telefon,
-      mesaj,
-      tarih: new Date().toISOString()
-    };
+      mesaj
+    });
 
-    // Dosyayı oku veya oluştur
-    let contacts = [];
-    if (fs.existsSync(CONTACTS_FILE)) {
-      contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE));
-    }
-
-    // Yeni kaydı ekle
-    contacts.push(contact);
-    fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2));
-
+    await contact.save();
     res.json({ success: true, message: "Formunuz başarıyla gönderildi!" });
   } catch (error) {
     console.error("Contact form error:", error);
