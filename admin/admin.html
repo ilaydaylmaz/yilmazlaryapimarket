@@ -27,6 +27,9 @@
 
 <button onclick="ekle()">Yeni Ürün Ekle</button>
 <button onclick="guncelle()">Güncelle</button>
+<button onclick="temizle()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Temizle</button>
+
+<div id="secili-urun" style="display: none; margin: 15px 0; padding: 10px; background: #e3f2fd; border-left: 4px solid #007bff; border-radius: 4px; font-weight: bold;"></div>
 
 <hr>
 <h2>Ürünler</h2>
@@ -37,71 +40,212 @@ let seciliId = null;
 
 function yukle() {
   fetch("/api/products")
-    .then(r => r.json())
+    .then(r => {
+      if (!r.ok) throw new Error("Ürünler yüklenemedi");
+      return r.json();
+    })
     .then(data => {
       const ul = document.getElementById("liste");
       ul.innerHTML = "";
+      if (data.length === 0) {
+        ul.innerHTML = "<li>Henüz ürün eklenmemiş.</li>";
+        return;
+      }
       data.forEach(p => {
-        ul.innerHTML += `
-          <li>
-            ${p.ad}
-            <button onclick='duzenle(${JSON.stringify(p)})'>Düzenle</button>
-            <button onclick="sil('${p.id}')">Sil</button>
-          </li>`;
+        const li = document.createElement("li");
+        li.style.marginBottom = "10px";
+        li.style.padding = "10px";
+        li.style.border = "1px solid #ddd";
+        li.style.borderRadius = "5px";
+        
+        const productInfo = document.createElement("span");
+        productInfo.style.marginRight = "10px";
+        productInfo.textContent = `${p.ad || "İsimsiz"} ${p.kategori ? `(${p.kategori})` : ""}`;
+        
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "Düzenle";
+        editBtn.style.marginRight = "5px";
+        editBtn.style.backgroundColor = "#007bff";
+        editBtn.style.color = "white";
+        editBtn.style.border = "none";
+        editBtn.style.padding = "5px 10px";
+        editBtn.style.borderRadius = "3px";
+        editBtn.style.cursor = "pointer";
+        editBtn.onclick = (e) => {
+          e.stopPropagation();
+          duzenle(p, e.target);
+        };
+        
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Sil";
+        deleteBtn.style.backgroundColor = "#dc3545";
+        deleteBtn.style.color = "white";
+        deleteBtn.onclick = () => {
+          if (confirm(`"${p.ad}" ürününü silmek istediğinize emin misiniz?`)) {
+            sil(p.id);
+          }
+        };
+        
+        li.appendChild(productInfo);
+        li.appendChild(editBtn);
+        li.appendChild(deleteBtn);
+        ul.appendChild(li);
       });
+    })
+    .catch(error => {
+      console.error("Yükleme hatası:", error);
+      alert("Ürünler yüklenirken bir hata oluştu!");
     });
 }
 
-function duzenle(p) {
-  seciliId = p.id;
-  ad.value = p.ad;
-  kategori.value = p.kategori;
-  marka.value = p.marka;
-  aciklama.value = p.aciklama;
+function duzenle(p, eventElement) {
+  console.log("Düzenleme başlatılıyor:", p);
+  seciliId = String(p.id); // ID'yi string'e çevir
+  console.log("Seçili ID:", seciliId);
+  
+  ad.value = p.ad || "";
+  kategori.value = p.kategori || "";
+  marka.value = p.marka || "";
+  aciklama.value = p.aciklama || "";
+  resim.value = ""; // Resim alanını temizle
+  
+  // Görsel geri bildirim
+  document.querySelectorAll("#liste li").forEach(li => {
+    li.style.backgroundColor = "";
+    li.style.border = "1px solid #ddd";
+  });
+  if (eventElement) {
+    const li = eventElement.closest("li");
+    if (li) {
+      li.style.backgroundColor = "#e3f2fd";
+      li.style.border = "2px solid #007bff";
+    }
+  }
+  
+  // Seçili ürünü göster
+  const seciliInfo = document.getElementById("secili-urun");
+  if (seciliInfo) {
+    seciliInfo.textContent = `Düzenleniyor: ${p.ad || "İsimsiz"} (ID: ${seciliId})`;
+    seciliInfo.style.display = "block";
+  }
 }
 
 function ekle() {
+  if (!ad.value.trim()) {
+    alert("Ürün adı zorunludur!");
+    return;
+  }
+
   const formData = new FormData();
-  formData.append("ad", ad.value);
-  formData.append("kategori", kategori.value);
-  formData.append("marka", marka.value);
-  formData.append("aciklama", aciklama.value);
-  formData.append("resim", resim.files[0]);
+  formData.append("ad", ad.value || "");
+  formData.append("kategori", kategori.value || "");
+  formData.append("marka", marka.value || "");
+  formData.append("aciklama", aciklama.value || "");
+  if (resim.files[0]) {
+    formData.append("resim", resim.files[0]);
+  }
 
   fetch("/api/products", {
     method: "POST",
     body: formData
-  }).then(() => {
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {
+        throw new Error(err.message || "Ekleme başarısız!");
+      });
+    }
+    return response.json();
+  })
+  .then(() => {
+    alert("Ürün başarıyla eklendi!");
     temizle();
     yukle();
+  })
+  .catch(error => {
+    alert("Hata: " + error.message);
+    console.error("Ekleme hatası:", error);
   });
 }
 
 function guncelle() {
-  if (!seciliId) return alert("Önce ürün seç");
+  if (!seciliId) {
+    alert("Önce düzenlemek istediğiniz ürünü seçin!");
+    return;
+  }
+
+  console.log("Güncelleme başlatılıyor, ID:", seciliId);
+  console.log("Form verileri:", {
+    ad: ad.value,
+    kategori: kategori.value,
+    marka: marka.value,
+    aciklama: aciklama.value,
+    resim: resim.files[0] ? resim.files[0].name : "yok"
+  });
 
   const formData = new FormData();
-  formData.append("ad", ad.value);
-  formData.append("kategori", kategori.value);
-  formData.append("marka", marka.value);
-  formData.append("aciklama", aciklama.value);
+  formData.append("ad", ad.value || "");
+  formData.append("kategori", kategori.value || "");
+  formData.append("marka", marka.value || "");
+  formData.append("aciklama", aciklama.value || "");
 
   if (resim.files[0]) {
     formData.append("resim", resim.files[0]);
   }
 
-  fetch("/api/products/" + seciliId, {
+  const url = "/api/products/" + encodeURIComponent(seciliId);
+  console.log("Request URL:", url);
+
+  fetch(url, {
     method: "PUT",
     body: formData
-  }).then(() => {
+  })
+  .then(response => {
+    console.log("Response status:", response.status);
+    console.log("Response ok:", response.ok);
+    
+    if (!response.ok) {
+      return response.text().then(text => {
+        console.error("Error response:", text);
+        let errorData;
+        try {
+          errorData = JSON.parse(text);
+        } catch (e) {
+          errorData = { message: text || "Güncelleme başarısız!" };
+        }
+        throw new Error(errorData.message || "Güncelleme başarısız!");
+      });
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log("Başarılı response:", data);
+    alert("Ürün başarıyla güncellendi!");
     temizle();
     yukle();
+  })
+  .catch(error => {
+    console.error("Güncelleme hatası detayları:", error);
+    alert("Hata: " + error.message + "\n\nLütfen tarayıcı konsolunu (F12) kontrol edin.");
   });
 }
 
 function sil(id) {
   fetch("/api/products/" + id, { method: "DELETE" })
-    .then(() => yukle());
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Silme işlemi başarısız!");
+      }
+      return response.json();
+    })
+    .then(() => {
+      alert("Ürün başarıyla silindi!");
+      yukle();
+    })
+    .catch(error => {
+      alert("Hata: " + error.message);
+      console.error("Silme hatası:", error);
+    });
 }
 
 function temizle() {
@@ -111,6 +255,17 @@ function temizle() {
   marka.value = "";
   aciklama.value = "";
   resim.value = "";
+  
+  // Görsel geri bildirimi temizle
+  document.querySelectorAll("#liste li").forEach(li => {
+    li.style.backgroundColor = "";
+    li.style.border = "1px solid #ddd";
+  });
+  
+  const seciliInfo = document.getElementById("secili-urun");
+  if (seciliInfo) {
+    seciliInfo.style.display = "none";
+  }
 }
 
 yukle();

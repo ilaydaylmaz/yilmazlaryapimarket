@@ -11,6 +11,7 @@ const app = express();
    BODY & SESSION
 ======================= */
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true })); // Form data için
 
 app.use(session({
   secret: "yapi-market-secret",
@@ -110,33 +111,63 @@ app.post("/api/products", auth, upload.single("resim"), (req, res) => {
 
 /* Güncelle */
 app.put("/api/products/:id", auth, upload.single("resim"), (req, res) => {
-  let products = JSON.parse(fs.readFileSync(DATA_FILE));
-  const index = products.findIndex(p => p.id === req.params.id);
+  try {
+    console.log("PUT request alındı - ID:", req.params.id);
+    console.log("Request body:", req.body);
+    console.log("Request file:", req.file);
+    
+    let products = JSON.parse(fs.readFileSync(DATA_FILE));
+    const productId = String(req.params.id); // ID'yi string'e çevir
+    
+    console.log("Aranan ID:", productId);
+    console.log("Mevcut ürünler:", products.map(p => ({ id: p.id, ad: p.ad })));
+    
+    const index = products.findIndex(p => String(p.id) === productId);
 
-  if (index === -1) {
-    return res.status(404).json({ success: false });
+    if (index === -1) {
+      console.error("Ürün bulunamadı! ID:", productId);
+      return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
+    }
+
+    console.log("Ürün bulundu, index:", index);
+
+    products[index] = {
+      id: productId,
+      ad: req.body.ad || "",
+      kategori: req.body.kategori || "",
+      marka: req.body.marka || "",
+      aciklama: req.body.aciklama || "",
+      resim: req.file ? req.file.filename : products[index].resim
+    };
+
+    fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
+    console.log("Ürün başarıyla güncellendi");
+    res.json({ success: true, message: "Ürün başarıyla güncellendi" });
+  } catch (error) {
+    console.error("Güncelleme hatası:", error);
+    res.status(500).json({ success: false, message: "Sunucu hatası: " + error.message });
   }
-
-  products[index] = {
-    id: req.params.id,
-    ad: req.body.ad,
-    kategori: req.body.kategori,
-    marka: req.body.marka,
-    aciklama: req.body.aciklama,
-    resim: req.file ? req.file.filename : products[index].resim
-  };
-
-  fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
-  res.json({ success: true });
 });
 
 /* Sil */
 app.delete("/api/products/:id", auth, (req, res) => {
-  let products = JSON.parse(fs.readFileSync(DATA_FILE));
-  products = products.filter(p => p.id !== req.params.id);
+  try {
+    let products = JSON.parse(fs.readFileSync(DATA_FILE));
+    const productId = String(req.params.id); // ID'yi string'e çevir
+    
+    const beforeLength = products.length;
+    products = products.filter(p => String(p.id) !== productId);
 
-  fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
-  res.json({ success: true });
+    if (products.length === beforeLength) {
+      return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
+    }
+
+    fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
+    res.json({ success: true, message: "Ürün başarıyla silindi" });
+  } catch (error) {
+    console.error("Silme hatası:", error);
+    res.status(500).json({ success: false, message: "Sunucu hatası" });
+  }
 });
 
 /* =======================
