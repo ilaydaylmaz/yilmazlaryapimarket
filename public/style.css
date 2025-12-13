@@ -828,6 +828,52 @@ input[type="search"]:focus {
   color: var(--white);
 }
 
+/* Instagram Icon */
+.instagram-icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  border-radius: 6px;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.instagram-icon::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border: 2px solid white;
+  border-radius: 3px;
+}
+
+.instagram-icon::after {
+  content: '';
+  position: absolute;
+  top: 25%;
+  right: 25%;
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+}
+
+.instagram-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  transition: transform 0.3s ease;
+}
+
+.instagram-link:hover .instagram-icon {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(225, 48, 108, 0.4);
+}
+
 @media (max-width: 768px) {
   .grid-2 {
     grid-template-columns: 1fr;
