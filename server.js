@@ -5,12 +5,14 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const multer = require("multer");
 const path = require("path");
-const mongoose = require("mongoose");
-
-const Product = require("./models/Product");
-const Contact = require("./models/Contact");
+const { MongoClient, ObjectId } = require("mongodb");
 
 const app = express();
+
+// MongoDB bağlantı değişkenleri
+let db;
+let productsCollection;
+let contactsCollection;
 
 /* =======================
    BODY & SESSION
@@ -48,15 +50,28 @@ const upload = multer({ storage });
    MONGODB CONNECTION
 ======================= */
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/yapi_market";
+const DB_NAME = "yapi_market";
 
-mongoose.connect(MONGODB_URI)
-  .then(() => {
+// MongoDB bağlantısı
+async function connectToMongoDB() {
+  try {
+    const client = new MongoClient(MONGODB_URI);
+    await client.connect();
+    db = client.db(DB_NAME);
+    productsCollection = db.collection("products");
+    contactsCollection = db.collection("contacts");
     console.log("✅ MongoDB bağlantısı başarılı!");
-  })
-  .catch((error) => {
+    
+    // Index oluştur
+    await productsCollection.createIndex({ createdAt: -1 });
+    await contactsCollection.createIndex({ createdAt: -1 });
+  } catch (error) {
     console.error("❌ MongoDB bağlantı hatası:", error);
     console.log("⚠️  MongoDB bağlantısı olmadan devam ediliyor...");
-  });
+  }
+}
+
+connectToMongoDB();
 
 // Uploads klasörünü kontrol et
 if (!fs.existsSync("./public/uploads")) {
@@ -105,15 +120,19 @@ app.get("/admin.html", auth, (req, res) => {
 /* Liste */
 app.get("/api/products", auth, async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    if (!productsCollection) {
+      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
+    }
+    
+    const products = await productsCollection.find({}).sort({ createdAt: -1 }).toArray();
     // MongoDB _id'yi id'ye çevir (eski kod uyumluluğu için)
     const formattedProducts = products.map(p => ({
       id: p._id.toString(),
-      ad: p.ad,
-      kategori: p.kategori,
-      marka: p.marka,
-      aciklama: p.aciklama,
-      resim: p.resim
+      ad: p.ad || "",
+      kategori: p.kategori || "",
+      marka: p.marka || "",
+      aciklama: p.aciklama || "",
+      resim: p.resim || ""
     }));
     res.json(formattedProducts);
   } catch (error) {
@@ -125,16 +144,22 @@ app.get("/api/products", auth, async (req, res) => {
 /* Ekle */
 app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
   try {
-    const product = new Product({
+    if (!productsCollection) {
+      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
+    }
+    
+    const product = {
       ad: req.body.ad || "",
       kategori: req.body.kategori || "",
       marka: req.body.marka || "",
       aciklama: req.body.aciklama || "",
-      resim: req.file ? req.file.filename : ""
-    });
+      resim: req.file ? req.file.filename : "",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
 
-    await product.save();
-    res.json({ success: true, id: product._id.toString() });
+    const result = await productsCollection.insertOne(product);
+    res.json({ success: true, id: result.insertedId.toString() });
   } catch (error) {
     console.error("Ürün ekleme hatası:", error);
     res.status(500).json({ success: false, message: "Ürün eklenemedi" });
@@ -144,24 +169,42 @@ app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
 /* Güncelle */
 app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
   try {
+    if (!productsCollection) {
+      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
+    }
+    
     const productId = req.params.id;
     
-    const product = await Product.findById(productId);
+    // ObjectId kontrolü
+    if (!ObjectId.isValid(productId)) {
+      return res.status(400).json({ success: false, message: "Geçersiz ürün ID" });
+    }
+    
+    const product = await productsCollection.findOne({ _id: new ObjectId(productId) });
     
     if (!product) {
       return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
     }
 
-    product.ad = req.body.ad || "";
-    product.kategori = req.body.kategori || "";
-    product.marka = req.body.marka || "";
-    product.aciklama = req.body.aciklama || "";
+    const updateData = {
+      ad: req.body.ad || "",
+      kategori: req.body.kategori || "",
+      marka: req.body.marka || "",
+      aciklama: req.body.aciklama || "",
+      updatedAt: new Date()
+    };
     
     if (req.file) {
-      product.resim = req.file.filename;
+      updateData.resim = req.file.filename;
+    } else {
+      updateData.resim = product.resim || "";
     }
 
-    await product.save();
+    await productsCollection.updateOne(
+      { _id: new ObjectId(productId) },
+      { $set: updateData }
+    );
+    
     res.json({ success: true, message: "Ürün başarıyla güncellendi" });
   } catch (error) {
     console.error("Güncelleme hatası:", error);
@@ -172,11 +215,20 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
 /* Sil */
 app.delete("/api/products/:id", auth, async (req, res) => {
   try {
+    if (!productsCollection) {
+      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
+    }
+    
     const productId = req.params.id;
     
-    const product = await Product.findByIdAndDelete(productId);
+    // ObjectId kontrolü
+    if (!ObjectId.isValid(productId)) {
+      return res.status(400).json({ success: false, message: "Geçersiz ürün ID" });
+    }
     
-    if (!product) {
+    const result = await productsCollection.deleteOne({ _id: new ObjectId(productId) });
+    
+    if (result.deletedCount === 0) {
       return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
     }
 
@@ -199,14 +251,18 @@ app.listen(PORT, () => {
 /* PUBLIC PRODUCTS */
 app.get("/api/public/products", async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    if (!productsCollection) {
+      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
+    }
+    
+    const products = await productsCollection.find({}).sort({ createdAt: -1 }).toArray();
     const formattedProducts = products.map(p => ({
       id: p._id.toString(),
-      ad: p.ad,
-      kategori: p.kategori,
-      marka: p.marka,
-      aciklama: p.aciklama,
-      resim: p.resim
+      ad: p.ad || "",
+      kategori: p.kategori || "",
+      marka: p.marka || "",
+      aciklama: p.aciklama || "",
+      resim: p.resim || ""
     }));
     res.json(formattedProducts);
   } catch (error) {
@@ -218,7 +274,18 @@ app.get("/api/public/products", async (req, res) => {
 /* TEK ÜRÜN (PUBLIC) */
 app.get("/api/public/products/:id", async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    if (!productsCollection) {
+      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
+    }
+    
+    const productId = req.params.id;
+    
+    // ObjectId kontrolü
+    if (!ObjectId.isValid(productId)) {
+      return res.status(400).json({ success: false, message: "Geçersiz ürün ID" });
+    }
+    
+    const product = await productsCollection.findOne({ _id: new ObjectId(productId) });
     
     if (!product) {
       return res.status(404).json({ success: false });
@@ -226,11 +293,11 @@ app.get("/api/public/products/:id", async (req, res) => {
     
     res.json({
       id: product._id.toString(),
-      ad: product.ad,
-      kategori: product.kategori,
-      marka: product.marka,
-      aciklama: product.aciklama,
-      resim: product.resim
+      ad: product.ad || "",
+      kategori: product.kategori || "",
+      marka: product.marka || "",
+      aciklama: product.aciklama || "",
+      resim: product.resim || ""
     });
   } catch (error) {
     console.error("Tek ürün hatası:", error);
@@ -243,6 +310,10 @@ app.get("/api/public/products/:id", async (req, res) => {
 ======================= */
 app.post("/api/contact", async (req, res) => {
   try {
+    if (!contactsCollection) {
+      return res.status(500).json({ success: false, message: "Veritabanı bağlantısı yok" });
+    }
+    
     const { adSoyad, email, telefon, mesaj } = req.body;
 
     // Validasyon
@@ -257,14 +328,16 @@ app.post("/api/contact", async (req, res) => {
     }
 
     // İletişim kaydı oluştur
-    const contact = new Contact({
+    const contact = {
       adSoyad,
       email,
       telefon,
-      mesaj
-    });
+      mesaj,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
 
-    await contact.save();
+    await contactsCollection.insertOne(contact);
     res.json({ success: true, message: "Formunuz başarıyla gönderildi!" });
   } catch (error) {
     console.error("Contact form error:", error);
