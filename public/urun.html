@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ürün Detayı - Yılmazlar Yapı Market</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <div class="navbar">
+    <img src="/logo.png" alt="Yılmazlar Yapı Market Logo">
+    <nav>
+      <a href="/">Ana Sayfa</a>
+      <a href="/urunler.html">Ürünler</a>
+      <a href="/hakkimizda.html">Hakkımızda</a>
+      <a href="/iletisim.html">İletişim</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container" id="detay">
+  <div style="text-align: center; padding: 40px; color: var(--text-light);">
+    <p>Yükleniyor...</p>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <h3>Yılmazlar Yapı Market</h3>
+      <p>Kaliteli ürün, güvenilir hizmet</p>
+    </div>
+    <div>
+      <h3>Hızlı Erişim</h3>
+      <p><a href="/" style="color: #aaa; text-decoration: none;">Ana Sayfa</a></p>
+      <p><a href="/urunler.html" style="color: #aaa; text-decoration: none;">Ürünler</a></p>
+      <p><a href="/hakkimizda.html" style="color: #aaa; text-decoration: none;">Hakkımızda</a></p>
+      <p><a href="/iletisim.html" style="color: #aaa; text-decoration: none;">İletişim</a></p>
+    </div>
+    <div>
+      <h3>İletişim</h3>
+      <p>📍 İstanbul / Türkiye</p>
+      <p>📞 05xx xxx xx xx</p>
+      <p>✉️ info@yilmazlaryapi.com</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2025 Yılmazlar Yapı Market. Tüm hakları saklıdır.
+  </div>
+</footer>
+
+<script>
+const id = new URLSearchParams(location.search).get("id");
+
+if (!id) {
+  document.getElementById("detay").innerHTML = `
+    <div style="text-align: center; padding: 40px;">
+      <h1>Ürün Bulunamadı</h1>
+      <p style="margin: 20px 0;">Aradığınız ürün bulunamadı.</p>
+      <a href="/urunler.html" class="btn btn-primary">Ürünlere Dön</a>
+    </div>
+  `;
+} else {
+  fetch("/api/public/products")
+    .then(r => r.json())
+    .then(data => {
+      const p = data.find(x => x.id === id);
+      
+      if (!p) {
+        document.getElementById("detay").innerHTML = `
+          <div style="text-align: center; padding: 40px;">
+            <h1>Ürün Bulunamadı</h1>
+            <p style="margin: 20px 0;">Aradığınız ürün bulunamadı.</p>
+            <a href="/urunler.html" class="btn btn-primary">Ürünlere Dön</a>
+          </div>
+        `;
+        return;
+      }
+      
+      const resimUrl = p.resim ? `/uploads/${p.resim}` : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
+      
+      document.getElementById("detay").innerHTML = `
+        <div class="product-detail">
+          <div>
+            <img src="${resimUrl}" alt="${p.ad}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'400\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'400\\' height=\\'400\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'18\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
+          </div>
+          <div class="product-info">
+            <h2>${p.ad || 'İsimsiz Ürün'}</h2>
+            ${p.kategori ? `<span class="badge">${p.kategori}</span>` : ''}
+            ${p.marka ? `<p><strong>Marka:</strong> ${p.marka}</p>` : ''}
+            ${p.kategori ? `<p><strong>Kategori:</strong> ${p.kategori}</p>` : ''}
+            ${p.aciklama ? `<p>${p.aciklama}</p>` : '<p>Bu ürün hakkında detaylı bilgi için lütfen bizimle iletişime geçin.</p>'}
+            <div style="margin-top: 30px;">
+              <a href="/urunler.html" class="btn" style="display: inline-block;">← Tüm Ürünlere Dön</a>
+            </div>
+          </div>
+        </div>
+      `;
+    })
+    .catch(err => {
+      document.getElementById("detay").innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+          <h1>Hata Oluştu</h1>
+          <p style="margin: 20px 0;">Ürün bilgileri yüklenirken bir hata oluştu.</p>
+          <a href="/urunler.html" class="btn btn-primary">Ürünlere Dön</a>
+        </div>
+      `;
+    });
+}
+</script>
+
+</body>
+</html>

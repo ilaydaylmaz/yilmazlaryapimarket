@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Yılmazlar Yapı Market iletişim bilgileri - Bize ulaşın">
+  <title>İletişim - Yılmazlar Yapı Market</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <div class="navbar">
+    <img src="/logo.png" alt="Yılmazlar Yapı Market Logo">
+    <nav>
+      <a href="/">Ana Sayfa</a>
+      <a href="/urunler.html">Ürünler</a>
+      <a href="/hakkimizda.html">Hakkımızda</a>
+      <a href="/iletisim.html" class="active">İletişim</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <h1>İletişim</h1>
+  <p class="page-intro">Sorularınız, önerileriniz veya talepleriniz için bizimle iletişime geçebilirsiniz.</p>
+  
+  <div class="grid-2 contact-cards">
+    <div style="background: var(--light-bg); padding: 30px; border-radius: 12px;">
+      <h3>📍 İletişim Bilgileri</h3>
+      <div style="margin-top: 20px;">
+        <p style="margin-bottom: 15px;">
+          <strong>Adres:</strong><br>
+          İstanbul / Türkiye
+        </p>
+        <p style="margin-bottom: 15px;">
+          <strong>Telefon:</strong><br>
+          <a href="tel:05xxxxxxxxx" style="color: var(--primary-color); text-decoration: none;">05xx xxx xx xx</a>
+        </p>
+        <p style="margin-bottom: 15px;">
+          <strong>E-posta:</strong><br>
+          <a href="mailto:info@yilmazlaryapi.com" style="color: var(--primary-color); text-decoration: none;">info@yilmazlaryapi.com</a>
+        </p>
+      </div>
+    </div>
+
+    <div style="background: var(--light-bg); padding: 30px; border-radius: 12px;">
+      <h3>🕒 Çalışma Saatleri</h3>
+      <div style="margin-top: 20px;">
+        <p style="margin-bottom: 15px;">
+          <strong>Hafta İçi:</strong><br>
+          08:00 – 18:00
+        </p>
+        <p style="margin-bottom: 15px;">
+          <strong>Cumartesi:</strong><br>
+          09:00 – 16:00
+        </p>
+        <p style="margin-bottom: 15px;">
+          <strong>Pazar:</strong><br>
+          Kapalı
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="contact-form-section">
+    <div class="contact-form-header">
+      <div class="form-header-line"></div>
+      <h2 class="form-title">
+        Bize ulaşmak için hemen, <span class="form-title-highlight">formu doldurun.</span>
+      </h2>
+    </div>
+
+    <form id="contactForm" class="contact-form">
+      <div class="form-row">
+        <div class="form-group">
+          <input type="text" id="adSoyad" name="adSoyad" placeholder="Ad Soyad" required>
+        </div>
+        <div class="form-group">
+          <input type="email" id="email" name="email" placeholder="E-Mail" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <input type="tel" id="telefon" name="telefon" placeholder="Telefon Numaranız" required>
+      </div>
+
+      <div class="form-group">
+        <textarea id="mesaj" name="mesaj" placeholder="Mesajınız" rows="6" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <div class="recaptcha-wrapper">
+          <label class="recaptcha-checkbox">
+            <input type="checkbox" id="recaptcha" name="recaptcha" required>
+            <span>Ben robot değilim</span>
+          </label>
+          <div class="recaptcha-info">
+            <div class="recaptcha-logo">reCAPTCHA</div>
+            <div class="recaptcha-links">Gizlilik - Şartlar</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="formMessage" class="form-message"></div>
+
+      <button type="submit" class="btn-submit">Formu Gönder</button>
+    </form>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <h3>Yılmazlar Yapı Market</h3>
+      <p>Kaliteli ürün, güvenilir hizmet</p>
+    </div>
+    <div>
+      <h3>Hızlı Erişim</h3>
+      <p><a href="/" class="footer-link">Ana Sayfa</a></p>
+      <p><a href="/urunler.html" class="footer-link">Ürünler</a></p>
+      <p><a href="/hakkimizda.html" class="footer-link">Hakkımızda</a></p>
+      <p><a href="/iletisim.html" class="footer-link">İletişim</a></p>
+    </div>
+    <div>
+      <h3>İletişim</h3>
+      <p>📍 İstanbul / Türkiye</p>
+      <p>📞 05xx xxx xx xx</p>
+      <p>✉️ info@yilmazlaryapi.com</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2025 Yılmazlar Yapı Market. Tüm hakları saklıdır.
+  </div>
+</footer>
+
+<script>
+document.getElementById("contactForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const formData = {
+    adSoyad: document.getElementById("adSoyad").value,
+    email: document.getElementById("email").value,
+    telefon: document.getElementById("telefon").value,
+    mesaj: document.getElementById("mesaj").value
+  };
+
+  const messageDiv = document.getElementById("formMessage");
+  const submitBtn = document.querySelector(".btn-submit");
+  
+  // Validasyon
+  if (!document.getElementById("recaptcha").checked) {
+    messageDiv.innerHTML = '<span class="error">Lütfen "Ben robot değilim" kutusunu işaretleyin.</span>';
+    return;
+  }
+
+  // Butonu devre dışı bırak
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Gönderiliyor...";
+  messageDiv.innerHTML = "";
+
+  try {
+    const response = await fetch("/api/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      messageDiv.innerHTML = '<span class="success">Formunuz başarıyla gönderildi! En kısa sürede size dönüş yapacağız.</span>';
+      document.getElementById("contactForm").reset();
+    } else {
+      messageDiv.innerHTML = '<span class="error">Bir hata oluştu. Lütfen tekrar deneyin.</span>';
+    }
+  } catch (error) {
+    messageDiv.innerHTML = '<span class="error">Bir hata oluştu. Lütfen tekrar deneyin.</span>';
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Formu Gönder";
+  }
+});
+</script>
+
+</body>
+</html>

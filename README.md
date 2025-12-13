@@ -1,0 +1,100 @@
+# Yılmazlar Yapı Market
+
+Modern ve profesyonel yapı market web sitesi.
+
+## Özellikler
+
+- 🏠 Modern ve responsive tasarım
+- 📦 Ürün kataloğu ve detay sayfaları
+- 🔍 Gelişmiş ürün arama ve filtreleme
+- 📝 İletişim formu
+- 🔐 Admin paneli (ürün yönetimi)
+- 📱 Mobil uyumlu
+
+## Kurulum
+
+### Yerel Geliştirme
+
+1. Projeyi klonlayın:
+```bash
+git clone <repository-url>
+cd yapi_market
+```
+
+2. Bağımlılıkları yükleyin:
+```bash
+npm install
+```
+
+3. Sunucuyu başlatın:
+```bash
+npm start
+```
+
+4. Tarayıcıda açın: `http://localhost:3000`
+
+## Admin Girişi
+
+- URL: `/login.html`
+- Kullanıcı adı: `admin`
+- Şifre: `1234`
+
+## Deployment (Yayınlama)
+
+### Render.com (Önerilen - Ücretsiz)
+
+1. [Render.com](https://render.com) hesabı oluşturun
+2. "New Web Service" seçin
+3. GitHub repository'nizi bağlayın
+4. Ayarlar:
+   - **Build Command**: `npm install`
+   - **Start Command**: `node server.js`
+   - **Environment**: `Node`
+5. Deploy edin!
+
+### Railway.app
+
+1. [Railway.app](https://railway.app) hesabı oluşturun
+2. "New Project" → "Deploy from GitHub repo"
+3. Repository'nizi seçin
+4. Otomatik deploy başlar!
+
+### Vercel
+
+1. [Vercel](https://vercel.com) hesabı oluşturun
+2. "Import Project" → GitHub repo seçin
+3. Framework: "Other"
+4. Build Command: `npm install`
+5. Output Directory: `.`
+6. Deploy!
+
+### Heroku
+
+1. [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) yükleyin
+2. Heroku'da yeni app oluşturun:
+```bash
+heroku create yapi-market
+```
+3. Deploy edin:
+```bash
+git push heroku main
+```
+
+## Ortam Değişkenleri
+
+Production'da şu değişkenleri ayarlayın:
+
+- `PORT`: Sunucu portu (genelde otomatik ayarlanır)
+- `SESSION_SECRET`: Session secret key (güvenlik için değiştirin)
+
+## Teknolojiler
+
+- **Backend**: Node.js, Express.js
+- **Frontend**: HTML, CSS, JavaScript
+- **Veri Depolama**: JSON dosyaları
+- **File Upload**: Multer
+
+## Lisans
+
+ISC
+

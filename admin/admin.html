@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+</head>
+<body>
+
+<h1>Ürün Yönetimi</h1>
+<a href="/logout">Çıkış Yap</a>
+<hr>
+
+<label>Ürün Adı</label><br>
+<input id="ad"><br><br>
+
+<label>Kategori</label><br>
+<input id="kategori"><br><br>
+
+<label>Marka</label><br>
+<input id="marka"><br><br>
+
+<label>Açıklama</label><br>
+<textarea id="aciklama"></textarea><br><br>
+
+<label>Ürün Resmi</label><br>
+<input type="file" id="resim" accept="image/*"><br><br>
+
+<button onclick="ekle()">Yeni Ürün Ekle</button>
+<button onclick="guncelle()">Güncelle</button>
+
+<hr>
+<h2>Ürünler</h2>
+<ul id="liste"></ul>
+
+<script>
+let seciliId = null;
+
+function yukle() {
+  fetch("/api/products")
+    .then(r => r.json())
+    .then(data => {
+      const ul = document.getElementById("liste");
+      ul.innerHTML = "";
+      data.forEach(p => {
+        ul.innerHTML += `
+          <li>
+            ${p.ad}
+            <button onclick='duzenle(${JSON.stringify(p)})'>Düzenle</button>
+            <button onclick="sil('${p.id}')">Sil</button>
+          </li>`;
+      });
+    });
+}
+
+function duzenle(p) {
+  seciliId = p.id;
+  ad.value = p.ad;
+  kategori.value = p.kategori;
+  marka.value = p.marka;
+  aciklama.value = p.aciklama;
+}
+
+function ekle() {
+  const formData = new FormData();
+  formData.append("ad", ad.value);
+  formData.append("kategori", kategori.value);
+  formData.append("marka", marka.value);
+  formData.append("aciklama", aciklama.value);
+  formData.append("resim", resim.files[0]);
+
+  fetch("/api/products", {
+    method: "POST",
+    body: formData
+  }).then(() => {
+    temizle();
+    yukle();
+  });
+}
+
+function guncelle() {
+  if (!seciliId) return alert("Önce ürün seç");
+
+  const formData = new FormData();
+  formData.append("ad", ad.value);
+  formData.append("kategori", kategori.value);
+  formData.append("marka", marka.value);
+  formData.append("aciklama", aciklama.value);
+
+  if (resim.files[0]) {
+    formData.append("resim", resim.files[0]);
+  }
+
+  fetch("/api/products/" + seciliId, {
+    method: "PUT",
+    body: formData
+  }).then(() => {
+    temizle();
+    yukle();
+  });
+}
+
+function sil(id) {
+  fetch("/api/products/" + id, { method: "DELETE" })
+    .then(() => yukle());
+}
+
+function temizle() {
+  seciliId = null;
+  ad.value = "";
+  kategori.value = "";
+  marka.value = "";
+  aciklama.value = "";
+  resim.value = "";
+}
+
+yukle();
+</script>
+
+</body>
+</html>
