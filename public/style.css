@@ -787,6 +787,19 @@
   gap: 10px;
 }
 
+.instagram-post-wrapper {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.instagram-post-wrapper blockquote {
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Placeholder stilleri (eğer daha fazla post eklenirse) */
 .instagram-post-placeholder {
   aspect-ratio: 1;
   background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
@@ -2562,8 +2575,12 @@ input[type="search"]:focus {
   }
 
   .instagram-posts-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .instagram-post-wrapper blockquote {
+    min-width: 280px !important;
   }
 
   .process-section {
