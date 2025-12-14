@@ -926,6 +926,91 @@
   box-shadow: 0 4px 15px rgba(196, 0, 0, 0.3);
 }
 
+/* BRANDS SECTION */
+.brands-section {
+  background: var(--white);
+  padding: 60px 20px;
+  border-top: 1px solid #e8e8e8;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.brands-slider-wrapper {
+  margin-top: 40px;
+  overflow: hidden;
+  position: relative;
+}
+
+.brands-slider {
+  width: 100%;
+  overflow: hidden;
+}
+
+.brands-track {
+  display: flex;
+  gap: 40px;
+  animation: slideBrands 30s linear infinite;
+  will-change: transform;
+}
+
+.brands-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes slideBrands {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.brand-item {
+  flex: 0 0 180px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+}
+
+.brand-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color);
+}
+
+.brand-item img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: grayscale(100%);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.brand-item:hover img {
+  filter: grayscale(0%);
+  opacity: 1;
+}
+
+.brand-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-light);
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: center;
+}
+
 /* POPULAR PRODUCTS SECTION */
 .popular-products-section {
   background: var(--light-bg);
@@ -2599,6 +2684,24 @@ input[type="search"]:focus {
 
   .section-subtitle {
     font-size: 0.9rem;
+  }
+
+  .brands-section {
+    padding: 40px 10px;
+  }
+
+  .brand-item {
+    flex: 0 0 120px;
+    height: 70px;
+    padding: 12px;
+  }
+
+  .brands-track {
+    gap: 20px;
+  }
+
+  .brand-fallback {
+    font-size: 0.85rem;
   }
 
   .popular-products-section {
