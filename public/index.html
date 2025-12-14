@@ -30,7 +30,6 @@
             <a href="/seramik-urunleri.html">Seramik Ürünleri</a>
             <a href="/banyo-urunleri.html">Banyo Ürünleri</a>
             <a href="/parke-urunleri.html">Parke Ürünleri</a>
-            <a href="/mutfak-urunleri.html">Mutfak Ürünleri</a>
             <a href="/kaba-grubu.html">Kaba Grubu</a>
           </div>
         </div>
@@ -63,6 +62,79 @@
   <div class="hero-buttons">
   <a class="btn btn-primary" href="/urunler.html">Ürünleri İncele</a>
     <a class="btn btn-secondary" href="/iletisim.html">Bize Ulaşın</a>
+  </div>
+</section>
+
+<!-- Popüler Ürünler Bölümü -->
+<section class="popular-products-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Popüler Ürünlerimiz</h2>
+      <p class="section-subtitle">En çok tercih edilen ürünlerimizi keşfedin</p>
+    </div>
+    <div class="popular-products-grid" id="popularProductsGrid">
+      <div class="loading-state">Yükleniyor...</div>
+    </div>
+    <div class="section-footer">
+      <a href="/urunler.html" class="btn btn-outline">Tüm Ürünleri Gör</a>
+    </div>
+  </div>
+</section>
+
+<!-- Kategoriler Bölümü -->
+<section class="categories-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Ürün Kategorilerimiz</h2>
+      <p class="section-subtitle">Geniş ürün yelpazemizden ihtiyacınıza uygun olanı seçin</p>
+    </div>
+    <div class="categories-grid">
+      <a href="/seramik-urunleri.html" class="category-card">
+        <div class="category-icon">🧱</div>
+        <h3>Seramik Ürünleri</h3>
+        <p>Yüksek kaliteli seramik ve fayans ürünleri</p>
+      </a>
+      <a href="/boya-urunleri.html" class="category-card">
+        <div class="category-icon">🎨</div>
+        <h3>Boya Ürünleri</h3>
+        <p>İç ve dış cephe boyaları, vernikler</p>
+      </a>
+      <a href="/hirdavat-urunleri.html" class="category-card">
+        <div class="category-icon">🔧</div>
+        <h3>Hırdavat Ürünleri</h3>
+        <p>Vida, çivi, vida ve hırdavat malzemeleri</p>
+      </a>
+      <a href="/elektrik-urunleri.html" class="category-card">
+        <div class="category-icon">⚡</div>
+        <h3>Elektrik Ürünleri</h3>
+        <p>Elektrik malzemeleri ve aksesuarları</p>
+      </a>
+      <a href="/tesisat-urunleri.html" class="category-card">
+        <div class="category-icon">🚿</div>
+        <h3>Tesisat Ürünleri</h3>
+        <p>Su tesisatı ve ısıtma sistemleri</p>
+      </a>
+      <a href="/yapi-malzemeleri.html" class="category-card">
+        <div class="category-icon">🏗️</div>
+        <h3>Yapı Malzemeleri</h3>
+        <p>Çimento, kum, tuğla ve yapı malzemeleri</p>
+      </a>
+      <a href="/el-aletleri-urunleri.html" class="category-card">
+        <div class="category-icon">🔨</div>
+        <h3>El Aletleri</h3>
+        <p>Profesyonel el aletleri ve takımları</p>
+      </a>
+      <a href="/banyo-urunleri.html" class="category-card">
+        <div class="category-icon">🛁</div>
+        <h3>Banyo Ürünleri</h3>
+        <p>Banyo aksesuarları ve donanımları</p>
+      </a>
+      <a href="/parke-urunleri.html" class="category-card">
+        <div class="category-icon">🪵</div>
+        <h3>Parke Ürünleri</h3>
+        <p>Laminat, parke ve zemin kaplamaları</p>
+      </a>
+    </div>
   </div>
 </section>
 
@@ -211,6 +283,67 @@ function handleHomeSearch(event) {
     window.location.href = '/urunler.html';
   }
 }
+
+// Popüler ürünleri yükle
+function loadPopularProducts() {
+  fetch("/api/public/products?t=" + Date.now(), {
+    cache: 'no-cache'
+  })
+    .then(r => r.json())
+    .then(data => {
+      const grid = document.getElementById("popularProductsGrid");
+      
+      if (!data || data.length === 0) {
+        grid.innerHTML = '<div class="empty-state">Henüz ürün eklenmemiş.</div>';
+        return;
+      }
+      
+      // İlk 8 ürünü al (veya rastgele seç)
+      const popularProducts = data.slice(0, 8);
+      
+      grid.innerHTML = "";
+      
+      popularProducts.forEach(product => {
+        const card = document.createElement("div");
+        card.className = "popular-product-card";
+        
+        let imageUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="300"%3E%3Crect fill="%23f0f0f0" width="300" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="20" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
+        
+        if (product.resim) {
+          imageUrl = product.resim;
+          if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('data:')) {
+            imageUrl = `/uploads/${imageUrl}`;
+          }
+        } else if (product.resimBase64) {
+          imageUrl = product.resimBase64;
+        }
+        
+        card.innerHTML = `
+          <a href="/urun.html?id=${product.id}" class="product-link">
+            <div class="product-image-wrapper">
+              <img src="${imageUrl}" alt="${product.ad || 'Ürün'}" class="product-image" 
+                   onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'300\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'300\\' height=\\'300\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'20\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">${product.ad || 'İsimsiz Ürün'}</h3>
+              ${product.marka ? `<p class="product-brand">${product.marka}</p>` : ''}
+              ${product.kategori ? `<span class="product-category">${product.kategori}</span>` : ''}
+            </div>
+          </a>
+        `;
+        
+        grid.appendChild(card);
+      });
+    })
+    .catch(error => {
+      console.error("Ürün yükleme hatası:", error);
+      document.getElementById("popularProductsGrid").innerHTML = 
+        '<div class="empty-state">Ürünler yüklenirken bir hata oluştu.</div>';
+    });
+}
+
+// Sayfa yüklendiğinde popüler ürünleri yükle
+document.addEventListener('DOMContentLoaded', loadPopularProducts);
 </script>
 
 </body>
