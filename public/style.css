@@ -196,7 +196,7 @@
   width: 100%;
   padding: 20px 20px 20px 50px;
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 20px;
   border: 2px solid var(--primary-color);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.95);
@@ -204,7 +204,9 @@
   outline: none;
   transition: all 0.3s ease;
   box-sizing: border-box;
-  min-height: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
 }
 
 .search-input::placeholder {
@@ -220,10 +222,10 @@
 }
 
 .search-button {
-  padding: 20px 40px;
+  padding: 0 40px;
   font-size: 16px;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 20px;
   color: var(--white);
   background: linear-gradient(180deg, #e63946 0%, #c40000 100%);
   border: none;
@@ -235,7 +237,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 60px;
+  height: 60px;
   box-sizing: border-box;
 }
 
