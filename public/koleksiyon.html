@@ -6,6 +6,558 @@
   <meta name="description" content="Yılmazlar Yapı Market - Seramik Koleksiyonu">
   <title>Seramik Koleksiyonu - Yılmazlar Yapı Market</title>
   <link rel="stylesheet" href="/style.css">
+  <style>
+    /* Collection Page Specific Styles */
+    .collection-page {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0;
+    }
+
+    .collection-hero {
+      width: 100%;
+      height: 500px;
+      background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+      position: relative;
+      margin-bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .collection-hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+
+    .collection-hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      z-index: 2;
+    }
+
+    .collection-hero .breadcrumb-minimal {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: rgba(255, 255, 255, 0.9);
+      z-index: 2;
+    }
+
+    .collection-hero .breadcrumb-minimal a {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .collection-hero .breadcrumb-minimal a:hover {
+      color: #fff;
+    }
+
+    .collection-hero .breadcrumb-minimal span {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .collection-header {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .collection-title {
+      font-size: 5rem;
+      font-weight: 300;
+      letter-spacing: 8px;
+      color: #fff;
+      margin: 0;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .collection-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .collection-count {
+      font-size: 1rem;
+      color: #666;
+    }
+
+    .collection-count strong {
+      color: #000;
+      font-weight: 600;
+    }
+
+    .filter-toggle-btn {
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .filter-toggle-btn:hover {
+      border-color: #000;
+      background: #f5f5f5;
+    }
+
+    .filter-arrow {
+      font-size: 0.7rem;
+      transition: transform 0.3s;
+    }
+
+    .filter-arrow.open {
+      transform: rotate(180deg);
+    }
+
+    .filters-container {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 30px;
+      margin: 20px 0 40px 0;
+      display: none;
+    }
+
+    .filters-container.show {
+      display: block;
+    }
+
+    .filters-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .filter-label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #000;
+    }
+
+    .filter-select {
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      background: #fff;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: #000;
+    }
+
+    .filter-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .btn-uygula {
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-uygula:hover {
+      background: #333;
+    }
+
+    .btn-temizle {
+      background: #fff;
+      color: #333;
+      border: 1px solid #ddd;
+      padding: 12px 30px;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-temizle:hover {
+      border-color: #000;
+      background: #f5f5f5;
+    }
+
+    .collection-products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 30px;
+      margin-top: 40px;
+    }
+
+    .collection-product {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .collection-product:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border-color: #000;
+    }
+
+    .collection-product-image {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      background: #f5f5f5;
+    }
+
+    .collection-product-info {
+      padding: 20px;
+    }
+
+    .collection-product-title {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #000;
+      margin: 0 0 8px 0;
+      line-height: 1.4;
+    }
+
+    .collection-product-specs {
+      font-size: 0.85rem;
+      color: #666;
+      margin: 0;
+    }
+
+    .breadcrumb-minimal {
+      font-size: 0.85rem;
+      color: #999;
+      margin-bottom: 20px;
+    }
+
+    .breadcrumb-minimal a {
+      color: #666;
+      text-decoration: none;
+    }
+
+    .breadcrumb-minimal a:hover {
+      color: #000;
+    }
+
+    .breadcrumb-minimal span {
+      margin: 0 8px;
+    }
+
+    .collection-info {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .collection-products {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px 40px 20px;
+    }
+
+    /* Product Modal Styles */
+    .product-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+    }
+
+    .modal-content {
+      position: relative;
+      background: #fff;
+      width: 100%;
+      max-width: 1400px;
+      max-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      z-index: 10001;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      border: none;
+      width: 35px;
+      height: 35px;
+      border-radius: 4px;
+      font-size: 20px;
+      font-weight: 300;
+      color: #333;
+      cursor: pointer;
+      z-index: 10002;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      background: #fff;
+      color: #000;
+    }
+
+    .modal-header {
+      padding: 25px 40px;
+      border-bottom: 1px solid #e0e0e0;
+      background: #fff;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 400;
+      color: #000;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+      flex: 1;
+      background: #f5f5f5;
+    }
+
+    .modal-image-section {
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 50px;
+      position: relative;
+    }
+
+    .image-gallery {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .gallery-main {
+      position: relative;
+      width: 100%;
+      padding-bottom: 100%;
+      background: #f5f5f5;
+      overflow: hidden;
+    }
+
+    .gallery-main img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .gallery-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #e0e0e0;
+      width: 45px;
+      height: 45px;
+      border-radius: 4px;
+      font-size: 28px;
+      font-weight: 300;
+      color: #333;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: all 0.3s;
+      line-height: 1;
+    }
+
+    .gallery-nav:hover {
+      background: #fff;
+      border-color: #000;
+      color: #000;
+    }
+
+    .gallery-prev {
+      left: 20px;
+    }
+
+    .gallery-next {
+      right: 20px;
+    }
+
+    .gallery-counter {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 400;
+    }
+
+    .modal-info-section {
+      padding: 40px;
+      overflow-y: auto;
+      background: #fff;
+    }
+
+    .tab-content {
+      margin-bottom: 0;
+    }
+
+    .product-specs-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .product-specs-table tr {
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .product-specs-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .product-specs-table td {
+      padding: 14px 0;
+      font-size: 0.95rem;
+      vertical-align: top;
+    }
+
+    .spec-label {
+      font-weight: 600;
+      color: #000;
+      width: 45%;
+      padding-right: 20px;
+    }
+
+    .spec-value {
+      color: #333;
+    }
+
+
+    @media (max-width: 768px) {
+      .collection-hero {
+        height: 350px;
+      }
+
+      .collection-title {
+        font-size: 2.5rem;
+        letter-spacing: 4px;
+      }
+
+      .filters-row {
+        grid-template-columns: 1fr;
+      }
+
+      .collection-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+
+      .collection-products {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-body {
+        grid-template-columns: 1fr;
+        max-height: calc(100vh - 100px);
+      }
+
+      .modal-image-section {
+        padding: 30px 20px;
+      }
+
+      .gallery-main {
+        padding-bottom: 80%;
+      }
+
+      .modal-info-section {
+        padding: 25px 20px;
+      }
+
+      .modal-header {
+        padding: 20px;
+      }
+
+      .modal-header h2 {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -41,48 +593,107 @@
   </div>
 </header>
 
-<div class="container">
-  <div class="page-header">
-    <div class="page-header-content">
-      <nav class="breadcrumb">
-        <a href="/">Ana Sayfa</a>
-        <span> / </span>
-        <a href="/seramik-urunleri.html">Seramik Ürünleri</a>
-        <span> / </span>
+<div class="collection-page">
+  <!-- Hero Image -->
+  <div class="collection-hero" id="collectionHero">
+    <div class="collection-hero-overlay">
+      <div class="breadcrumb-minimal">
+        <a href="/">Anasayfa</a>
+        <span>/</span>
+        <a href="/seramik-urunleri.html">ÜRÜNLER</a>
+        <span>/</span>
+        <a href="/seramik-urunleri.html">Seriler</a>
+        <span>/</span>
         <span id="breadcrumb-koleksiyon">Koleksiyon</span>
-      </nav>
-      <h1 id="koleksiyon-baslik">Koleksiyon</h1>
-      <p id="koleksiyon-aciklama" class="section-subtitle">Koleksiyon ürünleri yükleniyor...</p>
-    </div>
-    <div class="view-controls">
-      <button id="gridView" class="view-btn active" title="Grid Görünüm">
-        <span style="font-size: 1.2rem;">⊞</span>
-      </button>
-      <button id="listView" class="view-btn" title="Liste Görünüm">
-        <span style="font-size: 1.2rem;">☰</span>
-      </button>
+      </div>
+      <h1 class="collection-title" id="koleksiyon-baslik">KOLEKSİYON</h1>
     </div>
   </div>
 
-  <div class="filters-bar">
-    <div class="search-wrapper">
-      <input id="arama" type="search" placeholder="🔍 Ürün ara..." autocomplete="off">
+  <div class="collection-header">
+    <div class="collection-info">
+      <div class="collection-count">
+        <strong id="urun-sayisi">0</strong> Ürün listelendi.
+      </div>
+      <button class="filter-toggle-btn" id="filterToggle">
+        <span>FİLTRELE</span>
+        <span class="filter-arrow" id="filterArrow">▼</span>
+      </button>
     </div>
-    <div class="filters-row">
-      <select id="siralama" class="filter-select">
-        <option value="default">Varsayılan</option>
-        <option value="name-asc">İsme Göre (A-Z)</option>
-        <option value="name-desc">İsme Göre (Z-A)</option>
-      </select>
-      <button id="temizle" class="btn-clear">Temizle</button>
+
+    <div class="filters-container" id="filtersContainer">
+      <div class="filters-row">
+        <div class="filter-item">
+          <label class="filter-label">EBAT</label>
+          <select id="ebatFilter" class="filter-select">
+            <option value="">Tüm Ebatlar</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">DOKU</label>
+          <select id="dokuFilter" class="filter-select">
+            <option value="">Tüm Dokular</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">YÜZEY</label>
+          <select id="yuzeyFilter" class="filter-select">
+            <option value="">Tüm Yüzeyler</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">RENK</label>
+          <select id="renkFilter" class="filter-select">
+            <option value="">Tüm Renkler</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn-uygula" id="uygulaBtn">UYGULA</button>
+        <button class="btn-temizle" id="temizleBtn">Temizle</button>
+      </div>
     </div>
   </div>
 
-  <div id="sonuc" class="results-info"></div>
-
-  <div class="urunler" id="urunler">
-    <div class="loading-state">
+  <div class="collection-header">
+    <div class="collection-products" id="urunler">
+      <div style="text-align: center; padding: 40px;">
       <p>Yükleniyor...</p>
+    </div>
+    </div>
+  </div>
+</div>
+
+<!-- Product Detail Modal -->
+<div id="productModal" class="product-modal" style="display: none;">
+  <div class="modal-overlay" onclick="closeProductModal()"></div>
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeProductModal()">×</button>
+    <div class="modal-header">
+      <h2 id="modalProductTitle">Ürün Adı</h2>
+    </div>
+    <div class="modal-body">
+      <div class="modal-image-section">
+        <div class="image-gallery">
+          <button class="gallery-nav gallery-prev" onclick="changeImage(-1)">‹</button>
+          <div class="gallery-main">
+            <img id="modalProductImage" src="" alt="Ürün Görseli">
+            <div class="gallery-counter">
+              <span id="currentImage">1</span> / <span id="totalImages">1</span> Faces
+            </div>
+          </div>
+          <button class="gallery-nav gallery-next" onclick="changeImage(1)">›</button>
+        </div>
+      </div>
+      <div class="modal-info-section">
+        <div class="tab-content" id="tabGenel">
+          <table class="product-specs-table">
+            <tbody id="productSpecsBody">
+              <!-- Ürün özellikleri buraya eklenecek -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -123,7 +734,6 @@
 <script>
 let products = [];
 let filteredProducts = [];
-let currentView = 'grid';
 let koleksiyonAdi = '';
 
 // URL'den koleksiyon adını al
@@ -132,10 +742,10 @@ koleksiyonAdi = urlParams.get('seri') || urlParams.get('koleksiyon') || '';
 
 if (!koleksiyonAdi) {
   document.getElementById("urunler").innerHTML = `
-    <div class="empty-state">
-      <h3>Koleksiyon Bulunamadı</h3>
-      <p>Lütfen geçerli bir koleksiyon seçin.</p>
-      <a href="/seramik-urunleri.html" class="btn btn-primary">Seramik Ürünlerine Dön</a>
+    <div style="text-align: center; padding: 60px;">
+      <h2>Koleksiyon Bulunamadı</h2>
+      <p style="margin: 20px 0;">Lütfen geçerli bir koleksiyon seçin.</p>
+      <a href="/seramik-urunleri.html" style="display: inline-block; padding: 12px 30px; background: #000; color: #fff; text-decoration: none; border-radius: 4px; margin-top: 20px;">Seramik Ürünlerine Dön</a>
     </div>
   `;
 } else {
@@ -148,7 +758,7 @@ if (!koleksiyonAdi) {
         p.marka && p.marka.includes('Yurtbay Seramik')
       );
       
-      // Koleksiyon adına göre filtrele (örneğin: "Yurtbay Seramik AFYON" -> "AFYON")
+      // Koleksiyon adına göre filtrele
       products = yurtbayProducts.filter(p => {
         if (!p.ad) return false;
         const productName = p.ad.toUpperCase();
@@ -158,26 +768,33 @@ if (!koleksiyonAdi) {
       
       if (products.length === 0) {
         document.getElementById("urunler").innerHTML = `
-          <div class="empty-state">
-            <h3>Bu koleksiyonda ürün bulunamadı</h3>
-            <p>"${koleksiyonAdi}" koleksiyonunda henüz ürün bulunmamaktadır.</p>
-            <a href="/seramik-urunleri.html" class="btn btn-primary">Seramik Ürünlerine Dön</a>
+          <div style="text-align: center; padding: 60px;">
+            <h2>Bu koleksiyonda ürün bulunamadı</h2>
+            <p style="margin: 20px 0;">"${koleksiyonAdi}" koleksiyonunda henüz ürün bulunmamaktadır.</p>
+            <a href="/seramik-urunleri.html" style="display: inline-block; padding: 12px 30px; background: #000; color: #fff; text-decoration: none; border-radius: 4px; margin-top: 20px;">Seramik Ürünlerine Dön</a>
           </div>
         `;
         return;
       }
       
+      // Genel koleksiyon ürününü filtrele (sadece detaylı ürünler)
+      products = products.filter(p => {
+        // "Yurtbay Seramik AFYON" gibi genel ürünleri filtrele
+        const adParts = p.ad.split(' ');
+        if (adParts.length === 3 && adParts[0] === 'Yurtbay' && adParts[1] === 'Seramik') {
+          // Sadece koleksiyon adı varsa (detaylı ürün değilse) filtrele
+          return false;
+        }
+        return true;
+      });
+      
       // Koleksiyon başlığını güncelle
       document.getElementById("koleksiyon-baslik").textContent = koleksiyonAdi.toUpperCase();
       document.getElementById("breadcrumb-koleksiyon").textContent = koleksiyonAdi.toUpperCase();
+      document.getElementById("urun-sayisi").textContent = products.length;
       
-      // İlk ürünün açıklamasını kullan (eğer varsa)
-      const firstProduct = products[0];
-      if (firstProduct.aciklama) {
-        document.getElementById("koleksiyon-aciklama").textContent = firstProduct.aciklama;
-      } else {
-        document.getElementById("koleksiyon-aciklama").textContent = `${koleksiyonAdi.toUpperCase()} koleksiyonuna ait ${products.length} ürün bulunmaktadır.`;
-      }
+      // Hero görseli ayarla
+      updateHeroImage(koleksiyonAdi, products);
       
       filteredProducts = [...products];
       populateFilters();
@@ -186,59 +803,182 @@ if (!koleksiyonAdi) {
     .catch(err => {
       console.error("Hata:", err);
       document.getElementById("urunler").innerHTML = `
-        <div class="empty-state">
+        <div style="text-align: center; padding: 60px;">
           <p>Ürünler yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.</p>
         </div>
       `;
     });
 }
 
+function updateHeroImage(koleksiyonAdi, products) {
+  const hero = document.getElementById("collectionHero");
+  
+  // Önce genel koleksiyon ürününü bul (örn: "Yurtbay Seramik AFYON")
+  let heroImageUrl = null;
+  
+  // Tüm ürünlerden genel koleksiyon ürününü ara
+  fetch("/api/public/products")
+    .then(r => r.json())
+    .then(allProducts => {
+      const generalProduct = allProducts.find(p => {
+        if (!p.marka || !p.marka.includes('Yurtbay Seramik')) return false;
+        if (!p.ad) return false;
+        // Genel ürün: "Yurtbay Seramik AFYON" gibi (ebat bilgisi olmayan)
+        const adParts = p.ad.split(' ');
+        if (adParts.length === 3 && adParts[0] === 'Yurtbay' && adParts[1] === 'Seramik') {
+          const koleksiyonName = adParts[2].toUpperCase();
+          return koleksiyonName === koleksiyonAdi.toUpperCase();
+        }
+        return false;
+      });
+      
+      if (generalProduct && generalProduct.resim) {
+        heroImageUrl = generalProduct.resim;
+        if (heroImageUrl && !heroImageUrl.startsWith('/') && !heroImageUrl.startsWith('data:')) {
+          heroImageUrl = `/uploads/${heroImageUrl}`;
+        }
+      } else if (products.length > 0 && products[0].resim) {
+        // Genel ürün bulunamazsa ilk ürünün görselini kullan
+        heroImageUrl = products[0].resim;
+        if (heroImageUrl && !heroImageUrl.startsWith('/') && !heroImageUrl.startsWith('data:')) {
+          heroImageUrl = `/uploads/${heroImageUrl}`;
+        }
+      }
+      
+      // Hero'ya görsel ekle
+      if (heroImageUrl) {
+        if (!hero.querySelector('img')) {
+          const img = document.createElement('img');
+          img.src = heroImageUrl;
+          img.alt = koleksiyonAdi;
+          img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 0;';
+          hero.insertBefore(img, hero.querySelector('.collection-hero-overlay'));
+        } else {
+          hero.querySelector('img').src = heroImageUrl;
+        }
+      } else {
+        // Placeholder gradient - AFYON için özel renk
+        const colors = {
+          'AFYON': 'linear-gradient(135deg, #8B7355 0%, #D4C4B0 100%)',
+          'ALDA': 'linear-gradient(135deg, #E8E8E8 0%, #B8B8B8 100%)',
+          'ALDER': 'linear-gradient(135deg, #D4A574 0%, #F5D5A8 100%)',
+          'AMALFI': 'linear-gradient(135deg, #4A90E2 0%, #7BB3F0 100%)',
+          'AMAZON': 'linear-gradient(135deg, #2D8659 0%, #5FB88A 100%)'
+        };
+        hero.style.background = colors[koleksiyonAdi.toUpperCase()] || 'linear-gradient(135deg, #6C7A89 0%, #95A5A6 100%)';
+      }
+    })
+    .catch(err => {
+      console.error("Hero görsel yükleme hatası:", err);
+      // Hata durumunda placeholder gradient
+      const colors = {
+        'AFYON': 'linear-gradient(135deg, #8B7355 0%, #D4C4B0 100%)',
+        'ALDA': 'linear-gradient(135deg, #E8E8E8 0%, #B8B8B8 100%)',
+        'ALDER': 'linear-gradient(135deg, #D4A574 0%, #F5D5A8 100%)',
+        'AMALFI': 'linear-gradient(135deg, #4A90E2 0%, #7BB3F0 100%)',
+        'AMAZON': 'linear-gradient(135deg, #2D8659 0%, #5FB88A 100%)'
+      };
+      hero.style.background = colors[koleksiyonAdi.toUpperCase()] || 'linear-gradient(135deg, #6C7A89 0%, #95A5A6 100%)';
+    });
+}
+
 function populateFilters() {
-  // Filtreler burada eklenebilir
+  const ebatlar = new Set();
+  const dokular = new Set();
+  const yuzeyler = new Set();
+  const renkler = new Set();
+  
+  products.forEach(p => {
+    if (p.ad) {
+      const ebatMatch = p.ad.match(/(\d+X\d+)/i);
+      if (ebatMatch) ebatlar.add(ebatMatch[1]);
+      
+      if (p.ad.includes('MERMER')) dokular.add('Mermer');
+      if (p.ad.includes('DOĞAL TAŞ')) dokular.add('Doğal Taş');
+      if (p.ad.includes('BETON')) dokular.add('Beton');
+      if (p.ad.includes('AHŞAP')) dokular.add('Ahşap');
+      
+      if (p.ad.includes('POLİSH') || p.ad.includes('POLISH')) yuzeyler.add('Polish');
+      if (p.ad.includes('HİGH GLOSSY') || p.ad.includes('HIGH GLOSSY')) yuzeyler.add('High Glossy');
+      if (p.ad.includes('MAT')) yuzeyler.add('Mat');
+      if (p.ad.includes('LAPPATO')) yuzeyler.add('Lappato');
+      
+      if (p.ad.includes('BEYAZ')) renkler.add('Beyaz');
+      if (p.ad.includes('GRİ') || p.ad.includes('GRI')) renkler.add('Gri');
+      if (p.ad.includes('KAHVE')) renkler.add('Kahve');
+      if (p.ad.includes('SİYAH') || p.ad.includes('SIYAH')) renkler.add('Siyah');
+    }
+  });
+  
+  const ebatSelect = document.getElementById("ebatFilter");
+  Array.from(ebatlar).sort().forEach(ebat => {
+    const option = document.createElement("option");
+    option.value = ebat;
+    option.textContent = ebat;
+    ebatSelect.appendChild(option);
+  });
+  
+  const dokuSelect = document.getElementById("dokuFilter");
+  Array.from(dokular).sort().forEach(doku => {
+    const option = document.createElement("option");
+    option.value = doku;
+    option.textContent = doku;
+    dokuSelect.appendChild(option);
+  });
+  
+  const yuzeySelect = document.getElementById("yuzeyFilter");
+  Array.from(yuzeyler).sort().forEach(yuzey => {
+    const option = document.createElement("option");
+    option.value = yuzey;
+    option.textContent = yuzey;
+    yuzeySelect.appendChild(option);
+  });
+  
+  const renkSelect = document.getElementById("renkFilter");
+  Array.from(renkler).sort().forEach(renk => {
+    const option = document.createElement("option");
+    option.value = renk;
+    option.textContent = renk;
+    renkSelect.appendChild(option);
+  });
 }
 
 function applyFilters() {
-  const aramaVal = document.getElementById("arama").value.toLowerCase().trim();
+  const ebatVal = document.getElementById("ebatFilter").value;
+  const dokuVal = document.getElementById("dokuFilter").value;
+  const yuzeyVal = document.getElementById("yuzeyFilter").value;
+  const renkVal = document.getElementById("renkFilter").value;
 
   filteredProducts = products.filter(p => {
-    const matchArama = !aramaVal || 
-      (p.ad && p.ad.toLowerCase().includes(aramaVal)) ||
-      (p.aciklama && p.aciklama.toLowerCase().includes(aramaVal));
-
-    return matchArama;
+    if (!p.ad) return false;
+    
+    const adUpper = p.ad.toUpperCase();
+    
+    const matchEbat = !ebatVal || adUpper.includes(ebatVal.toUpperCase());
+    const matchDoku = !dokuVal || adUpper.includes(dokuVal.toUpperCase());
+    const matchYuzey = !yuzeyVal || adUpper.includes(yuzeyVal.toUpperCase().replace(' ', ' '));
+    const matchRenk = !renkVal || adUpper.includes(renkVal.toUpperCase());
+    
+    return matchEbat && matchDoku && matchYuzey && matchRenk;
   });
 
-  const siralama = document.getElementById("siralama").value;
-  if (siralama === "name-asc") {
-    filteredProducts.sort((a, b) => (a.ad || "").localeCompare(b.ad || "", "tr"));
-  } else if (siralama === "name-desc") {
-    filteredProducts.sort((a, b) => (b.ad || "").localeCompare(a.ad || "", "tr"));
-  }
-
+  document.getElementById("urun-sayisi").textContent = filteredProducts.length;
   listele(filteredProducts);
 }
 
 function listele(data) {
   const div = document.getElementById("urunler");
-  const sonuc = document.getElementById("sonuc");
 
   if (data.length === 0) {
     div.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">🔍</div>
-        <h3>Ürün bulunamadı</h3>
-        <p>Farklı bir arama terimi deneyin.</p>
+      <div style="text-align: center; padding: 60px; grid-column: 1 / -1;">
+        <h2>Ürün bulunamadı</h2>
+        <p style="margin: 20px 0;">Filtre kriterlerinize uygun ürün bulunamadı.</p>
       </div>
     `;
-    sonuc.innerHTML = `<span class="result-count">0 ürün bulundu</span>`;
     return;
   }
 
-  sonuc.innerHTML = `
-    <span class="result-count"><strong>${data.length}</strong> ürün bulundu</span>
-  `;
-
-  div.className = currentView === 'grid' ? 'urunler' : 'urunler-list';
   div.innerHTML = "";
 
   data.forEach(p => {
@@ -251,98 +991,208 @@ function listele(data) {
       }
     }
 
-    if (currentView === 'grid') {
-      div.innerHTML += `
-        <div class="urun" onclick="detay('${p.id}')">
-          <div class="urun-image-wrapper">
-            <img src="${resimUrl}" alt="${p.ad}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'300\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'300\\' height=\\'300\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'16\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
-          </div>
-          <div class="urun-content">
-            <h3>${p.ad || 'İsimsiz Ürün'}</h3>
-            <div class="urun-meta">
-              ${p.marka ? `<span class="urun-meta-item"><strong>Marka:</strong> ${p.marka}</span>` : ''}
-            </div>
-            ${p.aciklama ? `<p style="font-size: 0.9rem; color: var(--text-light); margin-top: 10px; line-height: 1.4;">${p.aciklama.substring(0, 100)}${p.aciklama.length > 100 ? '...' : ''}</p>` : ''}
-            <div class="urun-action">
-              <span class="urun-link">Detayları Gör →</span>
-            </div>
-          </div>
+    // Ürün bilgilerini çıkar
+    const ebatMatch = p.ad.match(/(\d+X\d+)/i);
+    const ebat = ebatMatch ? ebatMatch[1] : '';
+    
+    let specs = [];
+    if (ebat) specs.push(ebat);
+    if (p.ad.includes('BEYAZ')) specs.push('Beyaz');
+    if (p.ad.includes('POLİSH') || p.ad.includes('POLISH')) specs.push('Polish');
+    if (p.ad.includes('HİGH GLOSSY') || p.ad.includes('HIGH GLOSSY')) specs.push('High Glossy');
+    if (p.ad.includes('REKTİFİYELİ')) specs.push('Rektifiye');
+    
+    const specsText = specs.join(' ');
+
+    div.innerHTML += `
+      <div class="collection-product" onclick="openProductModal('${p.id}')">
+        <img src="${resimUrl}" alt="${p.ad}" class="collection-product-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'300\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'300\\' height=\\'300\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'16\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
+        <div class="collection-product-info">
+          <h3 class="collection-product-title">${p.ad || 'İsimsiz Ürün'}</h3>
+          ${specsText ? `<p class="collection-product-specs">${specsText}</p>` : ''}
         </div>
-      `;
-    } else {
-      div.innerHTML += `
-        <div class="urun-list-item" onclick="detay('${p.id}')">
-          <div class="urun-list-image">
-            <img src="${resimUrl}" alt="${p.ad}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'150\\' height=\\'150\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'150\\' height=\\'150\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'12\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
-          </div>
-          <div class="urun-list-content">
-            <div>
-              <h3>${p.ad || 'İsimsiz Ürün'}</h3>
-              <div class="urun-list-meta">
-                ${p.marka ? `<span class="urun-meta-item"><strong>Marka:</strong> ${p.marka}</span>` : ''}
-              </div>
-              ${p.aciklama ? `<p style="font-size: 0.9rem; color: var(--text-light); margin-top: 10px;">${p.aciklama.substring(0, 150)}${p.aciklama.length > 150 ? '...' : ''}</p>` : ''}
-            </div>
-            <div class="urun-list-action">
-              <span class="urun-link">Detayları Gör →</span>
-            </div>
-          </div>
-        </div>
-      `;
-    }
+      </div>
+    `;
   });
 }
 
-document.getElementById("arama").addEventListener("input", applyFilters);
-document.getElementById("siralama").addEventListener("change", applyFilters);
+// Filtre toggle
+document.getElementById("filterToggle").addEventListener("click", () => {
+  const container = document.getElementById("filtersContainer");
+  const arrow = document.getElementById("filterArrow");
+  
+  if (container.classList.contains("show")) {
+    container.classList.remove("show");
+    arrow.classList.remove("open");
+  } else {
+    container.classList.add("show");
+    arrow.classList.add("open");
+  }
+});
 
-document.getElementById("temizle").addEventListener("click", () => {
-  document.getElementById("arama").value = "";
-  document.getElementById("siralama").value = "default";
+// Filtre değişiklikleri
+document.getElementById("ebatFilter").addEventListener("change", applyFilters);
+document.getElementById("dokuFilter").addEventListener("change", applyFilters);
+document.getElementById("yuzeyFilter").addEventListener("change", applyFilters);
+document.getElementById("renkFilter").addEventListener("change", applyFilters);
+
+document.getElementById("uygulaBtn").addEventListener("click", () => {
+  applyFilters();
+  document.getElementById("filtersContainer").classList.remove("show");
+  document.getElementById("filterArrow").classList.remove("open");
+});
+
+document.getElementById("temizleBtn").addEventListener("click", () => {
+  document.getElementById("ebatFilter").value = "";
+  document.getElementById("dokuFilter").value = "";
+  document.getElementById("yuzeyFilter").value = "";
+  document.getElementById("renkFilter").value = "";
   applyFilters();
 });
 
-document.getElementById("gridView").addEventListener("click", () => {
-  currentView = 'grid';
-  document.getElementById("gridView").classList.add("active");
-  document.getElementById("listView").classList.remove("active");
-  listele(filteredProducts);
-});
+let currentProduct = null;
+let currentImageIndex = 0;
+let productImages = [];
 
-document.getElementById("listView").addEventListener("click", () => {
-  currentView = 'list';
-  document.getElementById("listView").classList.add("active");
-  document.getElementById("gridView").classList.remove("active");
-  listele(filteredProducts);
-});
+function openProductModal(productId) {
+  // Ürün bilgilerini al
+  const product = filteredProducts.find(p => p.id === productId);
+  if (!product) {
+    // Tüm ürünlerden ara
+    const allProduct = products.find(p => p.id === productId);
+    if (!allProduct) return;
+    currentProduct = allProduct;
+  } else {
+    currentProduct = product;
+  }
 
-function detay(id) {
-  location.href = "/urun.html?id=" + id;
+  // Modal'ı göster
+  document.getElementById("productModal").style.display = "flex";
+  document.body.style.overflow = "hidden";
+
+  // Ürün bilgilerini doldur
+  document.getElementById("modalProductTitle").textContent = currentProduct.ad || 'İsimsiz Ürün';
+
+  // Görseli ayarla
+  let resimUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="600" height="600"%3E%3Crect fill="%23f0f0f0" width="600" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="20" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
+  if (currentProduct.resim) {
+    resimUrl = currentProduct.resim;
+    if (resimUrl && !resimUrl.startsWith('/') && !resimUrl.startsWith('data:')) {
+      resimUrl = `/uploads/${resimUrl}`;
+    }
+  }
+
+  // Görselleri ayarla (şimdilik tek görsel, sonra çoklu görsel eklenebilir)
+  productImages = [resimUrl];
+  currentImageIndex = 0;
+  updateModalImage();
+  document.getElementById("totalImages").textContent = productImages.length;
+  document.getElementById("currentImage").textContent = "1";
+
+  // Ürün özelliklerini doldur
+  populateProductSpecs(currentProduct);
 }
+
+function closeProductModal() {
+  document.getElementById("productModal").style.display = "none";
+  document.body.style.overflow = "";
+  currentProduct = null;
+  currentImageIndex = 0;
+  productImages = [];
+}
+
+function updateModalImage() {
+  if (productImages.length > 0) {
+    const img = document.getElementById("modalProductImage");
+    img.src = productImages[currentImageIndex];
+    document.getElementById("currentImage").textContent = currentImageIndex + 1;
+  }
+}
+
+function changeImage(direction) {
+  if (productImages.length <= 1) return;
+  
+  currentImageIndex += direction;
+  if (currentImageIndex < 0) currentImageIndex = productImages.length - 1;
+  if (currentImageIndex >= productImages.length) currentImageIndex = 0;
+  
+  updateModalImage();
+}
+
+// Tab fonksiyonu kaldırıldı - sadece GENEL BİLGİ gösteriliyor
+
+function populateProductSpecs(product) {
+  const tbody = document.getElementById("productSpecsBody");
+  tbody.innerHTML = "";
+
+  // Ürün adından bilgileri çıkar
+  const ad = product.ad || '';
+  
+  // Ebat
+  const ebatMatch = ad.match(/(\d+X\d+)/i);
+  const ebat = ebatMatch ? ebatMatch[1] + ' Cm' : '-';
+  
+  // Doku
+  let doku = '-';
+  if (ad.includes('MERMER')) doku = 'Mermer';
+  else if (ad.includes('DOĞAL TAŞ')) doku = 'Doğal Taş';
+  else if (ad.includes('BETON')) doku = 'Beton';
+  else if (ad.includes('AHŞAP')) doku = 'Ahşap';
+  
+  // Yüzey
+  let yuzey = '-';
+  if (ad.includes('POLİSH') || ad.includes('POLISH')) yuzey = 'Polish';
+  else if (ad.includes('HİGH GLOSSY') || ad.includes('HIGH GLOSSY')) yuzey = 'High Glossy';
+  else if (ad.includes('MAT')) yuzey = 'Mat';
+  else if (ad.includes('LAPPATO')) yuzey = 'Lappato';
+  
+  // Renk
+  let renk = '-';
+  if (ad.includes('BEYAZ')) renk = 'Beyaz';
+  else if (ad.includes('GRİ') || ad.includes('GRI')) renk = 'Gri';
+  else if (ad.includes('KAHVE')) renk = 'Kahve';
+  else if (ad.includes('SİYAH') || ad.includes('SIYAH')) renk = 'Siyah';
+  
+  // Rektifiye
+  const rektifiye = ad.includes('REKTİFİYELİ') || ad.includes('REKTİFİYE') ? 'Rektifiye' : 'Standart';
+  
+  // Ürün kodu (ID'den oluştur)
+  const urunKodu = product.id.substring(0, 8).toUpperCase();
+
+  const specs = [
+    { label: 'Ürün Kodu', value: urunKodu },
+    { label: 'Doku', value: doku },
+    { label: 'Ebat', value: ebat },
+    { label: 'Kalınlık', value: '8,2 Mm' },
+    { label: 'İç Mekanda Kullanım', value: 'Duvar ve Yer' },
+    { label: 'Dış Mekanda Kullanım', value: ad.includes('HİGH GLOSSY') ? 'Uygun Değildir' : 'Duvar' },
+    { label: 'Kullanım Alanı', value: 'Balkon&Teras, Banyo, İç Mekan' },
+    { label: 'Yüzey Görünümü', value: yuzey },
+    { label: 'Kalıp', value: 'Düz' },
+    { label: 'Bünye', value: rektifiye },
+    { label: 'Ürün Grubu', value: 'EN 14411, Group Bla' },
+    { label: 'V Skalası', value: 'V3' }
+  ];
+
+  specs.forEach(spec => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="spec-label">${spec.label}</td>
+      <td class="spec-value">${spec.value}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// Faces tab fonksiyonu kaldırıldı
+
+// ESC tuşu ile modal'ı kapat
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeProductModal();
+  }
+});
 </script>
-
-<style>
-.breadcrumb {
-  margin-bottom: 15px;
-  font-size: 0.9rem;
-  color: var(--text-light);
-}
-
-.breadcrumb a {
-  color: var(--primary-color);
-  text-decoration: none;
-}
-
-.breadcrumb a:hover {
-  text-decoration: underline;
-}
-
-.breadcrumb span {
-  margin: 0 5px;
-  color: var(--text-light);
-}
-</style>
 
 </body>
 </html>
-
