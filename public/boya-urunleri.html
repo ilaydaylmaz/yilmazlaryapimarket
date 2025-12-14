@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Yılmazlar Yapı Market ürün kataloğu - Yapı malzemeleri, hırdavat, elektrik ve tesisat ürünleri">
-  <title>Ürünler - Yılmazlar Yapı Market</title>
+  <meta name="description" content="Yılmazlar Yapı Market Boya Ürünleri - Geniş boya ürünleri yelpazesi">
+  <title>Boya Ürünleri - Yılmazlar Yapı Market</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -44,8 +44,8 @@
 <div class="container">
   <div class="page-header">
     <div class="page-header-content">
-  <h1>Ürünlerimiz</h1>
-      <p>Geniş ürün yelpazemizden ihtiyacınıza uygun ürünü bulun</p>
+      <h1>Boya Ürünleri</h1>
+      <p>Geniş boya ürünleri yelpazemizden ihtiyacınıza uygun ürünü bulun</p>
     </div>
     <div class="view-controls">
       <button id="gridView" class="view-btn active" title="Grid Görünüm">
@@ -59,12 +59,9 @@
 
   <div class="filters-bar">
     <div class="search-wrapper">
-      <input id="arama" type="search" placeholder="🔍 Ürün, marka veya kategori ara..." autocomplete="off">
+      <input id="arama" type="search" placeholder="🔍 Ürün veya marka ara..." autocomplete="off">
     </div>
     <div class="filters-row">
-      <select id="kategoriFilter" class="filter-select">
-        <option value="">Tüm Kategoriler</option>
-      </select>
       <select id="markaFilter" class="filter-select">
         <option value="">Tüm Markalar</option>
       </select>
@@ -72,7 +69,6 @@
         <option value="default">Varsayılan</option>
         <option value="name-asc">İsme Göre (A-Z)</option>
         <option value="name-desc">İsme Göre (Z-A)</option>
-        <option value="category">Kategoriye Göre</option>
       </select>
       <button id="temizle" class="btn-clear">Temizle</button>
     </div>
@@ -117,28 +113,17 @@
 let products = [];
 let filteredProducts = [];
 let currentView = 'grid';
-
-// URL parametrelerini oku
-const urlParams = new URLSearchParams(window.location.search);
-const kategoriFromUrl = urlParams.get('kategori');
+const TARGET_CATEGORY = "Boya Ürünleri";
 
 // Verileri yükle
 fetch("/api/public/products")
   .then(r => r.json())
   .then(data => {
-    products = data;
-    filteredProducts = [...data];
+    // Sadece bu kategorideki ürünleri filtrele
+    products = data.filter(p => p.kategori && p.kategori.trim() === TARGET_CATEGORY);
+    filteredProducts = [...products];
     populateFilters();
-    
-    // URL'den kategori parametresi varsa filtreyi uygula
-    if (kategoriFromUrl) {
-      const decodedKategori = decodeURIComponent(kategoriFromUrl);
-      document.getElementById("kategoriFilter").value = decodedKategori;
-      // Hemen filtreleme yap
-      applyFilters();
-    } else {
-      listele(data);
-    }
+    listele(filteredProducts);
   })
   .catch(err => {
     document.getElementById("urunler").innerHTML = `
@@ -150,18 +135,8 @@ fetch("/api/public/products")
 
 // Filtreleri doldur
 function populateFilters() {
-  const kategoriler = [...new Set(products.map(p => p.kategori).filter(Boolean))].sort();
   const markalar = [...new Set(products.map(p => p.marka).filter(Boolean))].sort();
-  
-  const kategoriSelect = document.getElementById("kategoriFilter");
   const markaSelect = document.getElementById("markaFilter");
-  
-  kategoriler.forEach(k => {
-    const option = document.createElement("option");
-    option.value = k;
-    option.textContent = k;
-    kategoriSelect.appendChild(option);
-  });
   
   markalar.forEach(m => {
     const option = document.createElement("option");
@@ -174,22 +149,9 @@ function populateFilters() {
 // Filtreleme fonksiyonu
 function applyFilters() {
   const aramaVal = document.getElementById("arama").value.toLowerCase().trim();
-  const kategoriVal = document.getElementById("kategoriFilter").value.trim();
   const markaVal = document.getElementById("markaFilter").value.trim();
   
   filteredProducts = products.filter(p => {
-    // Kategori eşleşmesi - ÖNCE kategori kontrolü yap (en önemli filtre)
-    const productKategori = p.kategori ? String(p.kategori).trim() : "";
-    const selectedKategori = String(kategoriVal).trim();
-    
-    // Eğer kategori seçildiyse, sadece o kategoriyi göster - kesin eşitlik
-    if (selectedKategori && selectedKategori !== "" && selectedKategori !== "Tüm Kategoriler") {
-      if (productKategori !== selectedKategori) {
-        return false; // Kategori eşleşmiyorsa direkt çık
-      }
-    }
-    
-    // Arama filtresi - kategori aramadan çıkarıldı
     const matchArama = !aramaVal || 
       (p.ad && p.ad.toLowerCase().includes(aramaVal)) ||
       (p.marka && p.marka.toLowerCase().includes(aramaVal));
@@ -205,8 +167,6 @@ function applyFilters() {
     filteredProducts.sort((a, b) => (a.ad || "").localeCompare(b.ad || "", "tr"));
   } else if (siralama === "name-desc") {
     filteredProducts.sort((a, b) => (b.ad || "").localeCompare(a.ad || "", "tr"));
-  } else if (siralama === "category") {
-    filteredProducts.sort((a, b) => (a.kategori || "").localeCompare(b.kategori || "", "tr"));
   }
   
   listele(filteredProducts);
@@ -230,9 +190,6 @@ function listele(data) {
   }
   
   const activeFilters = [];
-  if (document.getElementById("kategoriFilter").value) {
-    activeFilters.push(`Kategori: ${document.getElementById("kategoriFilter").value}`);
-  }
   if (document.getElementById("markaFilter").value) {
     activeFilters.push(`Marka: ${document.getElementById("markaFilter").value}`);
   }
@@ -246,15 +203,10 @@ function listele(data) {
   div.innerHTML = "";
   
   data.forEach(p => {
-    // Base64 resim varsa onu kullan, yoksa dosya yolunu kullan
     let resimUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="300"%3E%3Crect fill="%23f0f0f0" width="300" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="16" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
     
     if (p.resim) {
-      // Backend'den gelen resim zaten doğru formatta (base64 veya /uploads/...)
-      // Direkt kullan
       resimUrl = p.resim;
-      
-      // Eğer sadece dosya adı geliyorsa (eski format), /uploads/ ekle
       if (p.resim && !p.resim.startsWith('/') && !p.resim.startsWith('data:')) {
         resimUrl = `/uploads/${p.resim}`;
       }
@@ -304,13 +256,11 @@ function listele(data) {
 
 // Event listeners
 document.getElementById("arama").addEventListener("input", applyFilters);
-document.getElementById("kategoriFilter").addEventListener("change", applyFilters);
 document.getElementById("markaFilter").addEventListener("change", applyFilters);
 document.getElementById("siralama").addEventListener("change", applyFilters);
 
 document.getElementById("temizle").addEventListener("click", () => {
   document.getElementById("arama").value = "";
-  document.getElementById("kategoriFilter").value = "";
   document.getElementById("markaFilter").value = "";
   document.getElementById("siralama").value = "default";
   applyFilters();
@@ -337,3 +287,4 @@ function detay(id) {
 
 </body>
 </html>
+
