@@ -178,13 +178,16 @@ function applyFilters() {
   const markaVal = document.getElementById("markaFilter").value.trim();
   
   filteredProducts = products.filter(p => {
+    // Arama filtresi - kategori aramadan çıkarıldı
     const matchArama = !aramaVal || 
       (p.ad && p.ad.toLowerCase().includes(aramaVal)) ||
-      (p.marka && p.marka.toLowerCase().includes(aramaVal)) ||
-      (p.kategori && p.kategori.toLowerCase().includes(aramaVal));
+      (p.marka && p.marka.toLowerCase().includes(aramaVal));
     
-    // Kategori eşleşmesi - tam eşitlik kontrolü
-    const matchKategori = !kategoriVal || (p.kategori && p.kategori.trim() === kategoriVal);
+    // Kategori eşleşmesi - tam eşitlik kontrolü (boşlukları normalize et)
+    const productKategori = p.kategori ? p.kategori.trim() : "";
+    const selectedKategori = kategoriVal.trim();
+    const matchKategori = !selectedKategori || productKategori === selectedKategori;
+    
     const matchMarka = !markaVal || (p.marka && p.marka.trim() === markaVal);
     
     return matchArama && matchKategori && matchMarka;
