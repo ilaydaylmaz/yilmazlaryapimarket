@@ -2001,8 +2001,14 @@ input[type="search"]:focus {
   }
 
   .category-icon {
-    font-size: 2.5rem;
+    width: 70px;
+    height: 70px;
     margin-bottom: 15px;
+  }
+
+  .category-icon svg {
+    width: 35px;
+    height: 35px;
   }
 
   .category-card h3 {
@@ -2290,8 +2296,14 @@ input[type="search"]:focus {
   }
 
   .category-icon {
-    font-size: 2rem;
+    width: 60px;
+    height: 60px;
     margin-bottom: 12px;
+  }
+
+  .category-icon svg {
+    width: 30px;
+    height: 30px;
   }
 
   .category-card h3 {
