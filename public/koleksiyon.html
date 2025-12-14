@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Yılmazlar Yapı Market Seramik Ürünleri - Geniş seramik ürünleri yelpazesi">
-  <title>Seramik Ürünleri - Yılmazlar Yapı Market</title>
+  <meta name="description" content="Yılmazlar Yapı Market - Seramik Koleksiyonu">
+  <title>Seramik Koleksiyonu - Yılmazlar Yapı Market</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
     <nav>
       <a href="/">Ana Sayfa</a>
       <div class="nav-dropdown">
-        <a href="/urunler.html" class="dropdown-toggle active">Ürünler <span class="dropdown-arrow">▼</span></a>
+        <a href="/urunler.html" class="dropdown-toggle">Ürünler <span class="dropdown-arrow">▼</span></a>
         <div class="dropdown-menu">
           <div class="dropdown-header">
             <h3>Ürün Grublarımız</h3>
@@ -44,8 +44,15 @@
 <div class="container">
   <div class="page-header">
     <div class="page-header-content">
-      <h1>Seramik Ürünleri</h1>
-      <p>Geniş seramik ürünleri yelpazemizden ihtiyacınıza uygun ürünü bulun</p>
+      <nav class="breadcrumb">
+        <a href="/">Ana Sayfa</a>
+        <span> / </span>
+        <a href="/seramik-urunleri.html">Seramik Ürünleri</a>
+        <span> / </span>
+        <span id="breadcrumb-koleksiyon">Koleksiyon</span>
+      </nav>
+      <h1 id="koleksiyon-baslik">Koleksiyon</h1>
+      <p id="koleksiyon-aciklama" class="section-subtitle">Koleksiyon ürünleri yükleniyor...</p>
     </div>
     <div class="view-controls">
       <button id="gridView" class="view-btn active" title="Grid Görünüm">
@@ -59,12 +66,9 @@
 
   <div class="filters-bar">
     <div class="search-wrapper">
-      <input id="arama" type="search" placeholder="🔍 Ürün veya marka ara..." autocomplete="off">
+      <input id="arama" type="search" placeholder="🔍 Ürün ara..." autocomplete="off">
     </div>
     <div class="filters-row">
-      <select id="markaFilter" class="filter-select">
-        <option value="">Tüm Markalar</option>
-      </select>
       <select id="siralama" class="filter-select">
         <option value="default">Varsayılan</option>
         <option value="name-asc">İsme Göre (A-Z)</option>
@@ -88,6 +92,7 @@
     <div>
       <h3>Yılmazlar Yapı Market</h3>
       <p>Kaliteli ürün, güvenilir hizmet</p>
+      <p>Yıllardır sektörde güvenilir çözüm ortağınız</p>
     </div>
     <div>
       <h3>Hızlı Erişim</h3>
@@ -98,10 +103,16 @@
     </div>
     <div>
       <h3>İletişim</h3>
-      <p>📍 İstanbul / Türkiye</p>
-      <p>📞 05xx xxx xx xx</p>
-      <p>✉️ info@yilmazlaryapi.com</p>
-      <p><a href="https://instagram.com/yilmazlarvize" target="_blank" rel="noopener noreferrer" class="instagram-link"><span class="instagram-icon"></span></a></p>
+      <p>📍 Kırklareli / Vize</p>
+      <p>📞 0536 719 13 08</p>
+      <p>✉️ yilmazlarvize@gmail.com</p>
+      <p><a href="https://instagram.com/yilmazlarvize" target="_blank" rel="noopener noreferrer" class="instagram-link" title="Instagram hesabımızı ziyaret edin"><span class="instagram-icon"></span> Instagram</a></p>
+      <div class="footer-hours">
+        <h4>🕒 Çalışma Saatleri</h4>
+        <p>Pzt-Cuma: 08:00 - 18:00</p>
+        <p>Cumartesi: 08:00 - 16:00</p>
+        <p>Pazar: Kapalı</p>
+      </div>
     </div>
   </div>
   <div class="footer-bottom">
@@ -113,48 +124,88 @@
 let products = [];
 let filteredProducts = [];
 let currentView = 'grid';
-const TARGET_CATEGORY = "Seramik Ürünleri";
+let koleksiyonAdi = '';
 
-fetch("/api/public/products")
-  .then(r => r.json())
-  .then(data => {
-    products = data.filter(p => p.kategori && p.kategori.trim() === TARGET_CATEGORY);
-    filteredProducts = [...products];
-    populateFilters();
-    listele(filteredProducts);
-  })
-  .catch(err => {
-    document.getElementById("urunler").innerHTML = `
-      <div class="empty-state">
-        <p>Ürünler yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.</p>
-      </div>
-    `;
-  });
+// URL'den koleksiyon adını al
+const urlParams = new URLSearchParams(window.location.search);
+koleksiyonAdi = urlParams.get('seri') || urlParams.get('koleksiyon') || '';
+
+if (!koleksiyonAdi) {
+  document.getElementById("urunler").innerHTML = `
+    <div class="empty-state">
+      <h3>Koleksiyon Bulunamadı</h3>
+      <p>Lütfen geçerli bir koleksiyon seçin.</p>
+      <a href="/seramik-urunleri.html" class="btn btn-primary">Seramik Ürünlerine Dön</a>
+    </div>
+  `;
+} else {
+  // Koleksiyon bilgilerini yükle
+  fetch("/api/public/products")
+    .then(r => r.json())
+    .then(data => {
+      // Yurtbay Seramik ürünlerini filtrele
+      const yurtbayProducts = data.filter(p => 
+        p.marka && p.marka.includes('Yurtbay Seramik')
+      );
+      
+      // Koleksiyon adına göre filtrele (örneğin: "Yurtbay Seramik AFYON" -> "AFYON")
+      products = yurtbayProducts.filter(p => {
+        if (!p.ad) return false;
+        const productName = p.ad.toUpperCase();
+        const koleksiyonUpper = koleksiyonAdi.toUpperCase();
+        return productName.includes(koleksiyonUpper);
+      });
+      
+      if (products.length === 0) {
+        document.getElementById("urunler").innerHTML = `
+          <div class="empty-state">
+            <h3>Bu koleksiyonda ürün bulunamadı</h3>
+            <p>"${koleksiyonAdi}" koleksiyonunda henüz ürün bulunmamaktadır.</p>
+            <a href="/seramik-urunleri.html" class="btn btn-primary">Seramik Ürünlerine Dön</a>
+          </div>
+        `;
+        return;
+      }
+      
+      // Koleksiyon başlığını güncelle
+      document.getElementById("koleksiyon-baslik").textContent = koleksiyonAdi.toUpperCase();
+      document.getElementById("breadcrumb-koleksiyon").textContent = koleksiyonAdi.toUpperCase();
+      
+      // İlk ürünün açıklamasını kullan (eğer varsa)
+      const firstProduct = products[0];
+      if (firstProduct.aciklama) {
+        document.getElementById("koleksiyon-aciklama").textContent = firstProduct.aciklama;
+      } else {
+        document.getElementById("koleksiyon-aciklama").textContent = `${koleksiyonAdi.toUpperCase()} koleksiyonuna ait ${products.length} ürün bulunmaktadır.`;
+      }
+      
+      filteredProducts = [...products];
+      populateFilters();
+      listele(filteredProducts);
+    })
+    .catch(err => {
+      console.error("Hata:", err);
+      document.getElementById("urunler").innerHTML = `
+        <div class="empty-state">
+          <p>Ürünler yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.</p>
+        </div>
+      `;
+    });
+}
 
 function populateFilters() {
-  const markalar = [...new Set(products.map(p => p.marka).filter(Boolean))].sort();
-  const markaSelect = document.getElementById("markaFilter");
-
-  markalar.forEach(m => {
-    const option = document.createElement("option");
-    option.value = m;
-    option.textContent = m;
-    markaSelect.appendChild(option);
-  });
+  // Filtreler burada eklenebilir
 }
 
 function applyFilters() {
   const aramaVal = document.getElementById("arama").value.toLowerCase().trim();
-  const markaVal = document.getElementById("markaFilter").value.trim();
 
   filteredProducts = products.filter(p => {
     const matchArama = !aramaVal || 
       (p.ad && p.ad.toLowerCase().includes(aramaVal)) ||
-      (p.marka && p.marka.toLowerCase().includes(aramaVal));
+      (p.aciklama && p.aciklama.toLowerCase().includes(aramaVal));
 
-    const matchMarka = !markaVal || (p.marka && String(p.marka).trim() === String(markaVal).trim());
-
-    return matchArama && matchMarka;
+    return matchArama;
   });
 
   const siralama = document.getElementById("siralama").value;
@@ -176,21 +227,15 @@ function listele(data) {
       <div class="empty-state">
         <div class="empty-state-icon">🔍</div>
         <h3>Ürün bulunamadı</h3>
-        <p>Farklı bir arama terimi veya filtre deneyin.</p>
+        <p>Farklı bir arama terimi deneyin.</p>
       </div>
     `;
     sonuc.innerHTML = `<span class="result-count">0 ürün bulundu</span>`;
     return;
   }
 
-  const activeFilters = [];
-  if (document.getElementById("markaFilter").value) {
-    activeFilters.push(`Marka: ${document.getElementById("markaFilter").value}`);
-  }
-
   sonuc.innerHTML = `
     <span class="result-count"><strong>${data.length}</strong> ürün bulundu</span>
-    ${activeFilters.length > 0 ? `<span class="active-filters">${activeFilters.join(" • ")}</span>` : ''}
   `;
 
   div.className = currentView === 'grid' ? 'urunler' : 'urunler-list';
@@ -206,40 +251,27 @@ function listele(data) {
       }
     }
 
-    // Yurtbay Seramik ürünleri için koleksiyon adını çıkar
-    let onClickAction = `detay('${p.id}')`;
-    let linkText = 'Detayları Gör →';
-    if (p.marka && p.marka.includes('Yurtbay Seramik') && p.ad) {
-      // Ürün adından koleksiyon adını çıkar (örn: "Yurtbay Seramik AFYON" -> "AFYON")
-      const adParts = p.ad.split(' ');
-      if (adParts.length >= 3 && adParts[0] === 'Yurtbay' && adParts[1] === 'Seramik') {
-        const koleksiyonAdi = adParts.slice(2).join(' ');
-        onClickAction = `koleksiyonDetay('${koleksiyonAdi.replace(/'/g, "\\'")}')`;
-        linkText = 'Koleksiyonu Gör →';
-      }
-    }
-
     if (currentView === 'grid') {
-    div.innerHTML += `
-      <div class="urun" onclick="${onClickAction}">
+      div.innerHTML += `
+        <div class="urun" onclick="detay('${p.id}')">
           <div class="urun-image-wrapper">
             <img src="${resimUrl}" alt="${p.ad}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'300\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'300\\' height=\\'300\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'16\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
-
           </div>
           <div class="urun-content">
             <h3>${p.ad || 'İsimsiz Ürün'}</h3>
             <div class="urun-meta">
               ${p.marka ? `<span class="urun-meta-item"><strong>Marka:</strong> ${p.marka}</span>` : ''}
             </div>
+            ${p.aciklama ? `<p style="font-size: 0.9rem; color: var(--text-light); margin-top: 10px; line-height: 1.4;">${p.aciklama.substring(0, 100)}${p.aciklama.length > 100 ? '...' : ''}</p>` : ''}
             <div class="urun-action">
-              <span class="urun-link">${linkText}</span>
+              <span class="urun-link">Detayları Gör →</span>
             </div>
           </div>
         </div>
       `;
     } else {
       div.innerHTML += `
-        <div class="urun-list-item" onclick="${onClickAction}">
+        <div class="urun-list-item" onclick="detay('${p.id}')">
           <div class="urun-list-image">
             <img src="${resimUrl}" alt="${p.ad}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'150\\' height=\\'150\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'150\\' height=\\'150\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'12\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
           </div>
@@ -247,27 +279,25 @@ function listele(data) {
             <div>
               <h3>${p.ad || 'İsimsiz Ürün'}</h3>
               <div class="urun-list-meta">
-
                 ${p.marka ? `<span class="urun-meta-item"><strong>Marka:</strong> ${p.marka}</span>` : ''}
               </div>
+              ${p.aciklama ? `<p style="font-size: 0.9rem; color: var(--text-light); margin-top: 10px;">${p.aciklama.substring(0, 150)}${p.aciklama.length > 150 ? '...' : ''}</p>` : ''}
             </div>
             <div class="urun-list-action">
-              <span class="urun-link">${linkText}</span>
+              <span class="urun-link">Detayları Gör →</span>
             </div>
           </div>
-      </div>
-    `;
+        </div>
+      `;
     }
   });
 }
 
 document.getElementById("arama").addEventListener("input", applyFilters);
-document.getElementById("markaFilter").addEventListener("change", applyFilters);
 document.getElementById("siralama").addEventListener("change", applyFilters);
 
 document.getElementById("temizle").addEventListener("click", () => {
   document.getElementById("arama").value = "";
-  document.getElementById("markaFilter").value = "";
   document.getElementById("siralama").value = "default";
   applyFilters();
 });
@@ -289,11 +319,30 @@ document.getElementById("listView").addEventListener("click", () => {
 function detay(id) {
   location.href = "/urun.html?id=" + id;
 }
-
-function koleksiyonDetay(koleksiyonAdi) {
-  location.href = "/koleksiyon.html?seri=" + encodeURIComponent(koleksiyonAdi);
-}
 </script>
+
+<style>
+.breadcrumb {
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.breadcrumb a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb span {
+  margin: 0 5px;
+  color: var(--text-light);
+}
+</style>
 
 </body>
 </html>
+
