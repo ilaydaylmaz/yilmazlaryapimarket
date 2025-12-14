@@ -787,6 +787,42 @@
   gap: 10px;
 }
 
+.instagram-post-wrapper {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  position: relative;
+}
+
+.instagram-post-wrapper blockquote {
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Instagram embed içindeki görseli göster, diğer elementleri gizle */
+.instagram-post-wrapper blockquote a {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.instagram-post-wrapper blockquote a img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Instagram embed içindeki metin ve butonları gizle */
+.instagram-post-wrapper blockquote p,
+.instagram-post-wrapper blockquote div[style*="padding-top"],
+.instagram-post-wrapper blockquote div[style*="padding: 19%"] {
+  display: none !important;
+}
+
 .instagram-post-image {
   display: block;
   width: 100%;

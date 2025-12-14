@@ -402,68 +402,42 @@ const instagramPosts = [
   'https://www.instagram.com/p/DR5ARhhjDjo/'
 ];
 
-// Instagram postlarını yükle
-async function loadInstagramPosts() {
+// Instagram postlarını yükle - iframe embed kullan
+function loadInstagramPosts() {
   const grid = document.getElementById('instagramPostsGrid');
   if (!grid) {
     console.error('Instagram posts grid bulunamadı');
     return;
   }
 
-  for (const postUrl of instagramPosts) {
-    try {
-      const response = await fetch(`/api/instagram/oembed?url=${encodeURIComponent(postUrl)}`);
-      
-      if (!response.ok) {
-        console.error(`Instagram oEmbed hatası: ${response.status}`);
-        continue;
+  instagramPosts.forEach((postUrl) => {
+    const postElement = document.createElement('div');
+    postElement.className = 'instagram-post-wrapper';
+    
+    // Instagram embed blockquote oluştur
+    const blockquote = document.createElement('blockquote');
+    blockquote.className = 'instagram-media';
+    blockquote.setAttribute('data-instgrm-permalink', postUrl);
+    blockquote.setAttribute('data-instgrm-version', '14');
+    blockquote.style.cssText = 'background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:100%; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);';
+    
+    postElement.appendChild(blockquote);
+    grid.appendChild(postElement);
+  });
+
+  // Instagram embed script'ini yükle
+  if (window.instgrm) {
+    window.instgrm.Embeds.process();
+  } else {
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = '//www.instagram.com/embed.js';
+    script.onload = () => {
+      if (window.instgrm) {
+        window.instgrm.Embeds.process();
       }
-      
-      const result = await response.json();
-      console.log('Instagram oEmbed sonucu:', result);
-      
-      if (result.success && result.data) {
-        const post = result.data;
-        const postElement = document.createElement('a');
-        postElement.href = postUrl;
-        postElement.target = '_blank';
-        postElement.rel = 'noopener noreferrer';
-        postElement.className = 'instagram-post-image';
-        
-        // Thumbnail URL'ini kullan (eğer varsa)
-        let imageUrl = post.thumbnail_url || null;
-        
-        // Eğer thumbnail_url yoksa, HTML'den görsel URL'ini çıkar
-        if (!imageUrl && post.html) {
-          // Instagram embed HTML'inden görsel URL'ini çıkar
-          const imgMatch = post.html.match(/<img[^>]+src=["']([^"']+)["']/i);
-          if (imgMatch) {
-            imageUrl = imgMatch[1];
-          }
-        }
-        
-        if (imageUrl) {
-          postElement.innerHTML = `<img src="${imageUrl}" alt="Instagram post" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'instagram-placeholder\\'>Görsel yüklenemedi</div>'">`;
-        } else {
-          // Fallback: placeholder
-          postElement.innerHTML = `<div class="instagram-placeholder">Instagram Post</div>`;
-        }
-        
-        grid.appendChild(postElement);
-      } else {
-        console.error('Instagram oEmbed başarısız:', result);
-      }
-    } catch (error) {
-      console.error('Instagram post yükleme hatası:', error);
-      // Hata durumunda placeholder göster
-      const postElement = document.createElement('a');
-      postElement.href = postUrl;
-      postElement.target = '_blank';
-      postElement.rel = 'noopener noreferrer';
-      postElement.className = 'instagram-post-image';
-      postElement.innerHTML = `<div class="instagram-placeholder">Instagram Post</div>`;
-      grid.appendChild(postElement);
-    }
+    };
+    document.body.appendChild(script);
   }
 }
 
