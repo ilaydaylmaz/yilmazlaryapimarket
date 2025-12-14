@@ -1024,4 +1024,37 @@ app.get("/api/catalog/info", (req, res) => {
       : "Katalog henüz hazırlanmamış. Lütfen bizimle iletişime geçin."
   });
 });
+
+// Instagram oEmbed endpoint
+app.get("/api/instagram/oembed", async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) {
+      return res.status(400).json({ success: false, message: "URL parametresi gerekli" });
+    }
+
+    const oembedUrl = `https://api.instagram.com/oembed/?url=${encodeURIComponent(url)}`;
+    
+    https.get(oembedUrl, (response) => {
+      let data = '';
+      
+      response.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      response.on('end', () => {
+        try {
+          const oembed = JSON.parse(data);
+          res.json({ success: true, data: oembed });
+        } catch (error) {
+          res.status(500).json({ success: false, message: "Instagram oEmbed parse hatası" });
+        }
+      });
+    }).on('error', (error) => {
+      res.status(500).json({ success: false, message: "Instagram oEmbed hatası: " + error.message });
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Sunucu hatası: " + error.message });
+  }
+});
   
