@@ -43,12 +43,12 @@
   
   .navbar {
     max-width: 1400px;
-    margin: 0 auto;
+  margin: 0 auto;
     padding: 20px 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
+  flex-wrap: wrap;
   }
   
   .nav-left,
@@ -57,15 +57,15 @@
     align-items: center;
     gap: 30px;
     flex: 1;
-  }
-  
+}
+
   .nav-right {
     justify-content: flex-end;
-  }
-  
+}
+
   .navbar-logo {
     flex: 0 0 auto;
-    display: flex;
+  display: flex;
     justify-content: center;
   }
   
@@ -78,14 +78,14 @@
     height: 60px;
     transition: transform 0.3s ease;
   }
-
+  
   .navbar-logo img:hover {
     transform: scale(1.05);
   }
   
   .nav-item {
     text-decoration: none;
-    color: var(--text-dark);
+  color: var(--text-dark);
     font-weight: 500;
     font-size: 14px;
     letter-spacing: 0.5px;
@@ -127,7 +127,7 @@
   visibility: hidden;
   transition: all 0.3s ease;
   pointer-events: none;
-}
+  }
 
 .search-modal.active {
   opacity: 1;
@@ -136,7 +136,7 @@
 }
 
 .search-modal-overlay {
-  position: absolute;
+    position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -212,7 +212,7 @@
 .search-input::placeholder {
   color: rgba(45, 52, 54, 0.5);
   font-weight: 400;
-}
+  }
 
 .search-input:focus {
   border-color: var(--primary-color);
@@ -220,7 +220,7 @@
   box-shadow: 0 4px 20px rgba(196, 0, 0, 0.15);
   outline: none;
 }
-
+  
 .search-button {
   padding: 0 40px;
   font-size: 16px;
@@ -431,8 +431,8 @@
   top: -150px;
   right: -150px;
   animation-delay: 0s;
-}
-
+  }
+  
 .hero-circle-2 {
   width: 200px;
   height: 200px;
@@ -494,7 +494,7 @@
   margin: 0 auto;
   animation: fadeInUp 1s ease;
 }
-
+  
 .hero-badge {
   display: inline-flex;
   align-items: center;
@@ -523,8 +523,8 @@
   animation: fadeInUp 0.8s ease 0.3s both;
   line-height: 1.1;
   letter-spacing: -1px;
-}
-
+  }
+  
 .title-line-1,
 .title-line-2 {
   display: block;
@@ -924,81 +924,6 @@
   color: var(--white);
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(196, 0, 0, 0.3);
-}
-
-/* BRANDS SECTION */
-.brands-section {
-  background: var(--white);
-  padding: 40px 20px;
-  border-bottom: 1px solid #e8e8e8;
-}
-
-.brands-slider {
-  overflow: hidden;
-  position: relative;
-  width: 100%;
-}
-
-.brands-track {
-  display: flex;
-  gap: 40px;
-  animation: scroll-brands 30s linear infinite;
-  width: fit-content;
-}
-
-.brand-item {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 200px;
-  height: 100px;
-  padding: 15px 30px;
-  background: var(--white);
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  border: 1px solid #e8e8e8;
-}
-
-.brand-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-  border-color: var(--primary-color);
-}
-
-.brand-logo-wrapper {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  filter: grayscale(100%);
-  opacity: 0.7;
-  transition: all 0.3s ease;
-}
-
-.brand-item:hover .brand-logo-wrapper {
-  filter: grayscale(0%);
-  opacity: 1;
-}
-
-.brand-logo-wrapper svg {
-  width: 100%;
-  height: auto;
-  max-height: 50px;
-}
-
-@keyframes scroll-brands {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.brands-slider:hover .brands-track {
-  animation-play-state: paused;
 }
 
 /* POPULAR PRODUCTS SECTION */
