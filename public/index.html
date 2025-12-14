@@ -14,7 +14,26 @@
     <img src="/logo.png" alt="Yılmazlar Yapı Market Logo">
     <nav>
       <a href="/" class="active">Ana Sayfa</a>
-      <a href="/urunler.html">Ürünler</a>
+      <div class="nav-dropdown">
+        <a href="/urunler.html" class="dropdown-toggle">Ürünler <span class="dropdown-arrow">▼</span></a>
+        <div class="dropdown-menu">
+          <div class="dropdown-header">
+            <h3>Ürün Grublarımız</h3>
+          </div>
+          <div class="dropdown-content">
+            <a href="/urunler.html?kategori=Seramik Ürünleri">Seramik Ürünleri</a>
+            <a href="/urunler.html?kategori=Kaba Grubu">Kaba Grubu</a>
+            <a href="/urunler.html?kategori=Banyo Ürünleri">Banyo Ürünleri</a>
+            <a href="/urunler.html?kategori=Hırdavat Ürünleri">Hırdavat Ürünleri</a>
+            <a href="/urunler.html?kategori=Boya Ürünleri">Boya Ürünleri</a>
+            <a href="/urunler.html?kategori=El Aletleri Ürünleri">El Aletleri Ürünleri</a>
+            <a href="/urunler.html?kategori=İnşaat Malzemeleri Ürünleri">İnşaat Malzemeleri Ürünleri</a>
+            <a href="/urunler.html?kategori=Elektrik Ürünleri">Elektrik Ürünleri</a>
+            <a href="/urunler.html?kategori=Parke Ürünleri">Parke Ürünleri</a>
+            <a href="/urunler.html?kategori=Mutfak Ürünleri">Mutfak Ürünleri</a>
+          </div>
+        </div>
+      </div>
       <a href="/hakkimizda.html">Hakkımızda</a>
       <a href="/iletisim.html">İletişim</a>
     </nav>
@@ -23,33 +42,112 @@
 
 <section class="hero">
   <h1>Yılmazlar Yapı Market</h1>
-  <p>Yapı • Hırdavat • Elektrik • Tesisat</p>
-  <p style="font-size: 1.1rem; margin-top: 10px;">Kaliteli ürünler, güvenilir hizmet, uygun fiyatlar</p>
-  <a class="btn btn-primary" href="/urunler.html">Ürünleri İncele</a>
+  <p class="hero-subtitle">Yapı • Hırdavat • Elektrik • Tesisat</p>
+  <p class="hero-description">Kaliteli ürünler, güvenilir hizmet, uygun fiyatlar</p>
+  <div class="hero-buttons">
+    <a class="btn btn-primary" href="/urunler.html">Ürünleri İncele</a>
+    <a class="btn btn-secondary" href="/iletisim.html">Bize Ulaşın</a>
+  </div>
 </section>
 
+<!-- Hizmetler Bölümü -->
 <div class="container">
-  <h1>Neden Yılmazlar Yapı Market?</h1>
+  <div class="section-header">
+    <h2>Neden Yılmazlar Yapı Market?</h2>
+    <p class="section-subtitle">Size en iyi hizmeti sunmak için çalışıyoruz</p>
+  </div>
   
-  <div class="grid-2" style="margin-top: 40px;">
-    <div>
-      <h3>🏆 Geniş Ürün Yelpazesi</h3>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon-wrapper">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3>Geniş Ürün Yelpazesi</h3>
       <p>Yapı malzemelerinden hırdavata, elektrik ürünlerinden tesisat malzemelerine kadar geniş bir ürün yelpazesi sunuyoruz.</p>
     </div>
-    <div>
-      <h3>💎 Kaliteli Ürünler</h3>
+    <div class="feature-card">
+      <div class="feature-icon-wrapper">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3>Kaliteli Ürünler</h3>
       <p>Müşterilerimize sadece kaliteli ve güvenilir markaların ürünlerini sunuyoruz. Her ürün titizlikle seçilir.</p>
     </div>
-    <div>
-      <h3>⚡ Hızlı Teslimat</h3>
+    <div class="feature-card">
+      <div class="feature-icon-wrapper">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3>Hızlı Teslimat</h3>
       <p>Siparişleriniz en kısa sürede hazırlanır ve güvenli bir şekilde size ulaştırılır.</p>
     </div>
-    <div>
-      <h3>🤝 Müşteri Memnuniyeti</h3>
+    <div class="feature-card">
+      <div class="feature-icon-wrapper">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3>Müşteri Memnuniyeti</h3>
       <p>Müşteri memnuniyeti bizim önceliğimizdir. Size en iyi hizmeti sunmak için çalışıyoruz.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-wrapper">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3>Uygun Fiyatlar</h3>
+      <p>Kaliteli ürünleri en uygun fiyatlarla sunuyoruz. Bütçenize uygun çözümler için bize ulaşın.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon-wrapper">
+        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3>Profesyonel Destek</h3>
+      <p>Uzman ekibimiz size projelerinizde yardımcı olmak için her zaman yanınızdadır.</p>
     </div>
   </div>
 </div>
+
+<!-- Hizmet Süreci Bölümü -->
+<section class="process-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Hizmet Sürecimiz</h2>
+      <p class="section-subtitle">Size nasıl hizmet veriyoruz?</p>
+    </div>
+    <div class="process-grid">
+      <div class="process-card">
+        <div class="process-number">1</div>
+        <h3>İletişim</h3>
+        <p>Bize ulaşın, ihtiyaçlarınızı belirtin. Uzman ekibimiz size yardımcı olacaktır.</p>
+      </div>
+      <div class="process-card">
+        <div class="process-number">2</div>
+        <h3>Teklif</h3>
+        <p>İhtiyaçlarınıza uygun en iyi çözümü sunmak için detaylı teklif hazırlıyoruz.</p>
+      </div>
+      <div class="process-card">
+        <div class="process-number">3</div>
+        <h3>Onay</h3>
+        <p>Teklifimizi onayladıktan sonra siparişiniz hazırlanmaya başlar.</p>
+      </div>
+      <div class="process-card">
+        <div class="process-number">4</div>
+        <h3>Teslimat</h3>
+        <p>Ürünleriniz güvenli bir şekilde hazırlanır ve size teslim edilir.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
 <footer>
   <div class="footer-inner">
@@ -60,22 +158,22 @@
     </div>
     <div>
       <h3>Hızlı Erişim</h3>
-      <p><a href="/" style="color: #aaa; text-decoration: none;">Ana Sayfa</a></p>
-      <p><a href="/urunler.html" style="color: #aaa; text-decoration: none;">Ürünler</a></p>
-      <p><a href="/hakkimizda.html" style="color: #aaa; text-decoration: none;">Hakkımızda</a></p>
-      <p><a href="/iletisim.html" style="color: #aaa; text-decoration: none;">İletişim</a></p>
+      <p><a href="/" class="footer-link">Ana Sayfa</a></p>
+      <p><a href="/urunler.html" class="footer-link">Ürünler</a></p>
+      <p><a href="/hakkimizda.html" class="footer-link">Hakkımızda</a></p>
+      <p><a href="/iletisim.html" class="footer-link">İletişim</a></p>
     </div>
     <div>
       <h3>İletişim</h3>
       <p>📍 Kırklareli / Vize</p>
       <p>📞 0536 719 13 08</p>
       <p>✉️ yilmazlarvize@gmail.com</p>
-      <p><a href="https://instagram.com/yilmazlarvize" target="_blank" rel="noopener noreferrer" class="instagram-link"><span class="instagram-icon"></span></a></p>
-      <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333;">
-        <h4 style="font-size: 0.9rem; margin-bottom: 10px; color: #ccc;">🕒 Çalışma Saatleri</h4>
-        <p style="font-size: 0.85rem; margin: 5px 0;">Pzt-Cuma: 08:00 - 18:00</p>
-        <p style="font-size: 0.85rem; margin: 5px 0;">Cumartesi: 08:00 - 16:00</p>
-        <p style="font-size: 0.85rem; margin: 5px 0;">Pazar: Kapalı</p>
+      <p><a href="https://instagram.com/yilmazlarvize" target="_blank" rel="noopener noreferrer" class="instagram-link" title="Instagram hesabımızı ziyaret edin"><span class="instagram-icon"></span> Instagram</a></p>
+      <div class="footer-hours">
+        <h4>🕒 Çalışma Saatleri</h4>
+        <p>Pzt-Cuma: 08:00 - 18:00</p>
+        <p>Cumartesi: 08:00 - 16:00</p>
+        <p>Pazar: Kapalı</p>
       </div>
     </div>
   </div>
@@ -83,6 +181,7 @@
     © 2025 Yılmazlar Yapı Market. Tüm hakları saklıdır.
   </div>
 </footer>
+
 
 </body>
 </html>

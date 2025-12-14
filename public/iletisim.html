@@ -14,7 +14,26 @@
     <img src="/logo.png" alt="Yılmazlar Yapı Market Logo">
     <nav>
       <a href="/">Ana Sayfa</a>
-      <a href="/urunler.html">Ürünler</a>
+      <div class="nav-dropdown">
+        <a href="/urunler.html" class="dropdown-toggle">Ürünler <span class="dropdown-arrow">▼</span></a>
+        <div class="dropdown-menu">
+          <div class="dropdown-header">
+            <h3>Ürün Grublarımız</h3>
+          </div>
+          <div class="dropdown-content">
+            <a href="/urunler.html?kategori=Seramik Ürünleri">Seramik Ürünleri</a>
+            <a href="/urunler.html?kategori=Kaba Grubu">Kaba Grubu</a>
+            <a href="/urunler.html?kategori=Banyo Ürünleri">Banyo Ürünleri</a>
+            <a href="/urunler.html?kategori=Hırdavat Ürünleri">Hırdavat Ürünleri</a>
+            <a href="/urunler.html?kategori=Boya Ürünleri">Boya Ürünleri</a>
+            <a href="/urunler.html?kategori=El Aletleri Ürünleri">El Aletleri Ürünleri</a>
+            <a href="/urunler.html?kategori=İnşaat Malzemeleri Ürünleri">İnşaat Malzemeleri Ürünleri</a>
+            <a href="/urunler.html?kategori=Elektrik Ürünleri">Elektrik Ürünleri</a>
+            <a href="/urunler.html?kategori=Parke Ürünleri">Parke Ürünleri</a>
+            <a href="/urunler.html?kategori=Mutfak Ürünleri">Mutfak Ürünleri</a>
+          </div>
+        </div>
+      </div>
       <a href="/hakkimizda.html">Hakkımızda</a>
       <a href="/iletisim.html" class="active">İletişim</a>
     </nav>
@@ -22,64 +41,119 @@
 </header>
 
 <div class="container">
-  <h1>İletişim</h1>
-  <p class="page-intro">Sorularınız, önerileriniz veya talepleriniz için bizimle iletişime geçebilirsiniz.</p>
+  <div class="contact-hero">
+    <h1>İletişim</h1>
+    <p class="page-intro">Sorularınız, önerileriniz veya talepleriniz için bizimle iletişime geçebilirsiniz. Size en kısa sürede dönüş yapacağız.</p>
+  </div>
   
-  <div class="grid-2 contact-cards">
-    <div style="background: var(--light-bg); padding: 30px; border-radius: 12px;">
-      <h3>📍 İletişim Bilgileri</h3>
-      <div style="margin-top: 20px;">
-        <p style="margin-bottom: 15px;">
-          <strong>Adres:</strong><br>
-          Kırklareli / Vize
-        </p>
-        <p style="margin-bottom: 15px;">
-          <strong>Telefon:</strong><br>
-          <a href="tel:05xxxxxxxxx" style="color: var(--primary-color); text-decoration: none;">0536 719 13 08</a>
-        </p>
-        <p style="margin-bottom: 15px;">
-          <strong>E-posta:</strong><br>
-          <a href="mailto:yilmazlarvize@gmail.com" style="color: var(--primary-color); text-decoration: none;">yilmazlarvize@gmail.com</a>
-        </p>
-        <p style="margin-bottom: 15px;">
-          <strong>Instagram:</strong><br>
-          <a href="https://instagram.com/yilmazlarvize" target="_blank" rel="noopener noreferrer" class="instagram-link"><span class="instagram-icon"></span></a>
-        </p>
+  <div class="contact-info-grid">
+    <div class="contact-info-card-modern">
+      <div class="contact-icon-wrapper">
+        <svg class="contact-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+        </svg>
       </div>
+      <h3>Adres</h3>
+      <p class="contact-detail">Kırklareli / Vize</p>
     </div>
 
-    <div style="background: var(--light-bg); padding: 30px; border-radius: 12px;">
-      <h3>🕒 Çalışma Saatleri</h3>
-      <div style="margin-top: 20px;">
-        <p style="margin-bottom: 10px;"><strong>Pazartesi - Cuma:</strong> 08:00 - 18:00</p>
-        <p style="margin-bottom: 10px;"><strong>Cumartesi:</strong> 08:00 - 16:00</p>
-        <p style="margin-bottom: 10px;"><strong>Pazar:</strong> Kapalı</p>
+    <div class="contact-info-card-modern">
+      <div class="contact-icon-wrapper">
+        <svg class="contact-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="currentColor"/>
+        </svg>
+      </div>
+      <h3>Telefon</h3>
+      <p class="contact-detail">
+        <a href="tel:05367191308" class="contact-link-modern">0536 719 13 08</a>
+      </p>
+    </div>
+
+    <div class="contact-info-card-modern">
+      <div class="contact-icon-wrapper">
+        <svg class="contact-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor"/>
+        </svg>
+      </div>
+      <h3>E-posta</h3>
+      <p class="contact-detail">
+        <a href="mailto:yilmazlarvize@gmail.com" class="contact-link-modern">yilmazlarvize@gmail.com</a>
+      </p>
+    </div>
+
+    <div class="contact-info-card-modern">
+      <div class="contact-icon-wrapper">
+        <svg class="contact-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
+        </svg>
+      </div>
+      <h3>Sosyal Medya</h3>
+      <p class="contact-detail">
+        <a href="https://instagram.com/yilmazlarvize" target="_blank" rel="noopener noreferrer" class="instagram-link-modern">
+          <span class="instagram-icon"></span>
+          <span>Instagram</span>
+        </a>
+      </p>
+    </div>
+  </div>
+
+  <div class="working-hours-card">
+    <div class="working-hours-header">
+      <div class="working-hours-icon">🕒</div>
+      <h2>Çalışma Saatlerimiz</h2>
+    </div>
+    <div class="working-hours-content">
+      <div class="working-hours-item">
+        <span class="day">Pazartesi - Cuma</span>
+        <span class="time">08:00 - 18:00</span>
+      </div>
+      <div class="working-hours-item">
+        <span class="day">Cumartesi</span>
+        <span class="time">09:00 - 17:00</span>
+      </div>
+      <div class="working-hours-item closed">
+        <span class="day">Pazar</span>
+        <span class="time">Kapalı</span>
       </div>
     </div>
   </div>
 
   <!-- Harita Bölümü -->
-  <div style="margin-top: 40px;">
-    <h2>📍 Konumumuz</h2>
-    <div style="margin-top: 20px; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow);">
+  <div class="map-section">
+    <div class="map-header">
+      <div class="map-icon-wrapper">
+        <svg class="map-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+        </svg>
+      </div>
+      <h2>Konumumuz</h2>
+      <p class="map-subtitle">Bizi ziyaret etmek için haritamızı kullanabilirsiniz</p>
+    </div>
+    <div class="map-container">
       <iframe 
         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1492.4874345676085!2d27.7721356!3d41.569788499999994!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40a09ca2f8af0b65%3A0x2c7343df4aad06e3!2sYurtbay%20Seramik!5e0!3m2!1str!2str!4v1765663557434!5m2!1str!2str" 
         width="100%" 
-        height="450" 
-        style="border:0;" 
+        height="500" 
         allowfullscreen="" 
         loading="lazy" 
-        referrerpolicy="no-referrer-when-downgrade">
+        title="Yılmazlar Yapı Market Konum Haritası"
+        class="map-iframe">
       </iframe>
     </div>
   </div>
   
   <div class="contact-form-section">
     <div class="contact-form-header">
+      <div class="form-header-icon-wrapper">
+        <svg class="form-header-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor"/>
+        </svg>
+      </div>
       <div class="form-header-line"></div>
       <h2 class="form-title">
         Bize ulaşmak için hemen, <span class="form-title-highlight">formu doldurun.</span>
       </h2>
+      <p class="form-subtitle">Tüm sorularınız ve talepleriniz için bizimle iletişime geçebilirsiniz. En kısa sürede size dönüş yapacağız.</p>
     </div>
 
     <form id="contactForm" class="contact-form">
@@ -138,7 +212,7 @@
       <p>📍 İstanbul / Türkiye</p>
       <p>📞 05xx xxx xx xx</p>
       <p>✉️ info@yilmazlaryapi.com</p>
-      <p><a href="https://instagram.com/yilmazlarvize" target="_blank" rel="noopener noreferrer" class="instagram-link"><span class="instagram-icon"></span></a></p>
+      <p><a href="https://instagram.com/yilmazlarvize" target="_blank" rel="noopener noreferrer" class="instagram-link" title="Instagram hesabımızı ziyaret edin"><span class="instagram-icon"></span> Instagram</a></p>
     </div>
   </div>
   <div class="footer-bottom">
