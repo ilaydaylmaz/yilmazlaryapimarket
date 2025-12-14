@@ -79,7 +79,7 @@
   </div>
 
   <div id="sonuc" class="results-info"></div>
-  
+
   <div class="urunler" id="urunler">
     <div class="loading-state">
       <p>Yükleniyor...</p>
@@ -121,6 +121,7 @@ let currentView = 'grid';
 // URL parametrelerini oku
 const urlParams = new URLSearchParams(window.location.search);
 const kategoriFromUrl = urlParams.get('kategori');
+const aramaFromUrl = urlParams.get('arama');
 
 // Verileri yükle
 fetch("/api/public/products")
@@ -129,12 +130,21 @@ fetch("/api/public/products")
     products = data;
     filteredProducts = [...data];
     populateFilters();
-    
+
+    // URL'den arama parametresi varsa arama çubuğuna yaz ve filtrele
+    if (aramaFromUrl) {
+      const decodedArama = decodeURIComponent(aramaFromUrl);
+      document.getElementById("arama").value = decodedArama;
+    }
+
     // URL'den kategori parametresi varsa filtreyi uygula
     if (kategoriFromUrl) {
       const decodedKategori = decodeURIComponent(kategoriFromUrl);
       document.getElementById("kategoriFilter").value = decodedKategori;
-      // Hemen filtreleme yap
+    }
+
+    // Eğer arama veya kategori varsa filtreleme yap
+    if (aramaFromUrl || kategoriFromUrl) {
       applyFilters();
     } else {
       listele(data);
@@ -152,17 +162,17 @@ fetch("/api/public/products")
 function populateFilters() {
   const kategoriler = [...new Set(products.map(p => p.kategori).filter(Boolean))].sort();
   const markalar = [...new Set(products.map(p => p.marka).filter(Boolean))].sort();
-  
+
   const kategoriSelect = document.getElementById("kategoriFilter");
   const markaSelect = document.getElementById("markaFilter");
-  
+
   kategoriler.forEach(k => {
     const option = document.createElement("option");
     option.value = k;
     option.textContent = k;
     kategoriSelect.appendChild(option);
   });
-  
+
   markalar.forEach(m => {
     const option = document.createElement("option");
     option.value = m;
@@ -176,29 +186,29 @@ function applyFilters() {
   const aramaVal = document.getElementById("arama").value.toLowerCase().trim();
   const kategoriVal = document.getElementById("kategoriFilter").value.trim();
   const markaVal = document.getElementById("markaFilter").value.trim();
-  
+
   filteredProducts = products.filter(p => {
     // Kategori eşleşmesi - ÖNCE kategori kontrolü yap (en önemli filtre)
     const productKategori = p.kategori ? String(p.kategori).trim() : "";
     const selectedKategori = String(kategoriVal).trim();
-    
+
     // Eğer kategori seçildiyse, sadece o kategoriyi göster - kesin eşitlik
     if (selectedKategori && selectedKategori !== "" && selectedKategori !== "Tüm Kategoriler") {
       if (productKategori !== selectedKategori) {
         return false; // Kategori eşleşmiyorsa direkt çık
       }
     }
-    
+
     // Arama filtresi - kategori aramadan çıkarıldı
     const matchArama = !aramaVal || 
       (p.ad && p.ad.toLowerCase().includes(aramaVal)) ||
       (p.marka && p.marka.toLowerCase().includes(aramaVal));
-    
+
     const matchMarka = !markaVal || (p.marka && String(p.marka).trim() === String(markaVal).trim());
-    
+
     return matchArama && matchMarka;
   });
-  
+
   // Sıralama
   const siralama = document.getElementById("siralama").value;
   if (siralama === "name-asc") {
@@ -208,7 +218,7 @@ function applyFilters() {
   } else if (siralama === "category") {
     filteredProducts.sort((a, b) => (a.kategori || "").localeCompare(b.kategori || "", "tr"));
   }
-  
+
   listele(filteredProducts);
 }
 
@@ -216,7 +226,7 @@ function applyFilters() {
 function listele(data) {
   const div = document.getElementById("urunler");
   const sonuc = document.getElementById("sonuc");
-  
+
   if (data.length === 0) {
     div.innerHTML = `
       <div class="empty-state">
@@ -228,7 +238,7 @@ function listele(data) {
     sonuc.innerHTML = `<span class="result-count">0 ürün bulundu</span>`;
     return;
   }
-  
+
   const activeFilters = [];
   if (document.getElementById("kategoriFilter").value) {
     activeFilters.push(`Kategori: ${document.getElementById("kategoriFilter").value}`);
@@ -236,36 +246,36 @@ function listele(data) {
   if (document.getElementById("markaFilter").value) {
     activeFilters.push(`Marka: ${document.getElementById("markaFilter").value}`);
   }
-  
+
   sonuc.innerHTML = `
     <span class="result-count"><strong>${data.length}</strong> ürün bulundu</span>
     ${activeFilters.length > 0 ? `<span class="active-filters">${activeFilters.join(" • ")}</span>` : ''}
   `;
-  
+
   div.className = currentView === 'grid' ? 'urunler' : 'urunler-list';
   div.innerHTML = "";
-  
+
   data.forEach(p => {
     // Base64 resim varsa onu kullan, yoksa dosya yolunu kullan
     let resimUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="300"%3E%3Crect fill="%23f0f0f0" width="300" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="16" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
-    
+
     if (p.resim) {
       // Backend'den gelen resim zaten doğru formatta (base64 veya /uploads/...)
       // Direkt kullan
       resimUrl = p.resim;
-      
+
       // Eğer sadece dosya adı geliyorsa (eski format), /uploads/ ekle
       if (p.resim && !p.resim.startsWith('/') && !p.resim.startsWith('data:')) {
         resimUrl = `/uploads/${p.resim}`;
       }
     }
-    
+
     if (currentView === 'grid') {
     div.innerHTML += `
       <div class="urun" onclick="detay('${p.id}')">
           <div class="urun-image-wrapper">
             <img src="${resimUrl}" alt="${p.ad}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'300\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'300\\' height=\\'300\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'16\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
-            ${p.kategori ? `<span class="urun-badge">${p.kategori}</span>` : ''}
+
           </div>
           <div class="urun-content">
             <h3>${p.ad || 'İsimsiz Ürün'}</h3>
@@ -288,7 +298,7 @@ function listele(data) {
             <div>
               <h3>${p.ad || 'İsimsiz Ürün'}</h3>
               <div class="urun-list-meta">
-                ${p.kategori ? `<span class="urun-badge">${p.kategori}</span>` : ''}
+
                 ${p.marka ? `<span class="urun-meta-item"><strong>Marka:</strong> ${p.marka}</span>` : ''}
               </div>
             </div>

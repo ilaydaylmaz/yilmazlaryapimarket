@@ -75,7 +75,7 @@
   </div>
 
   <div id="sonuc" class="results-info"></div>
-  
+
   <div class="urunler" id="urunler">
     <div class="loading-state">
       <p>Yükleniyor...</p>
@@ -134,7 +134,7 @@ fetch("/api/public/products")
 function populateFilters() {
   const markalar = [...new Set(products.map(p => p.marka).filter(Boolean))].sort();
   const markaSelect = document.getElementById("markaFilter");
-  
+
   markalar.forEach(m => {
     const option = document.createElement("option");
     option.value = m;
@@ -146,31 +146,31 @@ function populateFilters() {
 function applyFilters() {
   const aramaVal = document.getElementById("arama").value.toLowerCase().trim();
   const markaVal = document.getElementById("markaFilter").value.trim();
-  
+
   filteredProducts = products.filter(p => {
     const matchArama = !aramaVal || 
       (p.ad && p.ad.toLowerCase().includes(aramaVal)) ||
       (p.marka && p.marka.toLowerCase().includes(aramaVal));
-    
+
     const matchMarka = !markaVal || (p.marka && String(p.marka).trim() === String(markaVal).trim());
-    
+
     return matchArama && matchMarka;
   });
-  
+
   const siralama = document.getElementById("siralama").value;
   if (siralama === "name-asc") {
     filteredProducts.sort((a, b) => (a.ad || "").localeCompare(b.ad || "", "tr"));
   } else if (siralama === "name-desc") {
     filteredProducts.sort((a, b) => (b.ad || "").localeCompare(a.ad || "", "tr"));
   }
-  
+
   listele(filteredProducts);
 }
 
 function listele(data) {
   const div = document.getElementById("urunler");
   const sonuc = document.getElementById("sonuc");
-  
+
   if (data.length === 0) {
     div.innerHTML = `
       <div class="empty-state">
@@ -182,36 +182,36 @@ function listele(data) {
     sonuc.innerHTML = `<span class="result-count">0 ürün bulundu</span>`;
     return;
   }
-  
+
   const activeFilters = [];
   if (document.getElementById("markaFilter").value) {
     activeFilters.push(`Marka: ${document.getElementById("markaFilter").value}`);
   }
-  
+
   sonuc.innerHTML = `
     <span class="result-count"><strong>${data.length}</strong> ürün bulundu</span>
     ${activeFilters.length > 0 ? `<span class="active-filters">${activeFilters.join(" • ")}</span>` : ''}
   `;
-  
+
   div.className = currentView === 'grid' ? 'urunler' : 'urunler-list';
   div.innerHTML = "";
-  
+
   data.forEach(p => {
     let resimUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="300"%3E%3Crect fill="%23f0f0f0" width="300" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="16" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
-    
+
     if (p.resim) {
       resimUrl = p.resim;
       if (p.resim && !p.resim.startsWith('/') && !p.resim.startsWith('data:')) {
         resimUrl = `/uploads/${p.resim}`;
       }
     }
-    
+
     if (currentView === 'grid') {
     div.innerHTML += `
       <div class="urun" onclick="detay('${p.id}')">
           <div class="urun-image-wrapper">
             <img src="${resimUrl}" alt="${p.ad}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'300\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'300\\' height=\\'300\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'16\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
-            ${p.kategori ? `<span class="urun-badge">${p.kategori}</span>` : ''}
+
           </div>
           <div class="urun-content">
             <h3>${p.ad || 'İsimsiz Ürün'}</h3>
@@ -234,7 +234,7 @@ function listele(data) {
             <div>
               <h3>${p.ad || 'İsimsiz Ürün'}</h3>
               <div class="urun-list-meta">
-                ${p.kategori ? `<span class="urun-badge">${p.kategori}</span>` : ''}
+
                 ${p.marka ? `<span class="urun-meta-item"><strong>Marka:</strong> ${p.marka}</span>` : ''}
               </div>
             </div>
@@ -280,4 +280,3 @@ function detay(id) {
 
 </body>
 </html>
-

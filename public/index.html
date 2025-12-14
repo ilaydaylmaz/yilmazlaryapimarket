@@ -45,8 +45,23 @@
   <h1>Yılmazlar Yapı Market</h1>
   <p class="hero-subtitle">Yapı • Hırdavat • Elektrik • Tesisat</p>
   <p class="hero-description">Kaliteli ürünler, güvenilir hizmet, uygun fiyatlar</p>
+  
+  <!-- Arama Bölümü Hero İçinde -->
+  <div class="hero-search-wrapper">
+    <form id="homeSearchForm" class="home-search-form" onsubmit="handleHomeSearch(event)">
+      <input 
+        type="search" 
+        id="homeSearchInput" 
+        placeholder="🔍 Ürün, marka veya kategori ara..." 
+        autocomplete="off"
+        class="home-search-input"
+      >
+      <button type="submit" class="home-search-button">Ara</button>
+    </form>
+  </div>
+  
   <div class="hero-buttons">
-    <a class="btn btn-primary" href="/urunler.html">Ürünleri İncele</a>
+  <a class="btn btn-primary" href="/urunler.html">Ürünleri İncele</a>
     <a class="btn btn-secondary" href="/iletisim.html">Bize Ulaşın</a>
   </div>
 </section>
@@ -183,6 +198,20 @@
   </div>
 </footer>
 
+<script>
+function handleHomeSearch(event) {
+  event.preventDefault();
+  const searchTerm = document.getElementById('homeSearchInput').value.trim();
+  
+  if (searchTerm) {
+    // Arama terimini URL parametresi olarak ürünler sayfasına gönder
+    window.location.href = `/urunler.html?arama=${encodeURIComponent(searchTerm)}`;
+  } else {
+    // Eğer arama terimi boşsa, sadece ürünler sayfasına git
+    window.location.href = '/urunler.html';
+  }
+}
+</script>
 
 </body>
 </html>
