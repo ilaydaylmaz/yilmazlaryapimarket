@@ -947,7 +947,7 @@
 
 .brands-track {
   display: flex;
-  gap: 40px;
+  gap: 50px;
   animation: slideBrands 30s linear infinite;
   will-change: transform;
 }
@@ -966,14 +966,14 @@
 }
 
 .brand-item {
-  flex: 0 0 180px;
-  height: 100px;
+  flex: 0 0 240px;
+  height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--white);
   border-radius: 12px;
-  padding: 20px;
+  padding: 30px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   border: 1px solid #f0f0f0;
@@ -2375,13 +2375,13 @@ input[type="search"]:focus {
   }
 
   .brand-item {
-    flex: 0 0 140px;
-    height: 80px;
-    padding: 15px;
+    flex: 0 0 200px;
+    height: 120px;
+    padding: 25px;
   }
 
   .brands-track {
-    gap: 30px;
+    gap: 40px;
   }
 
   .categories-section {
@@ -2705,13 +2705,13 @@ input[type="search"]:focus {
   }
 
   .brand-item {
-    flex: 0 0 120px;
-    height: 70px;
-    padding: 12px;
+    flex: 0 0 180px;
+    height: 100px;
+    padding: 20px;
   }
 
   .brands-track {
-    gap: 20px;
+    gap: 30px;
   }
 
   .brand-fallback {
