@@ -177,34 +177,27 @@ function applyFilters() {
   const kategoriVal = document.getElementById("kategoriFilter").value.trim();
   const markaVal = document.getElementById("markaFilter").value.trim();
   
-  // Debug için
-  console.log("Filtreleme başladı:", { kategoriVal, toplamUrun: products.length });
-  
   filteredProducts = products.filter(p => {
+    // Kategori eşleşmesi - ÖNCE kategori kontrolü yap (en önemli filtre)
+    const productKategori = p.kategori ? String(p.kategori).trim() : "";
+    const selectedKategori = String(kategoriVal).trim();
+    
+    // Eğer kategori seçildiyse, sadece o kategoriyi göster - kesin eşitlik
+    if (selectedKategori && selectedKategori !== "" && selectedKategori !== "Tüm Kategoriler") {
+      if (productKategori !== selectedKategori) {
+        return false; // Kategori eşleşmiyorsa direkt çık
+      }
+    }
+    
     // Arama filtresi - kategori aramadan çıkarıldı
     const matchArama = !aramaVal || 
       (p.ad && p.ad.toLowerCase().includes(aramaVal)) ||
       (p.marka && p.marka.toLowerCase().includes(aramaVal));
     
-    // Kategori eşleşmesi - tam eşitlik kontrolü (boşlukları normalize et)
-    const productKategori = p.kategori ? String(p.kategori).trim() : "";
-    const selectedKategori = String(kategoriVal).trim();
-    
-    // Kategori filtresi aktifse, sadece o kategoriyi göster
-    let matchKategori = true;
-    if (selectedKategori && selectedKategori !== "") {
-      matchKategori = productKategori === selectedKategori;
-      if (!matchKategori) {
-        console.log("Kategori eşleşmedi:", { productKategori, selectedKategori, urun: p.ad });
-      }
-    }
-    
     const matchMarka = !markaVal || (p.marka && String(p.marka).trim() === String(markaVal).trim());
     
-    return matchArama && matchKategori && matchMarka;
+    return matchArama && matchMarka;
   });
-  
-  console.log("Filtreleme sonucu:", { filtrelenmisUrun: filteredProducts.length });
   
   // Sıralama
   const siralama = document.getElementById("siralama").value;
