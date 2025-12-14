@@ -404,7 +404,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(26, 26, 46, 0.75) 0%, rgba(45, 52, 54, 0.7) 50%, rgba(99, 110, 114, 0.65) 100%);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.35) 50%, rgba(0, 0, 0, 0.3) 100%);
   opacity: 1;
   z-index: 0;
 }
