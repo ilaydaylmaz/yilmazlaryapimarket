@@ -144,6 +144,11 @@ app.get("/admin.html", auth, (req, res) => {
 /* Liste */
 app.get("/api/products", auth, async (req, res) => {
   try {
+    // Cache'i önle
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
       const products = await productsCollection.find({}).toArray();
@@ -153,7 +158,23 @@ app.get("/api/products", auth, async (req, res) => {
         kategori: p.kategori,
         marka: p.marka,
         aciklama: p.aciklama,
-        resim: getImageUrl(p)
+        resim: getImageUrl(p),
+        // Seramik ürünleri için özel alanlar
+        urunKodu: p.urunKodu || "",
+        doku: p.doku || "",
+        kalinlik: p.kalinlik || "",
+        icMekan: p.icMekan || "",
+        disMekan: p.disMekan || "",
+        kullanimAlani: p.kullanimAlani || "",
+        yuzeyGorunumu: p.yuzeyGorunumu || "",
+        kalip: p.kalip || "",
+        bunye: p.bunye || "",
+        urunGrubu: p.urunGrubu || "",
+        vSkalasi: p.vSkalasi || "",
+        m2Kutu: p.m2Kutu || "",
+        m2Palet: p.m2Palet || "",
+        kutuPalet: p.kutuPalet || "",
+        paletAgirligi: p.paletAgirligi || ""
       }));
       res.json(formattedProducts);
     } else {
@@ -203,7 +224,23 @@ app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
       marka: req.body.marka || "",
       aciklama: req.body.aciklama || "",
       resim: resimData,
-      resimBase64: resimBase64 // MongoDB'ye base64 olarak kaydet
+      resimBase64: resimBase64, // MongoDB'ye base64 olarak kaydet
+      // Seramik ürünleri için özel alanlar
+      urunKodu: req.body.urunKodu || "",
+      doku: req.body.doku || "",
+      kalinlik: req.body.kalinlik || "",
+      icMekan: req.body.icMekan || "",
+      disMekan: req.body.disMekan || "",
+      kullanimAlani: req.body.kullanimAlani || "",
+      yuzeyGorunumu: req.body.yuzeyGorunumu || "",
+      kalip: req.body.kalip || "",
+      bunye: req.body.bunye || "",
+      urunGrubu: req.body.urunGrubu || "",
+      vSkalasi: req.body.vSkalasi || "",
+      m2Kutu: req.body.m2Kutu || "",
+      m2Palet: req.body.m2Palet || "",
+      kutuPalet: req.body.kutuPalet || "",
+      paletAgirligi: req.body.paletAgirligi || ""
     };
 
     if (isMongoDBEnabled()) {
@@ -256,14 +293,46 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
         aciklama: req.body.aciklama || "",
         resim: resimData,
         resimBase64: resimBase64,
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        // Seramik ürünleri için özel alanlar
+        urunKodu: req.body.urunKodu || "",
+        doku: req.body.doku || "",
+        kalinlik: req.body.kalinlik || "",
+        icMekan: req.body.icMekan || "",
+        disMekan: req.body.disMekan || "",
+        kullanimAlani: req.body.kullanimAlani || "",
+        yuzeyGorunumu: req.body.yuzeyGorunumu || "",
+        kalip: req.body.kalip || "",
+        bunye: req.body.bunye || "",
+        urunGrubu: req.body.urunGrubu || "",
+        vSkalasi: req.body.vSkalasi || "",
+        m2Kutu: req.body.m2Kutu || "",
+        m2Palet: req.body.m2Palet || "",
+        kutuPalet: req.body.kutuPalet || "",
+        paletAgirligi: req.body.paletAgirligi || ""
       };
 
-      await productsCollection.updateOne(
+      const result = await productsCollection.updateOne(
         { _id: new ObjectId(productId) },
         { $set: updateData }
       );
-      res.json({ success: true, message: "Ürün başarıyla güncellendi" });
+      
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
+      }
+      
+      // Güncelleme sonrası güncel veriyi tekrar oku
+      const updatedProduct = await productsCollection.findOne({ _id: new ObjectId(productId) });
+      console.log("Güncelleme sonucu:", result);
+      console.log("Güncellenmiş ürün:", {
+        id: updatedProduct._id.toString(),
+        ad: updatedProduct.ad,
+        urunKodu: updatedProduct.urunKodu,
+        doku: updatedProduct.doku,
+        kalinlik: updatedProduct.kalinlik
+      });
+      
+      res.json({ success: true, message: "Ürün başarıyla güncellendi", product: updatedProduct });
     } else {
       // JSON fallback
       let products = JSON.parse(fs.readFileSync(DATA_FILE));
@@ -361,6 +430,11 @@ connectDB()
 /* PUBLIC PRODUCTS */
 app.get("/api/public/products", async (req, res) => {
   try {
+    // Cache'i önle
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
       const products = await productsCollection.find({}).toArray();
@@ -370,7 +444,24 @@ app.get("/api/public/products", async (req, res) => {
         kategori: p.kategori,
         marka: p.marka,
         aciklama: p.aciklama,
-        resim: getImageUrl(p)
+        resim: getImageUrl(p),
+        resimBase64: p.resimBase64 || null,
+        // Seramik ürünleri için özel alanlar
+        urunKodu: p.urunKodu || "",
+        doku: p.doku || "",
+        kalinlik: p.kalinlik || "",
+        icMekan: p.icMekan || "",
+        disMekan: p.disMekan || "",
+        kullanimAlani: p.kullanimAlani || "",
+        yuzeyGorunumu: p.yuzeyGorunumu || "",
+        kalip: p.kalip || "",
+        bunye: p.bunye || "",
+        urunGrubu: p.urunGrubu || "",
+        vSkalasi: p.vSkalasi || "",
+        m2Kutu: p.m2Kutu || "",
+        m2Palet: p.m2Palet || "",
+        kutuPalet: p.kutuPalet || "",
+        paletAgirligi: p.paletAgirligi || ""
       }));
       res.json(formattedProducts);
     } else {
@@ -417,7 +508,23 @@ app.get("/api/public/products/:id", async (req, res) => {
         kategori: urun.kategori,
         marka: urun.marka,
         aciklama: urun.aciklama,
-        resim: getImageUrl(urun)
+        resim: getImageUrl(urun),
+        // Seramik ürünleri için özel alanlar
+        urunKodu: urun.urunKodu || "",
+        doku: urun.doku || "",
+        kalinlik: urun.kalinlik || "",
+        icMekan: urun.icMekan || "",
+        disMekan: urun.disMekan || "",
+        kullanimAlani: urun.kullanimAlani || "",
+        yuzeyGorunumu: urun.yuzeyGorunumu || "",
+        kalip: urun.kalip || "",
+        bunye: urun.bunye || "",
+        urunGrubu: urun.urunGrubu || "",
+        vSkalasi: urun.vSkalasi || "",
+        m2Kutu: urun.m2Kutu || "",
+        m2Palet: urun.m2Palet || "",
+        kutuPalet: urun.kutuPalet || "",
+        paletAgirligi: urun.paletAgirligi || ""
       });
     } else {
       // JSON fallback

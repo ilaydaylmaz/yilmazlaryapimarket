@@ -750,7 +750,9 @@ if (!koleksiyonAdi) {
   `;
 } else {
   // Koleksiyon bilgilerini yükle
-  fetch("/api/public/products")
+  fetch("/api/public/products?t=" + Date.now(), {
+    cache: 'no-cache'
+  })
     .then(r => r.json())
     .then(data => {
       // Yurtbay Seramik ürünlerini filtrele
@@ -817,7 +819,9 @@ function updateHeroImage(koleksiyonAdi, products) {
   let heroImageUrl = null;
   
   // Tüm ürünlerden genel koleksiyon ürününü ara
-  fetch("/api/public/products")
+  fetch("/api/public/products?t=" + Date.now(), {
+    cache: 'no-cache'
+  })
     .then(r => r.json())
     .then(allProducts => {
       const generalProduct = allProducts.find(p => {
@@ -981,6 +985,7 @@ function listele(data) {
 
   div.innerHTML = "";
 
+  // Her ürün için güncel veriyi çek
   data.forEach(p => {
     let resimUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="300"%3E%3Crect fill="%23f0f0f0" width="300" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="16" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
 
@@ -1004,15 +1009,19 @@ function listele(data) {
     
     const specsText = specs.join(' ');
 
-    div.innerHTML += `
-      <div class="collection-product" onclick="openProductModal('${p.id}')">
-        <img src="${resimUrl}" alt="${p.ad}" class="collection-product-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'300\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'300\\' height=\\'300\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'16\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
-        <div class="collection-product-info">
-          <h3 class="collection-product-title">${p.ad || 'İsimsiz Ürün'}</h3>
-          ${specsText ? `<p class="collection-product-specs">${specsText}</p>` : ''}
-        </div>
+    // Ürün kartını oluştur - her zaman güncel ID ile
+    const productCard = document.createElement('div');
+    productCard.className = 'collection-product';
+    productCard.setAttribute('data-product-id', p.id);
+    productCard.onclick = () => openProductModal(p.id);
+    productCard.innerHTML = `
+      <img src="${resimUrl}" alt="${p.ad}" class="collection-product-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'300\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'300\\' height=\\'300\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'16\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
+      <div class="collection-product-info">
+        <h3 class="collection-product-title">${p.ad || 'İsimsiz Ürün'}</h3>
+        ${specsText ? `<p class="collection-product-specs">${specsText}</p>` : ''}
       </div>
     `;
+    div.appendChild(productCard);
   });
 }
 
@@ -1055,42 +1064,50 @@ let currentImageIndex = 0;
 let productImages = [];
 
 function openProductModal(productId) {
-  // Ürün bilgilerini al
-  const product = filteredProducts.find(p => p.id === productId);
-  if (!product) {
-    // Tüm ürünlerden ara
-    const allProduct = products.find(p => p.id === productId);
-    if (!allProduct) return;
-    currentProduct = allProduct;
-  } else {
-    currentProduct = product;
-  }
+  // Her zaman API'den güncel veriyi çek
+  fetch("/api/public/products?t=" + Date.now(), {
+    cache: 'no-cache'
+  })
+    .then(r => r.json())
+    .then(allProducts => {
+      const product = allProducts.find(p => p.id === productId);
+      if (!product) {
+        alert("Ürün bulunamadı!");
+        return;
+      }
+      
+      currentProduct = product;
+      
+      // Modal'ı göster
+      document.getElementById("productModal").style.display = "flex";
+      document.body.style.overflow = "hidden";
 
-  // Modal'ı göster
-  document.getElementById("productModal").style.display = "flex";
-  document.body.style.overflow = "hidden";
+      // Ürün bilgilerini doldur
+      document.getElementById("modalProductTitle").textContent = currentProduct.ad || 'İsimsiz Ürün';
 
-  // Ürün bilgilerini doldur
-  document.getElementById("modalProductTitle").textContent = currentProduct.ad || 'İsimsiz Ürün';
+      // Görseli ayarla
+      let resimUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="600" height="600"%3E%3Crect fill="%23f0f0f0" width="600" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="20" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
+      if (currentProduct.resim) {
+        resimUrl = currentProduct.resim;
+        if (resimUrl && !resimUrl.startsWith('/') && !resimUrl.startsWith('data:')) {
+          resimUrl = `/uploads/${resimUrl}`;
+        }
+      }
 
-  // Görseli ayarla
-  let resimUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="600" height="600"%3E%3Crect fill="%23f0f0f0" width="600" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="20" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
-  if (currentProduct.resim) {
-    resimUrl = currentProduct.resim;
-    if (resimUrl && !resimUrl.startsWith('/') && !resimUrl.startsWith('data:')) {
-      resimUrl = `/uploads/${resimUrl}`;
-    }
-  }
+      // Görselleri ayarla
+      productImages = [resimUrl];
+      currentImageIndex = 0;
+      updateModalImage();
+      document.getElementById("totalImages").textContent = productImages.length;
+      document.getElementById("currentImage").textContent = "1";
 
-  // Görselleri ayarla (şimdilik tek görsel, sonra çoklu görsel eklenebilir)
-  productImages = [resimUrl];
-  currentImageIndex = 0;
-  updateModalImage();
-  document.getElementById("totalImages").textContent = productImages.length;
-  document.getElementById("currentImage").textContent = "1";
-
-  // Ürün özelliklerini doldur
-  populateProductSpecs(currentProduct);
+      // Ürün özelliklerini doldur
+      populateProductSpecs(currentProduct);
+    })
+    .catch(err => {
+      console.error("Ürün yükleme hatası:", err);
+      alert("Ürün bilgileri yüklenirken bir hata oluştu!");
+    });
 }
 
 function closeProductModal() {
@@ -1099,6 +1116,13 @@ function closeProductModal() {
   currentProduct = null;
   currentImageIndex = 0;
   productImages = [];
+  
+  // Modal kapandığında ürünleri yenile
+  if (koleksiyonAdi) {
+    setTimeout(() => {
+      refreshCollectionProducts();
+    }, 300);
+  }
 }
 
 function updateModalImage() {
@@ -1125,53 +1149,80 @@ function populateProductSpecs(product) {
   const tbody = document.getElementById("productSpecsBody");
   tbody.innerHTML = "";
 
-  // Ürün adından bilgileri çıkar
+  // Önce veritabanından gelen değerleri kullan, yoksa ürün adından çıkar
   const ad = product.ad || '';
   
   // Ebat
   const ebatMatch = ad.match(/(\d+X\d+)/i);
   const ebat = ebatMatch ? ebatMatch[1] + ' Cm' : '-';
   
+  // Ürün kodu
+  let urunKodu = product.urunKodu || '';
+  if (!urunKodu) {
+    urunKodu = product.id.substring(0, 8).toUpperCase();
+  }
+  
   // Doku
-  let doku = '-';
-  if (ad.includes('MERMER')) doku = 'Mermer';
-  else if (ad.includes('DOĞAL TAŞ')) doku = 'Doğal Taş';
-  else if (ad.includes('BETON')) doku = 'Beton';
-  else if (ad.includes('AHŞAP')) doku = 'Ahşap';
+  let doku = product.doku || '-';
+  if (doku === '-' && ad) {
+    if (ad.includes('MERMER')) doku = 'Mermer';
+    else if (ad.includes('DOĞAL TAŞ')) doku = 'Doğal Taş';
+    else if (ad.includes('BETON')) doku = 'Beton';
+    else if (ad.includes('AHŞAP')) doku = 'Ahşap';
+  }
   
-  // Yüzey
-  let yuzey = '-';
-  if (ad.includes('POLİSH') || ad.includes('POLISH')) yuzey = 'Polish';
-  else if (ad.includes('HİGH GLOSSY') || ad.includes('HIGH GLOSSY')) yuzey = 'High Glossy';
-  else if (ad.includes('MAT')) yuzey = 'Mat';
-  else if (ad.includes('LAPPATO')) yuzey = 'Lappato';
+  // Kalınlık
+  const kalinlik = product.kalinlik ? product.kalinlik + ' Mm' : '8,2 Mm';
   
-  // Renk
-  let renk = '-';
-  if (ad.includes('BEYAZ')) renk = 'Beyaz';
-  else if (ad.includes('GRİ') || ad.includes('GRI')) renk = 'Gri';
-  else if (ad.includes('KAHVE')) renk = 'Kahve';
-  else if (ad.includes('SİYAH') || ad.includes('SIYAH')) renk = 'Siyah';
+  // İç Mekan
+  const icMekan = product.icMekan || 'Duvar ve Yer';
   
-  // Rektifiye
-  const rektifiye = ad.includes('REKTİFİYELİ') || ad.includes('REKTİFİYE') ? 'Rektifiye' : 'Standart';
+  // Dış Mekan
+  let disMekan = product.disMekan || '';
+  if (!disMekan) {
+    disMekan = ad.includes('HİGH GLOSSY') || ad.includes('HIGH GLOSSY') ? 'Uygun Değildir' : 'Duvar';
+  }
   
-  // Ürün kodu (ID'den oluştur)
-  const urunKodu = product.id.substring(0, 8).toUpperCase();
+  // Kullanım Alanı
+  const kullanimAlani = product.kullanimAlani || 'Balkon&Teras, Banyo, İç Mekan';
+  
+  // Yüzey Görünümü
+  let yuzeyGorunumu = product.yuzeyGorunumu || '-';
+  if (yuzeyGorunumu === '-' && ad) {
+    if (ad.includes('POLİSH') || ad.includes('POLISH')) yuzeyGorunumu = 'Polish';
+    else if (ad.includes('HİGH GLOSSY') || ad.includes('HIGH GLOSSY')) yuzeyGorunumu = 'High Glossy';
+    else if (ad.includes('MAT')) yuzeyGorunumu = 'Mat';
+    else if (ad.includes('LAPPATO')) yuzeyGorunumu = 'Lappato';
+  }
+  
+  // Kalıp
+  const kalip = product.kalip || 'Düz';
+  
+  // Bünye
+  let bunye = product.bunye || '';
+  if (!bunye) {
+    bunye = ad.includes('REKTİFİYELİ') || ad.includes('REKTİFİYE') ? 'Rektifiye' : 'Standart';
+  }
+  
+  // Ürün Grubu
+  const urunGrubu = product.urunGrubu || 'EN 14411, Group Bla';
+  
+  // V Skalası
+  const vSkalasi = product.vSkalasi || 'V3';
 
   const specs = [
     { label: 'Ürün Kodu', value: urunKodu },
     { label: 'Doku', value: doku },
     { label: 'Ebat', value: ebat },
-    { label: 'Kalınlık', value: '8,2 Mm' },
-    { label: 'İç Mekanda Kullanım', value: 'Duvar ve Yer' },
-    { label: 'Dış Mekanda Kullanım', value: ad.includes('HİGH GLOSSY') ? 'Uygun Değildir' : 'Duvar' },
-    { label: 'Kullanım Alanı', value: 'Balkon&Teras, Banyo, İç Mekan' },
-    { label: 'Yüzey Görünümü', value: yuzey },
-    { label: 'Kalıp', value: 'Düz' },
-    { label: 'Bünye', value: rektifiye },
-    { label: 'Ürün Grubu', value: 'EN 14411, Group Bla' },
-    { label: 'V Skalası', value: 'V3' }
+    { label: 'Kalınlık', value: kalinlik },
+    { label: 'İç Mekanda Kullanım', value: icMekan },
+    { label: 'Dış Mekanda Kullanım', value: disMekan },
+    { label: 'Kullanım Alanı', value: kullanimAlani },
+    { label: 'Yüzey Görünümü', value: yuzeyGorunumu },
+    { label: 'Kalıp', value: kalip },
+    { label: 'Bünye', value: bunye },
+    { label: 'Ürün Grubu', value: urunGrubu },
+    { label: 'V Skalası', value: vSkalasi }
   ];
 
   specs.forEach(spec => {
@@ -1192,6 +1243,58 @@ document.addEventListener('keydown', function(e) {
     closeProductModal();
   }
 });
+
+// Sayfa yenilendiğinde veya odağa geldiğinde ürünleri yeniden yükle
+function refreshCollectionProducts() {
+  if (!koleksiyonAdi) return;
+  
+  fetch("/api/public/products?t=" + Date.now(), {
+    cache: 'no-cache'
+  })
+    .then(r => r.json())
+    .then(data => {
+      const yurtbayProducts = data.filter(p => 
+        p.marka && p.marka.includes('Yurtbay Seramik')
+      );
+      
+      const newProducts = yurtbayProducts.filter(p => {
+        if (!p.ad) return false;
+        const productName = p.ad.toUpperCase();
+        const koleksiyonUpper = koleksiyonAdi.toUpperCase();
+        return productName.includes(koleksiyonUpper);
+      });
+      
+      const filteredNewProducts = newProducts.filter(p => {
+        const adParts = p.ad.split(' ');
+        if (adParts.length === 3 && adParts[0] === 'Yurtbay' && adParts[1] === 'Seramik') {
+          return false;
+        }
+        return true;
+      });
+      
+      // Her zaman güncelle (ürün bilgileri değişmiş olabilir)
+      products = filteredNewProducts;
+      document.getElementById("urun-sayisi").textContent = products.length;
+      filteredProducts = [...products];
+      populateFilters();
+      listele(filteredProducts);
+    })
+    .catch(err => console.error("Yenileme hatası:", err));
+}
+
+// Sayfa görünür olduğunda kontrol et
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) {
+    refreshCollectionProducts();
+  }
+});
+
+// Modal kapandığında ürünleri yenile
+const originalCloseModal = closeProductModal;
+closeProductModal = function() {
+  originalCloseModal();
+  setTimeout(refreshCollectionProducts, 500);
+};
 </script>
 
 </body>

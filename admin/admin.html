@@ -13,12 +13,96 @@
     <h1>📦 Admin Panel</h1>
     <div class="header-actions">
       <button class="btn-tab" id="productsTab" onclick="showTab('products')">📦 Ürünler</button>
+      <button class="btn-tab" id="ceramicTab" onclick="showTab('ceramic')">🏺 Seramik Koleksiyonları</button>
       <button class="btn-tab active" id="messagesTab" onclick="showTab('messages')">💬 Mesajlar</button>
       <a href="/logout" class="btn-logout">🚪 Çıkış Yap</a>
     </div>
   </div>
 
   <div class="content">
+    <!-- Seramik Koleksiyonları Bölümü -->
+    <div id="ceramicSection" class="ceramic-section" style="display: none;">
+      <h2>🏺 Seramik Koleksiyonları Yönetimi</h2>
+      
+      <!-- Koleksiyon Ekleme Formu -->
+      <div class="ceramic-form-card">
+        <h3>➕ Yeni Koleksiyon Ürünü Ekle</h3>
+        <form id="ceramicForm" onsubmit="event.preventDefault(); ekleCeramicUrun();">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ceramicMarka">Marka *</label>
+              <select id="ceramicMarka" required>
+                <option value="">Marka Seçin</option>
+                <option value="Yurtbay Seramik">Yurtbay Seramik</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="ceramicKoleksiyon">Koleksiyon Adı *</label>
+              <input type="text" id="ceramicKoleksiyon" required placeholder="Örn: AFYON, ALDA, ALDER">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>
+              <input type="radio" name="ceramicTip" value="genel" checked onchange="toggleCeramicFields()">
+              Genel Koleksiyon Ürünü (Liste sayfasında görünür)
+            </label>
+            <label>
+              <input type="radio" name="ceramicTip" value="detayli" onchange="toggleCeramicFields()">
+              Detaylı Ürün (Ebat bilgili, koleksiyon sayfasında görünür)
+            </label>
+          </div>
+          
+          <div id="detayliUrunFields" style="display: none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="ceramicEbat">Ebat *</label>
+                <input type="text" id="ceramicEbat" placeholder="Örn: 60X120, 60X60">
+              </div>
+              <div class="form-group">
+                <label for="ceramicRenk">Renk</label>
+                <input type="text" id="ceramicRenk" placeholder="Örn: BEYAZ, GRİ">
+              </div>
+              <div class="form-group">
+                <label for="ceramicYuzey">Yüzey</label>
+                <input type="text" id="ceramicYuzey" placeholder="Örn: POLİSH, HİGH GLOSSY">
+              </div>
+              <div class="form-group">
+                <label for="ceramicOzellik">Özellik</label>
+                <input type="text" id="ceramicOzellik" placeholder="Örn: REKTİFİYELİ">
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="ceramicAciklama">Açıklama</label>
+            <textarea id="ceramicAciklama" rows="3" placeholder="Koleksiyon hakkında bilgi..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="ceramicResim">Ürün Resmi</label>
+            <input type="file" id="ceramicResim" accept="image/*" onchange="previewCeramicImage(this)">
+            <div class="image-preview" id="ceramicImagePreview">
+              <img id="ceramicPreviewImg" src="" alt="Önizleme">
+            </div>
+          </div>
+          
+          <div class="button-group">
+            <button type="submit" class="btn btn-primary">➕ Koleksiyon Ürünü Ekle</button>
+            <button type="button" class="btn btn-secondary" onclick="temizleCeramicForm()">🗑️ Temizle</button>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Mevcut Koleksiyonlar -->
+      <div class="ceramic-collections">
+        <h3>📋 Mevcut Seramik Koleksiyonları</h3>
+        <div id="ceramicCollectionsList" class="collections-list">
+          <div class="empty-state">Yükleniyor...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Mesajlar Bölümü -->
     <div id="messagesSection" class="messages-section" style="display: none;">
       <h2>💬 İletişim Formu Mesajları (<span id="mesaj-sayisi">0</span>)</h2>
@@ -74,6 +158,116 @@
         <div class="form-group">
           <label for="aciklama">Açıklama</label>
           <textarea id="aciklama" placeholder="Ürün hakkında detaylı bilgi..."></textarea>
+        </div>
+
+        <!-- Seramik Ürünleri için Özel Alanlar -->
+        <div id="ceramicSpecs" class="ceramic-specs" style="display: none;">
+          <h3>🏺 Seramik Ürün Özellikleri</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="urunKodu">Ürün Kodu</label>
+              <input type="text" id="urunKodu" placeholder="Örn: P10789, S16352">
+            </div>
+            <div class="form-group">
+              <label for="doku">Doku</label>
+              <select id="doku">
+                <option value="">Seçiniz</option>
+                <option value="Mermer">Mermer</option>
+                <option value="Doğal Taş">Doğal Taş</option>
+                <option value="Beton">Beton</option>
+                <option value="Ahşap">Ahşap</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="kalinlik">Kalınlık (Mm)</label>
+              <input type="text" id="kalinlik" placeholder="Örn: 8,2">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="icMekan">İç Mekanda Kullanım</label>
+              <select id="icMekan">
+                <option value="">Seçiniz</option>
+                <option value="Duvar ve Yer">Duvar ve Yer</option>
+                <option value="Duvar">Duvar</option>
+                <option value="Yer">Yer</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="disMekan">Dış Mekanda Kullanım</label>
+              <select id="disMekan">
+                <option value="">Seçiniz</option>
+                <option value="Duvar">Duvar</option>
+                <option value="Uygun Değildir">Uygun Değildir</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="kullanimAlani">Kullanım Alanı</label>
+              <input type="text" id="kullanimAlani" placeholder="Örn: Balkon&Teras, Banyo, İç Mekan">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="yuzeyGorunumu">Yüzey Görünümü</label>
+              <select id="yuzeyGorunumu">
+                <option value="">Seçiniz</option>
+                <option value="Polish">Polish</option>
+                <option value="High Glossy">High Glossy</option>
+                <option value="Mat">Mat</option>
+                <option value="Lappato">Lappato</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="kalip">Kalıp</label>
+              <select id="kalip">
+                <option value="">Seçiniz</option>
+                <option value="Düz">Düz</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bunye">Bünye</label>
+              <select id="bunye">
+                <option value="">Seçiniz</option>
+                <option value="Rektifiye">Rektifiye</option>
+                <option value="Standart">Standart</option>
+                <option value="Sırlı Granit">Sırlı Granit</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="urunGrubu">Ürün Grubu</label>
+              <input type="text" id="urunGrubu" placeholder="Örn: EN 14411, Group Bla" value="EN 14411, Group Bla">
+            </div>
+            <div class="form-group">
+              <label for="vSkalasi">V Skalası</label>
+              <select id="vSkalasi">
+                <option value="">Seçiniz</option>
+                <option value="V1">V1</option>
+                <option value="V2">V2</option>
+                <option value="V3" selected>V3</option>
+                <option value="V4">V4</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="m2Kutu">M²/Kutu</label>
+              <input type="text" id="m2Kutu" placeholder="Örn: 1.8">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="m2Palet">M²/Palet</label>
+              <input type="text" id="m2Palet" placeholder="Örn: 57.6">
+            </div>
+            <div class="form-group">
+              <label for="kutuPalet">Kutu/Palet</label>
+              <input type="text" id="kutuPalet" placeholder="Örn: 32 adet">
+            </div>
+            <div class="form-group">
+              <label for="paletAgirligi">Palet Ağırlığı (Kg)</label>
+              <input type="text" id="paletAgirligi" placeholder="Örn: 1051">
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -137,7 +331,43 @@ let allProducts = [];
 
 function setKategori(kat) {
   document.getElementById("kategori").value = kat;
+  toggleCeramicSpecs();
 }
+
+function toggleCeramicSpecs() {
+  const kategori = document.getElementById("kategori").value;
+  const ceramicSpecs = document.getElementById("ceramicSpecs");
+  
+  if (kategori === "Seramik Ürünleri") {
+    ceramicSpecs.style.display = "block";
+  } else {
+    ceramicSpecs.style.display = "none";
+    // Seramik olmayan ürünler için alanları temizle
+    document.getElementById("urunKodu").value = "";
+    document.getElementById("doku").value = "";
+    document.getElementById("kalinlik").value = "";
+    document.getElementById("icMekan").value = "";
+    document.getElementById("disMekan").value = "";
+    document.getElementById("kullanimAlani").value = "";
+    document.getElementById("yuzeyGorunumu").value = "";
+    document.getElementById("kalip").value = "";
+    document.getElementById("bunye").value = "";
+    document.getElementById("urunGrubu").value = "";
+    document.getElementById("vSkalasi").value = "";
+    document.getElementById("m2Kutu").value = "";
+    document.getElementById("m2Palet").value = "";
+    document.getElementById("kutuPalet").value = "";
+    document.getElementById("paletAgirligi").value = "";
+  }
+}
+
+// Kategori değiştiğinde seramik özelliklerini göster/gizle
+document.addEventListener("DOMContentLoaded", function() {
+  const kategoriSelect = document.getElementById("kategori");
+  if (kategoriSelect) {
+    kategoriSelect.addEventListener("change", toggleCeramicSpecs);
+  }
+});
 
 function previewImage(input) {
   const preview = document.getElementById("imagePreview");
@@ -165,7 +395,9 @@ function showSuccess(message) {
 }
 
 function yukle() {
-  fetch("/api/products")
+  return fetch("/api/products?t=" + Date.now(), {
+    cache: 'no-cache'
+  })
     .then(r => {
       if (!r.ok) throw new Error("Ürünler yüklenemedi");
       return r.json();
@@ -205,6 +437,7 @@ function yukle() {
     .catch(error => {
       console.error("Yükleme hatası:", error);
       document.getElementById("liste").innerHTML = '<div class="empty-state">❌ Ürünler yüklenirken bir hata oluştu!</div>';
+      throw error;
     });
 }
 
@@ -219,6 +452,26 @@ function duzenle(id) {
   document.getElementById("marka").value = p.marka || "";
   document.getElementById("aciklama").value = p.aciklama || "";
   document.getElementById("resim").value = "";
+  
+  // Seramik ürünleri için özel alanlar
+  toggleCeramicSpecs();
+  if (p.kategori === "Seramik Ürünleri") {
+    document.getElementById("urunKodu").value = p.urunKodu || "";
+    document.getElementById("doku").value = p.doku || "";
+    document.getElementById("kalinlik").value = p.kalinlik || "";
+    document.getElementById("icMekan").value = p.icMekan || "";
+    document.getElementById("disMekan").value = p.disMekan || "";
+    document.getElementById("kullanimAlani").value = p.kullanimAlani || "";
+    document.getElementById("yuzeyGorunumu").value = p.yuzeyGorunumu || "";
+    document.getElementById("kalip").value = p.kalip || "";
+    document.getElementById("bunye").value = p.bunye || "";
+    document.getElementById("urunGrubu").value = p.urunGrubu || "";
+    document.getElementById("vSkalasi").value = p.vSkalasi || "";
+    document.getElementById("m2Kutu").value = p.m2Kutu || "";
+    document.getElementById("m2Palet").value = p.m2Palet || "";
+    document.getElementById("kutuPalet").value = p.kutuPalet || "";
+    document.getElementById("paletAgirligi").value = p.paletAgirligi || "";
+  }
   
   // Görsel geri bildirim
   document.querySelectorAll(".product-item").forEach(item => {
@@ -260,6 +513,25 @@ function ekle() {
   formData.append("marka", document.getElementById("marka").value || "");
   formData.append("aciklama", document.getElementById("aciklama").value || "");
   
+  // Seramik ürünleri için özel alanlar
+  if (document.getElementById("kategori").value === "Seramik Ürünleri") {
+    formData.append("urunKodu", document.getElementById("urunKodu").value || "");
+    formData.append("doku", document.getElementById("doku").value || "");
+    formData.append("kalinlik", document.getElementById("kalinlik").value || "");
+    formData.append("icMekan", document.getElementById("icMekan").value || "");
+    formData.append("disMekan", document.getElementById("disMekan").value || "");
+    formData.append("kullanimAlani", document.getElementById("kullanimAlani").value || "");
+    formData.append("yuzeyGorunumu", document.getElementById("yuzeyGorunumu").value || "");
+    formData.append("kalip", document.getElementById("kalip").value || "");
+    formData.append("bunye", document.getElementById("bunye").value || "");
+    formData.append("urunGrubu", document.getElementById("urunGrubu").value || "");
+    formData.append("vSkalasi", document.getElementById("vSkalasi").value || "");
+    formData.append("m2Kutu", document.getElementById("m2Kutu").value || "");
+    formData.append("m2Palet", document.getElementById("m2Palet").value || "");
+    formData.append("kutuPalet", document.getElementById("kutuPalet").value || "");
+    formData.append("paletAgirligi", document.getElementById("paletAgirligi").value || "");
+  }
+  
   const resim = document.getElementById("resim").files[0];
   if (resim) {
     formData.append("resim", resim);
@@ -286,6 +558,10 @@ function ekle() {
     showSuccess("✅ Ürün başarıyla eklendi!");
     temizle();
     yukle();
+    // Seramik koleksiyonları listesini de yenile
+    if (currentTab === 'ceramic') {
+      yukleCeramicCollections();
+    }
   })
   .catch(error => {
     alert("❌ Hata: " + error.message);
@@ -309,6 +585,39 @@ function guncelle() {
   formData.append("marka", document.getElementById("marka").value || "");
   formData.append("aciklama", document.getElementById("aciklama").value || "");
 
+  // Seramik ürünleri için özel alanlar - her zaman gönder
+  const urunKoduEl = document.getElementById("urunKodu");
+  const dokuEl = document.getElementById("doku");
+  const kalinlikEl = document.getElementById("kalinlik");
+  const icMekanEl = document.getElementById("icMekan");
+  const disMekanEl = document.getElementById("disMekan");
+  const kullanimAlaniEl = document.getElementById("kullanimAlani");
+  const yuzeyGorunumuEl = document.getElementById("yuzeyGorunumu");
+  const kalipEl = document.getElementById("kalip");
+  const bunyeEl = document.getElementById("bunye");
+  const urunGrubuEl = document.getElementById("urunGrubu");
+  const vSkalasiEl = document.getElementById("vSkalasi");
+  const m2KutuEl = document.getElementById("m2Kutu");
+  const m2PaletEl = document.getElementById("m2Palet");
+  const kutuPaletEl = document.getElementById("kutuPalet");
+  const paletAgirligiEl = document.getElementById("paletAgirligi");
+  
+  formData.append("urunKodu", urunKoduEl ? urunKoduEl.value || "" : "");
+  formData.append("doku", dokuEl ? dokuEl.value || "" : "");
+  formData.append("kalinlik", kalinlikEl ? kalinlikEl.value || "" : "");
+  formData.append("icMekan", icMekanEl ? icMekanEl.value || "" : "");
+  formData.append("disMekan", disMekanEl ? disMekanEl.value || "" : "");
+  formData.append("kullanimAlani", kullanimAlaniEl ? kullanimAlaniEl.value || "" : "");
+  formData.append("yuzeyGorunumu", yuzeyGorunumuEl ? yuzeyGorunumuEl.value || "" : "");
+  formData.append("kalip", kalipEl ? kalipEl.value || "" : "");
+  formData.append("bunye", bunyeEl ? bunyeEl.value || "" : "");
+  formData.append("urunGrubu", urunGrubuEl ? urunGrubuEl.value || "" : "");
+  formData.append("vSkalasi", vSkalasiEl ? vSkalasiEl.value || "" : "");
+  formData.append("m2Kutu", m2KutuEl ? m2KutuEl.value || "" : "");
+  formData.append("m2Palet", m2PaletEl ? m2PaletEl.value || "" : "");
+  formData.append("kutuPalet", kutuPaletEl ? kutuPaletEl.value || "" : "");
+  formData.append("paletAgirligi", paletAgirligiEl ? paletAgirligiEl.value || "" : "");
+
   const resim = document.getElementById("resim").files[0];
   if (resim) {
     formData.append("resim", resim);
@@ -319,9 +628,10 @@ function guncelle() {
   updateBtn.disabled = true;
   updateBtn.innerHTML = "⏳ Güncelleniyor...";
 
-  fetch("/api/products/" + encodeURIComponent(seciliId), {
+  fetch("/api/products/" + encodeURIComponent(seciliId) + "?t=" + Date.now(), {
     method: "PUT",
-    body: formData
+    body: formData,
+    cache: 'no-cache'
   })
   .then(response => {
     if (!response.ok) {
@@ -337,10 +647,18 @@ function guncelle() {
     }
     return response.json();
   })
-  .then(() => {
+  .then((data) => {
+    console.log("Güncelleme başarılı:", data);
     showSuccess("✅ Ürün başarıyla güncellendi!");
     temizle();
-    yukle();
+    // Önce ürünleri yenile, sonra seramik koleksiyonlarını
+    return yukle();
+  })
+  .then(() => {
+    // Seramik koleksiyonları listesini de yenile
+    if (currentTab === 'ceramic') {
+      yukleCeramicCollections();
+    }
   })
   .catch(error => {
     alert("❌ Hata: " + error.message);
@@ -370,6 +688,10 @@ function sil(id) {
     .then(() => {
       showSuccess("✅ Ürün başarıyla silindi!");
       yukle();
+      // Seramik koleksiyonları listesini de yenile
+      if (currentTab === 'ceramic') {
+        yukleCeramicCollections();
+      }
       if (seciliId === id) {
         temizle();
       }
@@ -384,6 +706,7 @@ function temizle() {
   seciliId = null;
   document.getElementById("productForm").reset();
   document.getElementById("imagePreview").classList.remove("show");
+  toggleCeramicSpecs();
   
   document.querySelectorAll(".product-item").forEach(item => {
     item.classList.remove("selected");
@@ -400,14 +723,26 @@ function showTab(tab) {
   currentTab = tab;
   if (tab === 'products') {
     document.getElementById('productsSection').style.display = 'block';
+    document.getElementById('ceramicSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'none';
     document.getElementById('productsTab').classList.add('active');
+    document.getElementById('ceramicTab').classList.remove('active');
     document.getElementById('messagesTab').classList.remove('active');
     yukle();
+  } else if (tab === 'ceramic') {
+    document.getElementById('productsSection').style.display = 'none';
+    document.getElementById('ceramicSection').style.display = 'block';
+    document.getElementById('messagesSection').style.display = 'none';
+    document.getElementById('productsTab').classList.remove('active');
+    document.getElementById('ceramicTab').classList.add('active');
+    document.getElementById('messagesTab').classList.remove('active');
+    yukleCeramicCollections();
   } else {
     document.getElementById('productsSection').style.display = 'none';
+    document.getElementById('ceramicSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'block';
     document.getElementById('productsTab').classList.remove('active');
+    document.getElementById('ceramicTab').classList.remove('active');
     document.getElementById('messagesTab').classList.add('active');
     yukleMesajlar();
   }
@@ -555,6 +890,286 @@ document.getElementById("replyModal")?.addEventListener("click", (e) => {
     closeReplyModal();
   }
 });
+
+// Seramik Koleksiyonları Fonksiyonları
+function toggleCeramicFields() {
+  const tip = document.querySelector('input[name="ceramicTip"]:checked').value;
+  const detayliFields = document.getElementById('detayliUrunFields');
+  
+  if (tip === 'detayli') {
+    detayliFields.style.display = 'block';
+    document.getElementById('ceramicEbat').required = true;
+  } else {
+    detayliFields.style.display = 'none';
+    document.getElementById('ceramicEbat').required = false;
+    document.getElementById('ceramicEbat').value = '';
+    document.getElementById('ceramicRenk').value = '';
+    document.getElementById('ceramicYuzey').value = '';
+    document.getElementById('ceramicOzellik').value = '';
+  }
+}
+
+function previewCeramicImage(input) {
+  const preview = document.getElementById("ceramicImagePreview");
+  const previewImg = document.getElementById("ceramicPreviewImg");
+  
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImg.src = e.target.result;
+      preview.classList.add("show");
+    };
+    reader.readAsDataURL(input.files[0]);
+  } else {
+    preview.classList.remove("show");
+  }
+}
+
+function ekleCeramicUrun() {
+  const marka = document.getElementById("ceramicMarka").value.trim();
+  const koleksiyon = document.getElementById("ceramicKoleksiyon").value.trim();
+  const tip = document.querySelector('input[name="ceramicTip"]:checked').value;
+  
+  if (!marka || !koleksiyon) {
+    alert("⚠️ Marka ve Koleksiyon adı zorunludur!");
+    return;
+  }
+  
+  // Ürün adını oluştur
+  let urunAdi = `${marka} ${koleksiyon.toUpperCase()}`;
+  
+  if (tip === 'detayli') {
+    const ebat = document.getElementById("ceramicEbat").value.trim();
+    if (!ebat) {
+      alert("⚠️ Detaylı ürün için ebat zorunludur!");
+      return;
+    }
+    
+    const renk = document.getElementById("ceramicRenk").value.trim();
+    const yuzey = document.getElementById("ceramicYuzey").value.trim();
+    const ozellik = document.getElementById("ceramicOzellik").value.trim();
+    
+    // Detaylı ürün adı: "Yurtbay Seramik AFYON 60X120 BEYAZ POLİSH REKTİFİYELİ"
+    const parts = [koleksiyon.toUpperCase(), ebat.toUpperCase()];
+    if (renk) parts.push(renk.toUpperCase());
+    if (yuzey) parts.push(yuzey.toUpperCase());
+    if (ozellik) parts.push(ozellik.toUpperCase());
+    
+    urunAdi = `${marka} ${parts.join(' ')}`;
+  }
+  
+  const formData = new FormData();
+  formData.append("ad", urunAdi);
+  formData.append("kategori", "Seramik Ürünleri");
+  formData.append("marka", marka);
+  formData.append("aciklama", document.getElementById("ceramicAciklama").value || "");
+  
+  const resim = document.getElementById("ceramicResim").files[0];
+  if (resim) {
+    formData.append("resim", resim);
+  }
+  
+  const submitBtn = event.target.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = "⏳ Ekleniyor...";
+  
+  fetch("/api/products", {
+    method: "POST",
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {
+        throw new Error(err.message || "Ekleme başarısız!");
+      });
+    }
+    return response.json();
+  })
+  .then(() => {
+    showSuccess("✅ Koleksiyon ürünü başarıyla eklendi!");
+    temizleCeramicForm();
+    yukleCeramicCollections();
+    // Ürünler listesini de yenile
+    if (currentTab === 'products') {
+      yukle();
+    }
+  })
+  .catch(error => {
+    alert("❌ Hata: " + error.message);
+    console.error("Ekleme hatası:", error);
+  })
+  .finally(() => {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+  });
+}
+
+function temizleCeramicForm() {
+  document.getElementById("ceramicForm").reset();
+  document.getElementById("ceramicImagePreview").classList.remove("show");
+  document.querySelector('input[name="ceramicTip"][value="genel"]').checked = true;
+  toggleCeramicFields();
+}
+
+function yukleCeramicCollections() {
+  fetch("/api/products?t=" + Date.now(), {
+    cache: 'no-cache'
+  })
+    .then(r => {
+      if (!r.ok) throw new Error("Ürünler yüklenemedi");
+      return r.json();
+    })
+    .then(data => {
+      // Seramik ürünlerini filtrele
+      const seramikUrunler = data.filter(p => 
+        p.kategori === "Seramik Ürünleri" && 
+        p.marka && p.marka.includes('Yurtbay Seramik')
+      );
+      
+      // Koleksiyonlara göre grupla
+      const koleksiyonlar = {};
+      
+      seramikUrunler.forEach(p => {
+        if (!p.ad) return;
+        
+        const adParts = p.ad.split(' ');
+        if (adParts.length < 3 || adParts[0] !== 'Yurtbay' || adParts[1] !== 'Seramik') return;
+        
+        const koleksiyonAdi = adParts[2].toUpperCase();
+        
+        // Ebat kontrolü (detaylı ürün mü?)
+        const hasEbat = /\d+X\d+/.test(p.ad);
+        
+        if (!koleksiyonlar[koleksiyonAdi]) {
+          koleksiyonlar[koleksiyonAdi] = {
+            genel: null,
+            detayli: []
+          };
+        }
+        
+        if (hasEbat) {
+          koleksiyonlar[koleksiyonAdi].detayli.push(p);
+        } else {
+          koleksiyonlar[koleksiyonAdi].genel = p;
+        }
+      });
+      
+      const listDiv = document.getElementById("ceramicCollectionsList");
+      
+      if (Object.keys(koleksiyonlar).length === 0) {
+        listDiv.innerHTML = '<div class="empty-state">Henüz seramik koleksiyonu eklenmemiş.</div>';
+        return;
+      }
+      
+      listDiv.innerHTML = "";
+      
+      Object.keys(koleksiyonlar).sort().forEach(koleksiyonAdi => {
+        const koleksiyon = koleksiyonlar[koleksiyonAdi];
+        const card = document.createElement("div");
+        card.className = "collection-card";
+        
+        let genelHtml = '<div class="collection-item general"><span class="badge">Genel</span> <strong>Yok</strong></div>';
+        if (koleksiyon.genel) {
+          genelHtml = `
+            <div class="collection-item general">
+              <span class="badge">Genel</span>
+              <strong>${koleksiyon.genel.ad}</strong>
+              <div class="collection-item-actions">
+                <button class="btn btn-primary btn-small" onclick="duzenleCeramicUrun('${koleksiyon.genel.id}')">✏️</button>
+                <button class="btn btn-danger btn-small" onclick="silCeramicUrun('${koleksiyon.genel.id}')">🗑️</button>
+              </div>
+            </div>
+          `;
+        }
+        
+        let detayliHtml = '';
+        if (koleksiyon.detayli.length > 0) {
+          detayliHtml = koleksiyon.detayli.map(p => `
+            <div class="collection-item detayli">
+              <span class="badge">Detaylı</span>
+              <strong>${p.ad}</strong>
+              <div class="collection-item-actions">
+                <button class="btn btn-primary btn-small" onclick="duzenleCeramicUrun('${p.id}')">✏️</button>
+                <button class="btn btn-danger btn-small" onclick="silCeramicUrun('${p.id}')">🗑️</button>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          detayliHtml = '<div class="collection-item"><em>Henüz detaylı ürün eklenmemiş</em></div>';
+        }
+        
+        card.innerHTML = `
+          <div class="collection-header">
+            <h3>${koleksiyonAdi}</h3>
+            <span class="collection-count">${koleksiyon.detayli.length} detaylı ürün</span>
+          </div>
+          <div class="collection-items">
+            ${genelHtml}
+            ${detayliHtml}
+          </div>
+        `;
+        
+        listDiv.appendChild(card);
+      });
+    })
+    .catch(error => {
+      console.error("Yükleme hatası:", error);
+      document.getElementById("ceramicCollectionsList").innerHTML = '<div class="empty-state">❌ Koleksiyonlar yüklenirken bir hata oluştu!</div>';
+    });
+}
+
+function duzenleCeramicUrun(id) {
+  // Ürünler tab'ına geç ve ürünü düzenle
+  showTab('products');
+  
+  // Ürünü bul ve düzenle
+  fetch("/api/products?t=" + Date.now(), {
+    cache: 'no-cache'
+  })
+    .then(r => {
+      if (!r.ok) throw new Error("Ürünler yüklenemedi");
+      return r.json();
+    })
+    .then(data => {
+      const product = data.find(p => p.id === id);
+      if (product) {
+        duzenle(id);
+      } else {
+        alert("❌ Ürün bulunamadı!");
+      }
+    })
+    .catch(error => {
+      alert("❌ Hata: " + error.message);
+      console.error("Yükleme hatası:", error);
+    });
+}
+
+function silCeramicUrun(id) {
+  if (!confirm("Bu ürünü silmek istediğinize emin misiniz?")) {
+    return;
+  }
+  
+  fetch("/api/products/" + id, { method: "DELETE" })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Silme işlemi başarısız!");
+      }
+      return response.json();
+    })
+    .then(() => {
+      showSuccess("✅ Ürün başarıyla silindi!");
+      yukleCeramicCollections();
+      // Ürünler listesini de yenile
+      if (currentTab === 'products') {
+        yukle();
+      }
+    })
+    .catch(error => {
+      alert("❌ Hata: " + error.message);
+      console.error("Silme hatası:", error);
+    });
+}
 
 // Sayfa yüklendiğinde
 yukle();

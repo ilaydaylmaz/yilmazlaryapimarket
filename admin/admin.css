@@ -571,3 +571,179 @@ body {
   justify-content: flex-end;
 }
 
+/* Seramik Koleksiyonları Bölümü */
+.ceramic-section {
+  padding: 30px;
+}
+
+.ceramic-form-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 25px;
+  margin-bottom: 30px;
+  border: 1px solid #e0e0e0;
+}
+
+.ceramic-form-card h3 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.ceramic-form-card .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #555;
+}
+
+.ceramic-form-card .form-group input[type="radio"] {
+  margin-right: 8px;
+}
+
+.ceramic-form-card .form-group label {
+  display: block;
+}
+
+.ceramic-form-card .form-group label input[type="radio"] {
+  margin-right: 8px;
+}
+
+.ceramic-form-card .form-group > label:first-of-type {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.ceramic-collections {
+  margin-top: 30px;
+}
+
+.ceramic-collections h3 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.collections-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+}
+
+.collection-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s;
+}
+
+.collection-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.collection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.collection-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #333;
+}
+
+.collection-count {
+  font-size: 0.85rem;
+  color: #666;
+  background: #f0f0f0;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.collection-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.collection-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.collection-item strong {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.collection-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.collection-item .badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.collection-item.general .badge {
+  background: #4CAF50;
+  color: white;
+}
+
+.collection-item.detayli .badge {
+  background: #2196F3;
+  color: white;
+}
+
+.collection-item em {
+  color: #999;
+  font-style: italic;
+}
+
+.ceramic-specs {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.ceramic-specs h3 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .collections-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
