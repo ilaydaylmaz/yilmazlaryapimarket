@@ -3493,78 +3493,82 @@ input[type="search"]:focus {
 }
 
 .working-hours-card {
-  background: linear-gradient(135deg, rgba(196, 0, 0, 0.05) 0%, rgba(230, 57, 70, 0.05) 100%);
-  border: 2px solid rgba(196, 0, 0, 0.1);
-  border-radius: 20px;
-  padding: 40px;
+  background: var(--white);
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 30px;
   margin-bottom: 50px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .working-hours-header {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid rgba(196, 0, 0, 0.1);
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e8e8e8;
 }
 
 .working-hours-icon {
-  font-size: 2.5rem;
-  width: 60px;
-  height: 60px;
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gradient-primary);
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(196, 0, 0, 0.2);
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .working-hours-header h2 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: var(--text-dark);
   margin: 0;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .working-hours-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
 .working-hours-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 25px;
-  background: var(--white);
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  padding: 14px 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid #f0f0f0;
+  transition: none;
+}
+
+.working-hours-item:last-child {
+  border-bottom: none;
 }
 
 .working-hours-item:hover {
-  transform: translateX(5px);
-  box-shadow: 0 4px 15px rgba(196, 0, 0, 0.1);
+  transform: none;
+  box-shadow: none;
 }
 
 .working-hours-item.closed {
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .working-hours-item .day {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 500;
   color: var(--text-dark);
 }
 
 .working-hours-item .time {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--primary-color);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-dark);
 }
 
 .working-hours-item.closed .time {
@@ -4054,16 +4058,16 @@ input[type="search"]:focus {
   }
 
   .working-hours-header h2 {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
   }
 
   .working-hours-item {
-    padding: 15px 20px;
+    padding: 12px 0;
   }
 
   .working-hours-item .day,
   .working-hours-item .time {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .map-header h2 {
