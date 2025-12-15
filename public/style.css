@@ -951,7 +951,7 @@
 .brands-track {
   display: flex;
   gap: 40px;
-  animation: slideBrands 20s linear infinite;
+  animation: slideBrands 10s linear infinite;
   will-change: transform;
 }
 
@@ -969,14 +969,14 @@
 }
 
 .brand-item {
-  flex: 0 0 180px;
-  height: 100px;
+  flex: 0 0 220px;
+  height: 130px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--white);
   border-radius: 12px;
-  padding: 20px;
+  padding: 25px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   border: 1px solid #f0f0f0;
@@ -991,6 +991,9 @@
 .brand-item img {
   max-width: 100%;
   max-height: 100%;
+  min-height: 60px;
+  width: auto;
+  height: auto;
   object-fit: contain;
   opacity: 0.8;
   transition: all 0.3s ease;
@@ -2376,9 +2379,9 @@ input[type="search"]:focus {
   }
 
   .brand-item {
-    flex: 0 0 140px;
-    height: 80px;
-    padding: 15px;
+    flex: 0 0 170px;
+    height: 100px;
+    padding: 20px;
   }
 
   .brands-track {
@@ -2706,9 +2709,9 @@ input[type="search"]:focus {
   }
 
   .brand-item {
-    flex: 0 0 120px;
-    height: 70px;
-    padding: 12px;
+    flex: 0 0 150px;
+    height: 90px;
+    padding: 18px;
   }
 
   .brands-track {
