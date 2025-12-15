@@ -249,7 +249,7 @@ fetch("/api/public/products")
             <h2>${p.ad || 'İsimsiz Ürün'}</h2>
             ${p.marka ? `<p><strong>Marka:</strong> ${p.marka}</p>` : ''}
             ${p.kategori ? `<p><strong>Kategori:</strong> ${p.kategori}</p>` : ''}
-            ${p.aciklama ? `<p>${p.aciklama}</p>` : '<p>Bu ürün hakkında detaylı bilgi için lütfen bizimle iletişime geçin.</p>'}
+            ${p.aciklama ? `<p>${p.aciklama.replace(/\n/g, '<br>')}</p>` : '<p>Bu ürün hakkında detaylı bilgi için lütfen bizimle iletişime geçin.</p>'}
             <div style="margin-top: 30px;">
               <a href="/urunler.html" class="btn" style="display: inline-block;">← Tüm Ürünlere Dön</a>
             </div>
