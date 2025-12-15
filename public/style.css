@@ -3670,22 +3670,22 @@ input[type="search"]:focus {
   }
 
   .working-hours-card {
-    padding: 25px;
+    padding: 24px;
   }
 
   .working-hours-header {
-    flex-direction: column;
-    text-align: center;
+    flex-direction: row;
+    text-align: left;
   }
 
   .working-hours-header h2 {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
   }
 
   .working-hours-item {
-    flex-direction: column;
-    gap: 10px;
-    text-align: center;
+    flex-direction: row;
+    gap: 0;
+    text-align: left;
   }
 
   .map-header h2 {
@@ -3958,22 +3958,22 @@ input[type="search"]:focus {
   }
 
   .working-hours-card {
-    padding: 25px;
+    padding: 24px;
   }
 
   .working-hours-header {
-    flex-direction: column;
-    text-align: center;
+    flex-direction: row;
+    text-align: left;
   }
 
   .working-hours-header h2 {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
   }
 
   .working-hours-item {
-    flex-direction: column;
-    gap: 10px;
-    text-align: center;
+    flex-direction: row;
+    gap: 0;
+    text-align: left;
   }
 
   .map-header h2 {
