@@ -951,7 +951,7 @@
 .brands-track {
   display: flex;
   gap: 40px;
-  animation: slideBrands 25s linear infinite;
+  animation: slideBrands 20s linear infinite;
   will-change: transform;
 }
 
@@ -964,7 +964,7 @@
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
 }
 
