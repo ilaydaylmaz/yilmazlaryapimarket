@@ -296,7 +296,38 @@
 
     <!-- Ürünler Listesi -->
     <div class="products-section">
-      <h2>📋 Mevcut Ürünler (<span id="urun-sayisi">0</span>)</h2>
+      <div class="products-header">
+        <h2>📋 Mevcut Ürünler (<span id="urun-sayisi">0</span>)</h2>
+        <div class="products-filters">
+          <input 
+            type="search" 
+            id="productSearch" 
+            placeholder="Ürün adı veya marka ara..."
+          >
+          <select id="productFilterKategori">
+            <option value="">Tüm Kategoriler</option>
+            <option value="Boya Ürünleri">Boya Ürünleri</option>
+            <option value="Hırdavat Ürünleri">Hırdavat Ürünleri</option>
+            <option value="Elektrik Ürünleri">Elektrik Ürünleri</option>
+            <option value="Tesisat Ürünleri">Tesisat Ürünleri</option>
+            <option value="Yapı Malzemeleri">Yapı Malzemeleri</option>
+            <option value="El Aletleri Ürünleri">El Aletleri Ürünleri</option>
+            <option value="Seramik Ürünleri">Seramik Ürünleri</option>
+            <option value="Banyo Ürünleri">Banyo Ürünleri</option>
+            <option value="Parke Ürünleri">Parke Ürünleri</option>
+            <option value="Mutfak Ürünleri">Mutfak Ürünleri</option>
+            <option value="Kaba Grubu">Kaba Grubu</option>
+            <option value="Diğer">Diğer</option>
+          </select>
+          <select id="productSort">
+            <option value="default">Sıralama: Varsayılan</option>
+            <option value="nameAsc">Ürün Adı A → Z</option>
+            <option value="nameDesc">Ürün Adı Z → A</option>
+            <option value="brandAsc">Marka A → Z</option>
+            <option value="brandDesc">Marka Z → A</option>
+          </select>
+        </div>
+      </div>
       <div class="products-list" id="liste">
         <div class="empty-state">Yükleniyor...</div>
       </div>
@@ -369,6 +400,22 @@ document.addEventListener("DOMContentLoaded", function() {
   if (kategoriSelect) {
     kategoriSelect.addEventListener("change", toggleCeramicSpecs);
   }
+
+  const searchInput = document.getElementById("productSearch");
+  const kategoriFilter = document.getElementById("productFilterKategori");
+  const sortSelect = document.getElementById("productSort");
+
+  if (searchInput) {
+    searchInput.addEventListener("input", () => applyProductFilters());
+  }
+
+  if (kategoriFilter) {
+    kategoriFilter.addEventListener("change", () => applyProductFilters());
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener("change", () => applyProductFilters());
+  }
 });
 
 function previewImage(input) {
@@ -406,41 +453,99 @@ function yukle() {
     })
     .then(data => {
       allProducts = data;
-      const liste = document.getElementById("liste");
       const sayac = document.getElementById("urun-sayisi");
       
       sayac.textContent = data.length;
-      
-      if (data.length === 0) {
-        liste.innerHTML = '<div class="empty-state">Henüz ürün eklenmemiş. Yukarıdaki formdan ekleyebilirsiniz.</div>';
-        return;
-      }
-      
-      liste.innerHTML = "";
-      data.forEach(p => {
-        const item = document.createElement("div");
-        item.className = "product-item";
-        item.dataset.id = p.id;
-        
-        item.innerHTML = `
-          <div class="product-info">
-            <h3>${p.ad || "İsimsiz Ürün"}</h3>
-            <p>${p.kategori ? `📁 ${p.kategori}` : ""} ${p.marka ? `• 🏷️ ${p.marka}` : ""}</p>
-          </div>
-          <div class="product-actions">
-            <button class="btn btn-primary btn-small" onclick="duzenle('${p.id}')">✏️ Düzenle</button>
-            <button class="btn btn-danger btn-small" onclick="sil('${p.id}')">🗑️ Sil</button>
-          </div>
-        `;
-        
-        liste.appendChild(item);
-      });
+
+      applyProductFilters();
     })
     .catch(error => {
       console.error("Yükleme hatası:", error);
       document.getElementById("liste").innerHTML = '<div class="empty-state">❌ Ürünler yüklenirken bir hata oluştu!</div>';
       throw error;
     });
+}
+
+function renderProducts(list) {
+  const liste = document.getElementById("liste");
+
+  if (!list || list.length === 0) {
+    liste.innerHTML = '<div class="empty-state">Sonuç bulunamadı. Filtreleri temizleyip tekrar deneyin.</div>';
+    return;
+  }
+
+  liste.innerHTML = "";
+
+  list.forEach(p => {
+    const item = document.createElement("div");
+    item.className = "product-item";
+    item.dataset.id = p.id;
+
+    item.innerHTML = `
+      <div class="product-info">
+        <h3>${p.ad || "İsimsiz Ürün"}</h3>
+        <p>${p.kategori ? `📁 ${p.kategori}` : ""} ${p.marka ? `• 🏷️ ${p.marka}` : ""}</p>
+      </div>
+      <div class="product-actions">
+        <button class="btn btn-primary btn-small" onclick="duzenle('${p.id}')">✏️ Düzenle</button>
+        <button class="btn btn-danger btn-small" onclick="sil('${p.id}')">🗑️ Sil</button>
+      </div>
+    `;
+
+    liste.appendChild(item);
+  });
+}
+
+function applyProductFilters() {
+  if (!Array.isArray(allProducts)) {
+    renderProducts([]);
+    return;
+  }
+
+  const searchInput = document.getElementById("productSearch");
+  const kategoriSelect = document.getElementById("productFilterKategori");
+  const sortSelect = document.getElementById("productSort");
+
+  const searchTerm = (searchInput?.value || "").toLowerCase().trim();
+  const kategoriFilter = kategoriSelect?.value || "";
+  const sortValue = sortSelect?.value || "default";
+
+  let filtered = allProducts.slice();
+
+  if (searchTerm) {
+    filtered = filtered.filter(p => {
+      const ad = (p.ad || "").toLowerCase();
+      const marka = (p.marka || "").toLowerCase();
+      const kategori = (p.kategori || "").toLowerCase();
+      return ad.includes(searchTerm) || marka.includes(searchTerm) || kategori.includes(searchTerm);
+    });
+  }
+
+  if (kategoriFilter) {
+    filtered = filtered.filter(p => p.kategori === kategoriFilter);
+  }
+
+  filtered.sort((a, b) => {
+    const nameA = (a.ad || "").toLowerCase();
+    const nameB = (b.ad || "").toLowerCase();
+    const brandA = (a.marka || "").toLowerCase();
+    const brandB = (b.marka || "").toLowerCase();
+
+    switch (sortValue) {
+      case "nameAsc":
+        return nameA.localeCompare(nameB, "tr");
+      case "nameDesc":
+        return nameB.localeCompare(nameA, "tr");
+      case "brandAsc":
+        return brandA.localeCompare(brandB, "tr");
+      case "brandDesc":
+        return brandB.localeCompare(brandA, "tr");
+      default:
+        return 0;
+    }
+  });
+
+  renderProducts(filtered);
 }
 
 function duzenle(id) {
