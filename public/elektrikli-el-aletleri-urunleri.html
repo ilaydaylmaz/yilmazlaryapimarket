@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Yılmazlar Yapı Market Elektrik Ürünleri - Geniş elektrik ürünleri yelpazesi">
-  <title>Elektrik Ürünleri - Yılmazlar Yapı Market</title>
+  <meta name="description" content="Yılmazlar Yapı Market Elektrikli El Aletleri - Matkap, taşlama, şarjlı vidalama ve daha fazlası">
+  <title>Elektrikli El Aletleri - Yılmazlar Yapı Market</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -42,7 +42,8 @@
     
     <div class="navbar-logo">
       <a href="/">
-      <img src="/logo.png" alt="Yılmazlar Yapı Market Logo">
+        <img src="/logo.png" alt="Yılmazlar Yapı Market Logo">
+      </a>
     </div>
     
     <nav class="nav-right">
@@ -55,11 +56,13 @@
       </a>
     </nav>
   </div>
-</header><div class="container">
+</header>
+
+<div class="container">
   <div class="page-header">
     <div class="page-header-content">
-      <h1>Elektrik Ürünleri</h1>
-      <p>Geniş elektrik ürünleri yelpazemizden ihtiyacınıza uygun ürünü bulun</p>
+      <h1>Elektrikli El Aletleri</h1>
+      <p>Matkap, taşlama, şarjlı vidalama ve diğer elektrikli el aletleri için ürünlerimiz</p>
     </div>
     <div class="view-controls">
       <button id="gridView" class="view-btn active" title="Grid Görünüm">
@@ -73,7 +76,7 @@
 
   <div class="filters-bar">
     <div class="search-wrapper">
-      <input id="arama" type="search" placeholder="Ürün, marka veya kategori ara..." autocomplete="off">
+      <input id="arama" type="search" placeholder="Ürün veya marka ara..." autocomplete="off">
     </div>
     <div class="filters-row">
       <select id="markaFilter" class="filter-select">
@@ -103,14 +106,12 @@
       <div class="footer-logo">
         <img src="/logo.png" alt="Yılmazlar Yapı Market Logo">
       </div>
-      
     </div>
     
     <div class="footer-center">
       <div class="footer-column">
         <h3>ANASAYFA</h3>
       </div>
-      <div class="footer-column">
       <div class="footer-column">
         <h3>ÜRÜNLER</h3>
         <ul>
@@ -119,6 +120,7 @@
           <li><a href="/boya-urunleri.html">Boya Ürünleri</a></li>
           <li><a href="/hirdavat-urunleri.html">Hırdavat Ürünleri</a></li>
           <li><a href="/elektrik-urunleri.html">Elektrik Ürünleri</a></li>
+          <li><a href="/elektrikli-el-aletleri-urunleri.html">Elektrikli El Aletleri</a></li>
         </ul>
       </div>
       <div class="footer-column">
@@ -229,7 +231,7 @@ if (typeof document !== "undefined") {
     
     // ESC tuşu ile kapat
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" </footer></footer> searchModal </footer></footer> searchModal.classList.contains("active")) {
+      if (e.key === "Escape" && searchModal && searchModal.classList.contains("active")) {
         closeSearchModal();
       }
     });
@@ -241,7 +243,7 @@ if (typeof document !== "undefined") {
 let products = [];
 let filteredProducts = [];
 let currentView = 'grid';
-const TARGET_CATEGORY = "Elektrik Ürünleri";
+const TARGET_CATEGORY = "Elektrikli El Aletleri";
 
 fetch("/api/public/products")
   .then(r => r.json())
@@ -276,12 +278,10 @@ function applyFilters() {
   const markaVal = document.getElementById("markaFilter").value.trim();
 
   filteredProducts = products.filter(p => {
-    const matchArama = !aramaVal || 
+    const matchArama = !aramaVal ||
       (p.ad && p.ad.toLowerCase().includes(aramaVal)) ||
       (p.marka && p.marka.toLowerCase().includes(aramaVal));
-
     const matchMarka = !markaVal || (p.marka && String(p.marka).trim() === String(markaVal).trim());
-
     return matchArama && matchMarka;
   });
 
@@ -302,7 +302,7 @@ function listele(data) {
   if (data.length === 0) {
     div.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">🔍</div>
+        <div class="empty-state-icon">🔌</div>
         <h3>Ürün bulunamadı</h3>
         <p>Farklı bir arama terimi veya filtre deneyin.</p>
       </div>
@@ -311,14 +311,8 @@ function listele(data) {
     return;
   }
 
-  const activeFilters = [];
-  if (document.getElementById("markaFilter").value) {
-    activeFilters.push(`Marka: ${document.getElementById("markaFilter").value}`);
-  }
-
   sonuc.innerHTML = `
     <span class="result-count"><strong>${data.length}</strong> ürün bulundu</span>
-    ${activeFilters.length > 0 ? `<span class="active-filters">${activeFilters.join(" • ")}</span>` : ''}
   `;
 
   div.className = currentView === 'grid' ? 'urunler' : 'urunler-list';
@@ -335,11 +329,10 @@ function listele(data) {
     }
 
     if (currentView === 'grid') {
-    div.innerHTML += `
-      <div class="urun" onclick="detay('${p.id}')">
+      div.innerHTML += `
+        <div class="urun" onclick="detay('${p.id}')">
           <div class="urun-image-wrapper">
             <img src="${resimUrl}" alt="${p.ad}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'300\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'300\\' height=\\'300\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'16\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
-
           </div>
           <div class="urun-content">
             <h3>${p.ad || 'İsimsiz Ürün'}</h3>
@@ -362,7 +355,6 @@ function listele(data) {
             <div>
               <h3>${p.ad || 'İsimsiz Ürün'}</h3>
               <div class="urun-list-meta">
-
                 ${p.marka ? `<span class="urun-meta-item"><strong>Marka:</strong> ${p.marka}</span>` : ''}
               </div>
             </div>
@@ -370,8 +362,8 @@ function listele(data) {
               <span class="urun-link">Detayları Gör →</span>
             </div>
           </div>
-      </div>
-    `;
+        </div>
+      `;
     }
   });
 }
@@ -408,3 +400,5 @@ function detay(id) {
 
 </body>
 </html>
+
+
