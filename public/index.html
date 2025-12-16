@@ -517,10 +517,20 @@ function loadInstagramPosts() {
   }
 }
 
-// Sayfa yüklendiğinde popüler ürünleri ve Instagram postlarını yükle
+// Marka slider'ında sonsuz döngü efekti için track içeriğini iki kere yan yana klonla
+function initBrandsSlider() {
+  const track = document.querySelector('.brands-track');
+  if (track && !track.dataset.cloned) {
+    track.innerHTML = track.innerHTML + track.innerHTML;
+    track.dataset.cloned = 'true';
+  }
+}
+
+// Sayfa yüklendiğinde popüler ürünleri, Instagram postlarını ve marka sliderını yükle
 document.addEventListener('DOMContentLoaded', () => {
   loadPopularProducts();
   loadInstagramPosts();
+  initBrandsSlider();
 });
 </script>
 
