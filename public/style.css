@@ -384,7 +384,7 @@
   background: linear-gradient(135deg, #1a1a2e 0%, #2d3436 50%, #636e72 100%);
   background-image: url('/uploads/showroom-banner.jpg');
   background-size: cover;
-  background-position: center;
+  background-position: center top;
   background-repeat: no-repeat;
   text-align: center;
   padding: 140px 20px 120px;
@@ -2208,12 +2208,9 @@ input[type="search"]:focus {
   }
 
   .hero {
-    padding: 60px 20px;
-  }
-
-  .hero {
-    padding: 80px 20px 60px;
-    min-height: 70vh;
+    padding: 90px 20px 70px;
+    min-height: 85vh;
+    background-position: center top;
   }
 
   .hero-title {
@@ -2436,6 +2433,11 @@ input[type="search"]:focus {
     gap: 30px;
   }
 
+  .instagram-logo-card {
+    position: static;
+    top: auto;
+  }
+
   .instagram-left-card {
     position: static;
     padding: 30px 20px;
@@ -2591,12 +2593,9 @@ input[type="search"]:focus {
   }
 
   .hero {
-    padding: 50px 15px;
-  }
-
-  .hero {
-    padding: 60px 15px 50px;
-    min-height: 60vh;
+    padding: 90px 15px 70px;
+    min-height: 80vh;
+    background-position: center top;
   }
 
   .hero-badge {
