@@ -951,7 +951,7 @@
 .brands-track {
   display: flex;
   gap: 40px;
-  animation: slideBrands 20s linear infinite;
+  animation: slideBrands 12s linear infinite;
   will-change: transform;
 }
 
