@@ -251,6 +251,7 @@ let currentView = 'grid';
 const urlParams = new URLSearchParams(window.location.search);
 const kategoriFromUrl = urlParams.get('kategori');
 const aramaFromUrl = urlParams.get('arama');
+const markaFromUrl = urlParams.get('marka');
 
 // Verileri yükle
 fetch("/api/public/products")
@@ -272,8 +273,14 @@ fetch("/api/public/products")
       document.getElementById("kategoriFilter").value = decodedKategori;
     }
 
-    // Eğer arama veya kategori varsa filtreleme yap
-    if (aramaFromUrl || kategoriFromUrl) {
+    // URL'den marka parametresi varsa filtreyi uygula
+    if (markaFromUrl) {
+      const decodedMarka = decodeURIComponent(markaFromUrl);
+      document.getElementById("markaFilter").value = decodedMarka;
+    }
+
+    // Eğer arama, kategori veya marka varsa filtreleme yap
+    if (aramaFromUrl || kategoriFromUrl || markaFromUrl) {
       applyFilters();
     } else {
       listele(data);
