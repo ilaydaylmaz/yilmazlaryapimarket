@@ -267,7 +267,9 @@ function changeMainImage(url, allUrls, index) {
   const mainImg = document.getElementById("mainProductImage");
   if (mainImg) {
     mainImg.src = url;
-    mainImg.onclick = () => openImageLightbox(url, allUrls);
+    mainImg.setAttribute('data-image-index', index);
+    // Lightbox için onclick'i güncelle
+    mainImg.onclick = () => openImageLightbox(url, allUrls || [url]);
   }
   
   // Thumbnail'ları güncelle
@@ -277,6 +279,34 @@ function changeMainImage(url, allUrls, index) {
     } else {
       thumb.classList.remove("active");
     }
+  });
+}
+
+// Thumbnail click event listener'ı ekle
+function initProductGallery() {
+  document.querySelectorAll(".product-thumbnail").forEach((thumb) => {
+    thumb.addEventListener('click', function() {
+      const index = parseInt(this.getAttribute('data-image-index'));
+      const url = this.getAttribute('data-image-url');
+      
+      // Galeri container'ından tüm resim URL'lerini al
+      const gallery = this.closest('.product-images-gallery');
+      let allUrls = [];
+      
+      if (gallery) {
+        // Tüm thumbnail'lardan URL'leri topla
+        gallery.querySelectorAll('.product-thumbnail').forEach((t) => {
+          const imgUrl = t.getAttribute('data-image-url');
+          if (imgUrl) {
+            allUrls.push(imgUrl);
+          }
+        });
+      }
+      
+      if (url && allUrls.length > 0) {
+        changeMainImage(url, allUrls, index);
+      }
+    });
   });
 }
 
@@ -362,11 +392,15 @@ fetch("/api/public/products")
               <img src="${resimUrl}" alt="${p.ad}" id="mainProductImage" onclick="openImageLightbox('${resimUrls[0]}', ${JSON.stringify(resimUrls)})" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'400\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'400\\' height=\\'400\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'18\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
             </div>
             <div class="product-thumbnails">
-              ${resimUrls.map((url, index) => `
-                <div class="product-thumbnail ${index === 0 ? 'active' : ''}" onclick="changeMainImage('${url}', ${JSON.stringify(resimUrls)}, ${index})">
+              ${resimUrls.map((url, index) => {
+                // URL'yi base64 encode et veya güvenli hale getir
+                const safeUrl = url.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+                return `
+                <div class="product-thumbnail ${index === 0 ? 'active' : ''}" data-image-index="${index}" data-image-url="${safeUrl}">
                   <img src="${url}" alt="${p.ad} - Resim ${index + 1}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'100\\' height=\\'100\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'12\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
                 </div>
-              `).join('')}
+              `;
+              }).join('')}
             </div>
           </div>
         `;
@@ -469,8 +503,10 @@ fetch("/api/public/products")
       // Son ziyaret edilen ürünleri yükle
       loadRecentProducts(p.id, data);
       
-      // Bu ürünü son ziyaret edilenlere ekle
-      addToRecentProducts(p.id);
+      // Resim galerisi event listener'larını başlat
+      setTimeout(() => {
+        initProductGallery();
+      }, 100);
     })
     .catch(err => {
     document.getElementById("detay").innerHTML = `
