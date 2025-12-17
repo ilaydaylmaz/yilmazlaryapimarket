@@ -527,26 +527,72 @@ connectDB()
   });
 
 /* PUBLIC PRODUCTS */
+// API Cache (5 dakika)
+let productsCache = null;
+let productsCacheTime = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 dakika
+
 app.get("/api/public/products", async (req, res) => {
   try {
-    // Cache'i önle
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    const now = Date.now();
+    const includeDetails = req.query.details === 'true'; // Detay sayfası için
+    
+    // Cache kontrolü
+    if (productsCache && productsCacheTime && (now - productsCacheTime) < CACHE_DURATION && !includeDetails) {
+      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 dakika browser cache
+      return res.json(productsCache);
+    }
     
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
       const products = await productsCollection.find({}).toArray();
-      const formattedProducts = products.map(p => ({
-        id: p._id.toString(),
-        ad: p.ad,
-        kategori: p.kategori,
-        marka: p.marka,
-        aciklama: p.aciklama,
-        resim: getImageUrl(p),
-        resimBase64: p.resimBase64 || null,
-        resimler: p.resimler || (p.resim ? [p.resim] : []),
-        resimlerBase64: p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : []),
+      const formattedProducts = products.map(p => {
+        const baseProduct = {
+          id: p._id.toString(),
+          ad: p.ad,
+          kategori: p.kategori,
+          marka: p.marka,
+          resim: getImageUrl(p),
+          // Liste sayfası için base64 gönderme (çok büyük)
+          resimBase64: includeDetails ? (p.resimBase64 || null) : null,
+          resimler: p.resimler || (p.resim ? [p.resim] : []),
+          // Liste sayfası için base64 array gönderme
+          resimlerBase64: includeDetails ? (p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : [])) : [],
+        };
+        
+        // Detay sayfası için ek alanlar
+        if (includeDetails) {
+          baseProduct.aciklama = p.aciklama;
+          baseProduct.urunKodu = p.urunKodu || "";
+          baseProduct.doku = p.doku || "";
+          baseProduct.kalinlik = p.kalinlik || "";
+          baseProduct.icMekan = p.icMekan || "";
+          baseProduct.disMekan = p.disMekan || "";
+          baseProduct.kullanimAlani = p.kullanimAlani || "";
+          baseProduct.yuzeyGorunumu = p.yuzeyGorunumu || "";
+          baseProduct.kalip = p.kalip || "";
+          baseProduct.bunye = p.bunye || "";
+          baseProduct.urunGrubu = p.urunGrubu || "";
+          baseProduct.vSkalasi = p.vSkalasi || "";
+          baseProduct.m2Kutu = p.m2Kutu || "";
+          baseProduct.m2Palet = p.m2Palet || "";
+          baseProduct.kutuPalet = p.kutuPalet || "";
+          baseProduct.paletAgirligi = p.paletAgirligi || "";
+        }
+        
+        return baseProduct;
+      });
+      
+      // Cache'e kaydet (sadece liste için)
+      if (!includeDetails) {
+        productsCache = formattedProducts;
+        productsCacheTime = now;
+        res.setHeader('Cache-Control', 'public, max-age=300'); // 5 dakika browser cache
+      } else {
+        res.setHeader('Cache-Control', 'no-cache'); // Detay için cache yok
+      }
+      
+      res.json(formattedProducts);
         // Seramik ürünleri için özel alanlar
         urunKodu: p.urunKodu || "",
         doku: p.doku || "",
@@ -568,10 +614,36 @@ app.get("/api/public/products", async (req, res) => {
     } else {
       // JSON fallback
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
-      const formattedData = data.map(p => ({
-        ...p,
-        resim: getImageUrl(p)
-      }));
+      const formattedData = data.map(p => {
+        const baseProduct = {
+          ...p,
+          resim: getImageUrl(p),
+          resimBase64: includeDetails ? (p.resimBase64 || null) : null,
+          resimler: p.resimler || (p.resim ? [p.resim] : []),
+          resimlerBase64: includeDetails ? (p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : [])) : [],
+        };
+        
+        // Liste sayfası için gereksiz alanları kaldır
+        if (!includeDetails) {
+          delete baseProduct.aciklama;
+          delete baseProduct.urunKodu;
+          delete baseProduct.doku;
+          delete baseProduct.kalinlik;
+          // ... diğer seramik alanları
+        }
+        
+        return baseProduct;
+      });
+      
+      // Cache'e kaydet (sadece liste için)
+      if (!includeDetails) {
+        productsCache = formattedData;
+        productsCacheTime = now;
+        res.setHeader('Cache-Control', 'public, max-age=300');
+      } else {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+      
       res.json(formattedData);
     }
   } catch (error) {
