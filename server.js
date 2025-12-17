@@ -593,24 +593,6 @@ app.get("/api/public/products", async (req, res) => {
       }
       
       res.json(formattedProducts);
-        // Seramik ürünleri için özel alanlar
-        urunKodu: p.urunKodu || "",
-        doku: p.doku || "",
-        kalinlik: p.kalinlik || "",
-        icMekan: p.icMekan || "",
-        disMekan: p.disMekan || "",
-        kullanimAlani: p.kullanimAlani || "",
-        yuzeyGorunumu: p.yuzeyGorunumu || "",
-        kalip: p.kalip || "",
-        bunye: p.bunye || "",
-        urunGrubu: p.urunGrubu || "",
-        vSkalasi: p.vSkalasi || "",
-        m2Kutu: p.m2Kutu || "",
-        m2Palet: p.m2Palet || "",
-        kutuPalet: p.kutuPalet || "",
-        paletAgirligi: p.paletAgirligi || ""
-      }));
-      res.json(formattedProducts);
     } else {
       // JSON fallback
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
