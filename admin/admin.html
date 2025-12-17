@@ -299,7 +299,7 @@
     <!-- Ürünler Listesi -->
     <div class="products-section">
       <div class="products-header">
-        <h2>📋 Mevcut Ürünler (<span id="urun-sayisi">0</span>)</h2>
+      <h2>📋 Mevcut Ürünler (<span id="urun-sayisi">0</span>)</h2>
         <div class="products-filters">
           <input 
             type="search" 
@@ -459,7 +459,7 @@ function yukle() {
       const sayac = document.getElementById("urun-sayisi");
       
       sayac.textContent = data.length;
-
+      
       applyProductFilters();
     })
     .catch(error => {
@@ -474,29 +474,29 @@ function renderProducts(list) {
 
   if (!list || list.length === 0) {
     liste.innerHTML = '<div class="empty-state">Sonuç bulunamadı. Filtreleri temizleyip tekrar deneyin.</div>';
-    return;
-  }
-
-  liste.innerHTML = "";
+        return;
+      }
+      
+      liste.innerHTML = "";
 
   list.forEach(p => {
-    const item = document.createElement("div");
-    item.className = "product-item";
-    item.dataset.id = p.id;
-
-    item.innerHTML = `
-      <div class="product-info">
-        <h3>${p.ad || "İsimsiz Ürün"}</h3>
-        <p>${p.kategori ? `📁 ${p.kategori}` : ""} ${p.marka ? `• 🏷️ ${p.marka}` : ""}</p>
-      </div>
-      <div class="product-actions">
-        <button class="btn btn-primary btn-small" onclick="duzenle('${p.id}')">✏️ Düzenle</button>
-        <button class="btn btn-danger btn-small" onclick="sil('${p.id}')">🗑️ Sil</button>
-      </div>
-    `;
-
-    liste.appendChild(item);
-  });
+        const item = document.createElement("div");
+        item.className = "product-item";
+        item.dataset.id = p.id;
+        
+        item.innerHTML = `
+          <div class="product-info">
+            <h3>${p.ad || "İsimsiz Ürün"}</h3>
+            <p>${p.kategori ? `📁 ${p.kategori}` : ""} ${p.marka ? `• 🏷️ ${p.marka}` : ""}</p>
+          </div>
+          <div class="product-actions">
+            <button class="btn btn-primary btn-small" onclick="duzenle('${p.id}')">✏️ Düzenle</button>
+            <button class="btn btn-danger btn-small" onclick="sil('${p.id}')">🗑️ Sil</button>
+          </div>
+        `;
+        
+        liste.appendChild(item);
+      });
 }
 
 function applyProductFilters() {
