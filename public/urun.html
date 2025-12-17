@@ -287,29 +287,19 @@ function initProductGallery() {
   document.querySelectorAll(".product-thumbnail").forEach((thumb) => {
     thumb.addEventListener('click', function() {
       const index = parseInt(this.getAttribute('data-image-index'));
-      let url = this.getAttribute('data-image-url');
-      
-      // HTML entity'leri decode et
-      if (url) {
-        const textarea = document.createElement('textarea');
-        textarea.innerHTML = url;
-        url = textarea.value;
-      }
+      // URL'yi direkt img src'den al (daha güvenli)
+      const img = this.querySelector('img');
+      const url = img ? img.src : null;
       
       // Galeri container'ından tüm resim URL'lerini al
       const gallery = this.closest('.product-images-gallery');
       let allUrls = [];
       
       if (gallery) {
-        // Tüm thumbnail'lardan URL'leri topla
-        gallery.querySelectorAll('.product-thumbnail').forEach((t) => {
-          let imgUrl = t.getAttribute('data-image-url');
-          if (imgUrl) {
-            // HTML entity'leri decode et
-            const textarea = document.createElement('textarea');
-            textarea.innerHTML = imgUrl;
-            imgUrl = textarea.value;
-            allUrls.push(imgUrl);
+        // Tüm thumbnail'lardan URL'leri topla (img src'den)
+        gallery.querySelectorAll('.product-thumbnail img').forEach((img) => {
+          if (img && img.src) {
+            allUrls.push(img.src);
           }
         });
       }
