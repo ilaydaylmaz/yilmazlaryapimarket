@@ -6,7 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "migrate": "node migrate-to-mongodb.js",
-    "convert-images": "node convert-images-to-base64.js"
+    "convert-images": "node convert-images-to-base64.js",
+    "add-camsanparke": "node add-camsanparke-products.js"
   },
   "keywords": [],
   "author": "",
