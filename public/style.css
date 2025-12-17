@@ -3915,14 +3915,14 @@ input[type="search"]:focus {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 20px;
-  color: white;
+  color: #2a9d8f;
 }
 
 .contact-panel-description {
   font-size: 1.1rem;
   line-height: 1.8;
   margin-bottom: 40px;
-  color: rgba(255, 255, 255, 0.9);
+  color: #d63031;
 }
 
 .contact-form-layout {
@@ -4028,7 +4028,7 @@ input[type="search"]:focus {
 }
 
 .contact-info-item {
-  color: white;
+  color: #2a9d8f;
   font-size: 1rem;
   line-height: 1.6;
 }
@@ -4037,10 +4037,11 @@ input[type="search"]:focus {
   font-size: 1.1rem;
   display: block;
   margin-bottom: 5px;
+  color: #2a9d8f;
 }
 
 .contact-info-link {
-  color: white;
+  color: #2a9d8f;
   text-decoration: none;
   display: block;
   transition: opacity 0.3s ease;

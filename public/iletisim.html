@@ -94,18 +94,6 @@
             <div class="form-group">
               <textarea id="mesaj" name="mesaj" placeholder="Mesajınız" rows="6" required></textarea>
             </div>
-            <div class="form-group">
-              <div class="recaptcha-wrapper">
-                <label class="recaptcha-checkbox">
-                  <input type="checkbox" id="recaptcha" name="recaptcha" required>
-                  <span>Ben robot değilim</span>
-                </label>
-                <div class="recaptcha-info">
-                  <div class="recaptcha-logo">reCAPTCHA</div>
-                  <div class="recaptcha-links">Gizlilik - Şartlar</div>
-                </div>
-              </div>
-            </div>
             <div id="formMessage" class="form-message"></div>
             <button type="submit" class="btn-submit-new">Gönder</button>
           </form>
@@ -280,12 +268,6 @@ document.getElementById("contactForm").addEventListener("submit", async (e) => {
   const messageDiv = document.getElementById("formMessage");
   const submitBtn = document.querySelector(".btn-submit");
   
-  // Validasyon
-  if (!document.getElementById("recaptcha").checked) {
-    messageDiv.innerHTML = '<span class="error">Lütfen "Ben robot değilim" kutusunu işaretleyin.</span>';
-    return;
-  }
-
   // Butonu devre dışı bırak
   submitBtn.disabled = true;
   submitBtn.textContent = "Gönderiliyor...";
