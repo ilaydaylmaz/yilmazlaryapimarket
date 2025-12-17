@@ -120,7 +120,9 @@
   <div class="image-lightbox-overlay" onclick="closeImageLightbox()"></div>
   <div class="image-lightbox-content">
     <button class="image-lightbox-close" type="button" onclick="closeImageLightbox()">×</button>
+    <button class="image-lightbox-nav prev" type="button" onclick="prevImageLightbox()">‹</button>
     <img id="imageLightboxImg" src="" alt="Büyük görsel">
+    <button class="image-lightbox-nav next" type="button" onclick="nextImageLightbox()">›</button>
   </div>
 </div>
 
@@ -215,11 +217,24 @@ if (typeof document !== "undefined") {
 </script>
 
 <script>
-function openImageLightbox(src) {
+let imageLightboxImages = [];
+let imageLightboxIndex = 0;
+
+function openImageLightbox(src, group) {
   const modal = document.getElementById("imageLightbox");
   const img = document.getElementById("imageLightboxImg");
   if (!modal || !img) return;
-  img.src = src;
+
+  if (Array.isArray(group) && group.length > 0) {
+    imageLightboxImages = group;
+    imageLightboxIndex = group.indexOf(src);
+    if (imageLightboxIndex === -1) imageLightboxIndex = 0;
+  } else {
+    imageLightboxImages = [src];
+    imageLightboxIndex = 0;
+  }
+
+  img.src = imageLightboxImages[imageLightboxIndex];
   modal.classList.add("active");
   document.body.style.overflow = "hidden";
 }
@@ -229,6 +244,23 @@ function closeImageLightbox() {
   if (!modal) return;
   modal.classList.remove("active");
   document.body.style.overflow = "";
+}
+
+function showImageLightboxAt(index) {
+  if (!imageLightboxImages.length) return;
+  const img = document.getElementById("imageLightboxImg");
+  if (!img) return;
+  const total = imageLightboxImages.length;
+  imageLightboxIndex = (index + total) % total;
+  img.src = imageLightboxImages[imageLightboxIndex];
+}
+
+function nextImageLightbox() {
+  showImageLightboxAt(imageLightboxIndex + 1);
+}
+
+function prevImageLightbox() {
+  showImageLightboxAt(imageLightboxIndex - 1);
 }
 
 const id = new URLSearchParams(location.search).get("id");
@@ -278,13 +310,13 @@ fetch("/api/public/products")
             <h3 class="akcali-gallery-title">Renk Kartelası</h3>
             <div class="akcali-gallery-track">
               <div class="akcali-gallery-item">
-                <img src="/uploads/akcali-sprey-kartela-1.jpg" alt="Akçalı Sprey Renk Kartelası 1" loading="lazy" onclick="openImageLightbox('/uploads/akcali-sprey-kartela-1.jpg')">
+                <img src="/uploads/akcali-sprey-kartela-1.jpg" alt="Akçalı Sprey Renk Kartelası 1" loading="lazy" onclick="openImageLightbox('/uploads/akcali-sprey-kartela-1.jpg', ['/uploads/akcali-sprey-kartela-1.jpg','/uploads/akcali-sprey-kartela-2.jpg','/uploads/akcali-sprey-kartela-3.jpg'])">
               </div>
               <div class="akcali-gallery-item">
-                <img src="/uploads/akcali-sprey-kartela-2.jpg" alt="Akçalı Sprey Renk Kartelası 2" loading="lazy" onclick="openImageLightbox('/uploads/akcali-sprey-kartela-2.jpg')">
+                <img src="/uploads/akcali-sprey-kartela-2.jpg" alt="Akçalı Sprey Renk Kartelası 2" loading="lazy" onclick="openImageLightbox('/uploads/akcali-sprey-kartela-2.jpg', ['/uploads/akcali-sprey-kartela-1.jpg','/uploads/akcali-sprey-kartela-2.jpg','/uploads/akcali-sprey-kartela-3.jpg'])">
               </div>
               <div class="akcali-gallery-item">
-                <img src="/uploads/akcali-sprey-kartela-3.jpg" alt="Akçalı Sprey Renk Kartelası 3" loading="lazy" onclick="openImageLightbox('/uploads/akcali-sprey-kartela-3.jpg')">
+                <img src="/uploads/akcali-sprey-kartela-3.jpg" alt="Akçalı Sprey Renk Kartelası 3" loading="lazy" onclick="openImageLightbox('/uploads/akcali-sprey-kartela-3.jpg', ['/uploads/akcali-sprey-kartela-1.jpg','/uploads/akcali-sprey-kartela-2.jpg','/uploads/akcali-sprey-kartela-3.jpg'])">
               </div>
             </div>
           </div>
