@@ -205,17 +205,35 @@ app.get("/api/products", auth, async (req, res) => {
 });
 
 /* Ekle */
-app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
+app.post("/api/products", auth, upload.fields([{ name: "resim", maxCount: 1 }, { name: "resimler", maxCount: 10 }]), async (req, res) => {
   try {
     let resimData = "";
     let resimBase64 = null;
+    let resimlerData = [];
+    let resimlerBase64 = [];
     
-    // Resim varsa hem dosya adını hem de base64'ü kaydet
-    if (req.file) {
-      resimData = req.file.filename;
-      // Base64'e çevir (Render'da kalıcı olması için)
-      const filePath = path.join("public/uploads", req.file.filename);
+    // Tek resim (eski format - geriye dönük uyumluluk)
+    if (req.files && req.files.resim && req.files.resim[0]) {
+      resimData = req.files.resim[0].filename;
+      const filePath = path.join("public/uploads", req.files.resim[0].filename);
       resimBase64 = imageToBase64(filePath);
+    }
+    
+    // Birden fazla resim (yeni format)
+    if (req.files && req.files.resimler && req.files.resimler.length > 0) {
+      for (const file of req.files.resimler) {
+        resimlerData.push(file.filename);
+        const filePath = path.join("public/uploads", file.filename);
+        const base64 = imageToBase64(filePath);
+        if (base64) {
+          resimlerBase64.push(base64);
+        }
+      }
+      // İlk resmi ana resim olarak kullan (geriye dönük uyumluluk)
+      if (resimlerData.length > 0 && !resimData) {
+        resimData = resimlerData[0];
+        resimBase64 = resimlerBase64[0];
+      }
     }
     
     const urun = {
@@ -226,6 +244,8 @@ app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
       aciklama: req.body.aciklama || "",
       resim: resimData,
       resimBase64: resimBase64, // MongoDB'ye base64 olarak kaydet
+      resimler: resimlerData.length > 0 ? resimlerData : (resimData ? [resimData] : []),
+      resimlerBase64: resimlerBase64.length > 0 ? resimlerBase64 : (resimBase64 ? [resimBase64] : []),
       // Seramik ürünleri için özel alanlar
       urunKodu: req.body.urunKodu || "",
       doku: req.body.doku || "",
@@ -265,7 +285,7 @@ app.post("/api/products", auth, upload.single("resim"), async (req, res) => {
 });
 
 /* Güncelle */
-app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
+app.put("/api/products/:id", auth, upload.fields([{ name: "resim", maxCount: 1 }, { name: "resimler", maxCount: 10 }]), async (req, res) => {
   try {
     const productId = String(req.params.id);
     
@@ -277,14 +297,69 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
         return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
       }
 
-      let resimData = existingProduct.resim;
+      let resimData = existingProduct.resim || "";
       let resimBase64 = existingProduct.resimBase64 || null;
+      let resimlerData = existingProduct.resimler || (existingProduct.resim ? [existingProduct.resim] : []);
+      let resimlerBase64 = existingProduct.resimlerBase64 || (existingProduct.resimBase64 ? [existingProduct.resimBase64] : []);
       
-      // Yeni resim yüklendiyse
-      if (req.file) {
-        resimData = req.file.filename;
-        const filePath = path.join("public/uploads", req.file.filename);
+      // Tek resim güncelleme (eski format)
+      if (req.files && req.files.resim && req.files.resim[0]) {
+        resimData = req.files.resim[0].filename;
+        const filePath = path.join("public/uploads", req.files.resim[0].filename);
         resimBase64 = imageToBase64(filePath);
+        // Tek resim güncellenirse, resimler array'ini de güncelle
+        if (resimlerData.length === 0 || resimlerData.length === 1) {
+          resimlerData = [resimData];
+          resimlerBase64 = resimBase64 ? [resimBase64] : [];
+        }
+      }
+      
+      // Birden fazla resim ekleme (yeni format)
+      if (req.files && req.files.resimler && req.files.resimler.length > 0) {
+        const newResimlerData = [];
+        const newResimlerBase64 = [];
+        for (const file of req.files.resimler) {
+          newResimlerData.push(file.filename);
+          const filePath = path.join("public/uploads", file.filename);
+          const base64 = imageToBase64(filePath);
+          if (base64) {
+            newResimlerBase64.push(base64);
+          }
+        }
+        // Mevcut resimlerle birleştir
+        resimlerData = [...resimlerData, ...newResimlerData];
+        resimlerBase64 = [...resimlerBase64, ...newResimlerBase64];
+        // İlk resmi ana resim olarak kullan
+        if (resimlerData.length > 0 && !resimData) {
+          resimData = resimlerData[0];
+          resimBase64 = resimlerBase64[0] || null;
+        }
+      }
+      
+      // Silinecek resimler (req.body'den gelir)
+      if (req.body.silinecekResimler) {
+        try {
+          const silinecekIndeksler = JSON.parse(req.body.silinecekResimler);
+          // Ters sırada sil (indeks kaymasını önlemek için)
+          silinecekIndeksler.sort((a, b) => b - a).forEach(index => {
+            if (index >= 0 && index < resimlerData.length) {
+              resimlerData.splice(index, 1);
+              if (index < resimlerBase64.length) {
+                resimlerBase64.splice(index, 1);
+              }
+            }
+          });
+          // Ana resmi güncelle
+          if (resimlerData.length > 0) {
+            resimData = resimlerData[0];
+            resimBase64 = resimlerBase64[0] || null;
+          } else {
+            resimData = "";
+            resimBase64 = null;
+          }
+        } catch (e) {
+          console.error("Silinecek resimler parse hatası:", e);
+        }
       }
       
       const updateData = {
@@ -294,6 +369,8 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
         aciklama: req.body.aciklama || "",
         resim: resimData,
         resimBase64: resimBase64,
+        resimler: resimlerData,
+        resimlerBase64: resimlerBase64,
         updatedAt: new Date(),
         // Seramik ürünleri için özel alanlar
         urunKodu: req.body.urunKodu || "",
@@ -343,13 +420,32 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
         return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
       }
 
-      let resimData = products[index].resim;
+      let resimData = products[index].resim || "";
       let resimBase64 = products[index].resimBase64 || null;
+      let resimlerData = products[index].resimler || (products[index].resim ? [products[index].resim] : []);
+      let resimlerBase64 = products[index].resimlerBase64 || (products[index].resimBase64 ? [products[index].resimBase64] : []);
       
-      if (req.file) {
-        resimData = req.file.filename;
-        const filePath = path.join("public/uploads", req.file.filename);
+      // Tek resim güncelleme
+      if (req.files && req.files.resim && req.files.resim[0]) {
+        resimData = req.files.resim[0].filename;
+        const filePath = path.join("public/uploads", req.files.resim[0].filename);
         resimBase64 = imageToBase64(filePath);
+      }
+      
+      // Birden fazla resim ekleme
+      if (req.files && req.files.resimler && req.files.resimler.length > 0) {
+        const newResimlerData = [];
+        const newResimlerBase64 = [];
+        for (const file of req.files.resimler) {
+          newResimlerData.push(file.filename);
+          const filePath = path.join("public/uploads", file.filename);
+          const base64 = imageToBase64(filePath);
+          if (base64) {
+            newResimlerBase64.push(base64);
+          }
+        }
+        resimlerData = [...resimlerData, ...newResimlerData];
+        resimlerBase64 = [...resimlerBase64, ...newResimlerBase64];
       }
       
       products[index] = {
@@ -359,7 +455,9 @@ app.put("/api/products/:id", auth, upload.single("resim"), async (req, res) => {
         marka: req.body.marka || "",
         aciklama: req.body.aciklama || "",
         resim: resimData,
-        resimBase64: resimBase64
+        resimBase64: resimBase64,
+        resimler: resimlerData,
+        resimlerBase64: resimlerBase64
       };
 
       fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));

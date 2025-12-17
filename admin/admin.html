@@ -275,7 +275,17 @@
         </div>
 
         <div class="form-group">
-          <label for="resim">Ürün Resmi</label>
+          <label for="resimler">Ürün Resimleri (Birden fazla seçebilirsiniz)</label>
+          <input type="file" id="resimler" accept="image/*" multiple onchange="previewImages(this)">
+          <div class="images-preview" id="imagesPreview">
+            <!-- Resimler buraya eklenecek -->
+          </div>
+          <small style="color: #666; display: block; margin-top: 5px;">💡 İpucu: Birden fazla resim seçmek için Ctrl (Windows) veya Cmd (Mac) tuşuna basılı tutarak tıklayın</small>
+        </div>
+        
+        <!-- Eski tek resim desteği (geriye dönük uyumluluk) -->
+        <div class="form-group" style="display: none;">
+          <label for="resim">Ürün Resmi (Tek - Eski Format)</label>
           <input type="file" id="resim" accept="image/*" onchange="previewImage(this)">
           <div class="image-preview" id="imagePreview">
             <img id="previewImg" src="" alt="Önizleme">
@@ -437,6 +447,30 @@ function previewImage(input) {
   }
 }
 
+function previewImages(input) {
+  const preview = document.getElementById("imagesPreview");
+  preview.innerHTML = "";
+  
+  if (input.files && input.files.length > 0) {
+    Array.from(input.files).forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imgWrapper = document.createElement("div");
+        imgWrapper.className = "image-preview-item";
+        imgWrapper.innerHTML = `
+          <img src="${e.target.result}" alt="Önizleme ${index + 1}">
+          <span class="image-number">${index + 1}</span>
+        `;
+        preview.appendChild(imgWrapper);
+      };
+      reader.readAsDataURL(file);
+    });
+    preview.classList.add("show");
+  } else {
+    preview.classList.remove("show");
+  }
+}
+
 function showSuccess(message) {
   const msg = document.getElementById("successMessage");
   msg.textContent = message;
@@ -562,6 +596,10 @@ function duzenle(id) {
   document.getElementById("marka").value = p.marka || "";
   document.getElementById("aciklama").value = p.aciklama || "";
   document.getElementById("resim").value = "";
+  document.getElementById("resimler").value = "";
+  
+  // Mevcut resimleri göster
+  showExistingImages(p);
   
   // Seramik ürünleri için özel alanlar
   toggleCeramicSpecs();
@@ -605,9 +643,75 @@ function duzenle(id) {
   
   // Resim önizlemesini temizle
   document.getElementById("imagePreview").classList.remove("show");
+  document.getElementById("imagesPreview").innerHTML = "";
+  document.getElementById("imagesPreview").classList.remove("show");
+  silinecekResimIndeksleri = [];
   
   // Forma scroll
   document.querySelector(".form-section").scrollIntoView({ behavior: "smooth" });
+}
+
+let silinecekResimIndeksleri = [];
+
+function showExistingImages(product) {
+  const preview = document.getElementById("imagesPreview");
+  preview.innerHTML = "";
+  silinecekResimIndeksleri = [];
+  
+  // Resimler array'i varsa onu kullan, yoksa tek resim varsa onu kullan
+  const resimler = product.resimler || (product.resim ? [product.resim] : []);
+  const resimlerBase64 = product.resimlerBase64 || (product.resimBase64 ? [product.resimBase64] : []);
+  
+  if (resimler.length > 0 || resimlerBase64.length > 0) {
+    const maxLength = Math.max(resimler.length, resimlerBase64.length);
+    
+    for (let i = 0; i < maxLength; i++) {
+      const imgWrapper = document.createElement("div");
+      imgWrapper.className = "image-preview-item existing";
+      imgWrapper.dataset.index = i;
+      
+      // Resim URL'sini belirle
+      let imgSrc = "";
+      if (resimlerBase64[i]) {
+        imgSrc = resimlerBase64[i];
+      } else if (resimler[i]) {
+        // Base64 yoksa dosya yolunu kullan
+        if (resimler[i].startsWith('data:image')) {
+          imgSrc = resimler[i];
+        } else {
+          imgSrc = `/uploads/${resimler[i]}`;
+        }
+      }
+      
+      imgWrapper.innerHTML = `
+        <img src="${imgSrc}" alt="Mevcut resim ${i + 1}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'200\\' height=\\'200\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'200\\' height=\\'200\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'14\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
+        <span class="image-number">${i + 1}</span>
+        <button type="button" class="image-delete-btn" onclick="markImageForDeletion(${i})" title="Resmi Sil">×</button>
+      `;
+      preview.appendChild(imgWrapper);
+    }
+    preview.classList.add("show");
+  } else {
+    preview.classList.remove("show");
+  }
+}
+
+function markImageForDeletion(index) {
+  if (confirm(`Bu resmi silmek istediğinize emin misiniz?`)) {
+    if (!silinecekResimIndeksleri.includes(index)) {
+      silinecekResimIndeksleri.push(index);
+    }
+    const imgWrapper = document.querySelector(`.image-preview-item.existing[data-index="${index}"]`);
+    if (imgWrapper) {
+      imgWrapper.classList.add("marked-for-deletion");
+      imgWrapper.querySelector(".image-delete-btn").textContent = "✓";
+      imgWrapper.querySelector(".image-delete-btn").title = "Silinecek";
+    }
+  }
+}
+
+function getSilinecekResimler() {
+  return silinecekResimIndeksleri;
 }
 
 function ekle() {
@@ -642,6 +746,15 @@ function ekle() {
     formData.append("paletAgirligi", document.getElementById("paletAgirligi").value || "");
   }
   
+  // Birden fazla resim (yeni format)
+  const resimler = document.getElementById("resimler").files;
+  if (resimler && resimler.length > 0) {
+    Array.from(resimler).forEach((file) => {
+      formData.append("resimler", file);
+    });
+  }
+  
+  // Tek resim (eski format - geriye dönük uyumluluk)
   const resim = document.getElementById("resim").files[0];
   if (resim) {
     formData.append("resim", resim);
@@ -728,9 +841,24 @@ function guncelle() {
   formData.append("kutuPalet", kutuPaletEl ? kutuPaletEl.value || "" : "");
   formData.append("paletAgirligi", paletAgirligiEl ? paletAgirligiEl.value || "" : "");
 
+  // Birden fazla resim (yeni format)
+  const resimler = document.getElementById("resimler").files;
+  if (resimler && resimler.length > 0) {
+    Array.from(resimler).forEach((file) => {
+      formData.append("resimler", file);
+    });
+  }
+  
+  // Tek resim (eski format - geriye dönük uyumluluk)
   const resim = document.getElementById("resim").files[0];
   if (resim) {
     formData.append("resim", resim);
+  }
+  
+  // Silinecek resimler
+  const silinecekResimler = getSilinecekResimler();
+  if (silinecekResimler.length > 0) {
+    formData.append("silinecekResimler", JSON.stringify(silinecekResimler));
   }
 
   const updateBtn = document.getElementById("updateBtn");
