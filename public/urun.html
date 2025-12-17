@@ -115,6 +115,15 @@
   </div>
 </footer>
 
+<!-- Image Lightbox Modal -->
+<div class="image-lightbox" id="imageLightbox">
+  <div class="image-lightbox-overlay" onclick="closeImageLightbox()"></div>
+  <div class="image-lightbox-content">
+    <button class="image-lightbox-close" type="button" onclick="closeImageLightbox()">×</button>
+    <img id="imageLightboxImg" src="" alt="Büyük görsel">
+  </div>
+</div>
+
 <!-- Search Popup Modal -->
 <div class="search-modal" id="searchModal">
   <div class="search-modal-overlay" id="searchModalOverlay"></div>
@@ -191,15 +200,37 @@ if (typeof document !== "undefined") {
     
     // ESC tuşu ile kapat
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" </footer></footer> searchModal </footer></footer> searchModal.classList.contains("active")) {
-        closeSearchModal();
-      }
+      if (e.key === "Escape") {
+        if (searchModal && searchModal.classList.contains("active")) {
+          closeSearchModal();
+        }
+        const imgModal = document.getElementById("imageLightbox");
+        if (imgModal && imgModal.classList.contains("active")) {
+          closeImageLightbox();
+        }
+      } 
     });
   });
 }
 </script>
 
 <script>
+function openImageLightbox(src) {
+  const modal = document.getElementById("imageLightbox");
+  const img = document.getElementById("imageLightboxImg");
+  if (!modal || !img) return;
+  img.src = src;
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeImageLightbox() {
+  const modal = document.getElementById("imageLightbox");
+  if (!modal) return;
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
 const id = new URLSearchParams(location.search).get("id");
 
 if (!id) {
@@ -247,13 +278,13 @@ fetch("/api/public/products")
             <h3 class="akcali-gallery-title">Renk Kartelası</h3>
             <div class="akcali-gallery-track">
               <div class="akcali-gallery-item">
-                <img src="/uploads/akcali-sprey-kartela-1.jpg" alt="Akçalı Sprey Renk Kartelası 1" loading="lazy">
+                <img src="/uploads/akcali-sprey-kartela-1.jpg" alt="Akçalı Sprey Renk Kartelası 1" loading="lazy" onclick="openImageLightbox('/uploads/akcali-sprey-kartela-1.jpg')">
               </div>
               <div class="akcali-gallery-item">
-                <img src="/uploads/akcali-sprey-kartela-2.jpg" alt="Akçalı Sprey Renk Kartelası 2" loading="lazy">
+                <img src="/uploads/akcali-sprey-kartela-2.jpg" alt="Akçalı Sprey Renk Kartelası 2" loading="lazy" onclick="openImageLightbox('/uploads/akcali-sprey-kartela-2.jpg')">
               </div>
               <div class="akcali-gallery-item">
-                <img src="/uploads/akcali-sprey-kartela-3.jpg" alt="Akçalı Sprey Renk Kartelası 3" loading="lazy">
+                <img src="/uploads/akcali-sprey-kartela-3.jpg" alt="Akçalı Sprey Renk Kartelası 3" loading="lazy" onclick="openImageLightbox('/uploads/akcali-sprey-kartela-3.jpg')">
               </div>
             </div>
           </div>
