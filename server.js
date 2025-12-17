@@ -545,6 +545,8 @@ app.get("/api/public/products", async (req, res) => {
         aciklama: p.aciklama,
         resim: getImageUrl(p),
         resimBase64: p.resimBase64 || null,
+        resimler: p.resimler || (p.resim ? [p.resim] : []),
+        resimlerBase64: p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : []),
         // Seramik ürünleri için özel alanlar
         urunKodu: p.urunKodu || "",
         doku: p.doku || "",
