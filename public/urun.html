@@ -243,12 +243,18 @@ fetch("/api/public/products")
       // Akçalı Sprey Boya için renk kartelası görselleri
       const akcaliGallery = (p.marka === "Akçalı Sprey Boya")
         ? `
-          <div class="akcali-gallery" style="margin-top: 30px; display: grid; gap: 16px;">
-            <h3>Renk Kartelası</h3>
-            <div style="display: grid; gap: 12px;">
-              <img src="/uploads/akcali-sprey-kartela-1.jpg" alt="Akçalı Sprey Renk Kartelası 1" style="width: 100%; border-radius: 8px; box-shadow: var(--shadow);" loading="lazy">
-              <img src="/uploads/akcali-sprey-kartela-2.jpg" alt="Akçalı Sprey Renk Kartelası 2" style="width: 100%; border-radius: 8px; box-shadow: var(--shadow);" loading="lazy">
-              <img src="/uploads/akcali-sprey-kartela-3.jpg" alt="Akçalı Sprey Renk Kartelası 3" style="width: 100%; border-radius: 8px; box-shadow: var(--shadow);" loading="lazy">
+          <div class="akcali-gallery">
+            <h3 class="akcali-gallery-title">Renk Kartelası</h3>
+            <div class="akcali-gallery-track">
+              <div class="akcali-gallery-item">
+                <img src="/uploads/akcali-sprey-kartela-1.jpg" alt="Akçalı Sprey Renk Kartelası 1" loading="lazy">
+              </div>
+              <div class="akcali-gallery-item">
+                <img src="/uploads/akcali-sprey-kartela-2.jpg" alt="Akçalı Sprey Renk Kartelası 2" loading="lazy">
+              </div>
+              <div class="akcali-gallery-item">
+                <img src="/uploads/akcali-sprey-kartela-3.jpg" alt="Akçalı Sprey Renk Kartelası 3" loading="lazy">
+              </div>
             </div>
           </div>
         `

@@ -1876,6 +1876,46 @@ input[type="search"]:focus {
   gap: 20px;
 }
 
+/* Akçalı Sprey Boya renk kartelası galeri */
+.akcali-gallery {
+  margin-top: 25px;
+}
+
+.akcali-gallery-title {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.akcali-gallery-track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.akcali-gallery-track::-webkit-scrollbar {
+  height: 6px;
+}
+
+.akcali-gallery-track::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.akcali-gallery-item {
+  flex: 0 0 auto;
+  max-width: 220px;
+}
+
+.akcali-gallery-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
 .product-info h2 {
   font-size: 2.5rem;
   color: var(--text-dark);
