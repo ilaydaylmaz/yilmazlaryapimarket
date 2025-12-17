@@ -287,7 +287,14 @@ function initProductGallery() {
   document.querySelectorAll(".product-thumbnail").forEach((thumb) => {
     thumb.addEventListener('click', function() {
       const index = parseInt(this.getAttribute('data-image-index'));
-      const url = this.getAttribute('data-image-url');
+      let url = this.getAttribute('data-image-url');
+      
+      // HTML entity'leri decode et
+      if (url) {
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = url;
+        url = textarea.value;
+      }
       
       // Galeri container'ından tüm resim URL'lerini al
       const gallery = this.closest('.product-images-gallery');
@@ -296,8 +303,12 @@ function initProductGallery() {
       if (gallery) {
         // Tüm thumbnail'lardan URL'leri topla
         gallery.querySelectorAll('.product-thumbnail').forEach((t) => {
-          const imgUrl = t.getAttribute('data-image-url');
+          let imgUrl = t.getAttribute('data-image-url');
           if (imgUrl) {
+            // HTML entity'leri decode et
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = imgUrl;
+            imgUrl = textarea.value;
             allUrls.push(imgUrl);
           }
         });
