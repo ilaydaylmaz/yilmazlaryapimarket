@@ -26,7 +26,7 @@ async function updateCategories() {
       "Aletler": "El Aletleri Ürünleri",
       "El Aletleri": "El Aletleri Ürünleri",
       "Seramik": "Seramik Ürünleri",
-      "Banyo": "Banyo Ürünleri",
+      "Banyo": "Banyo Dolapları",
       "Parke": "Parke Ürünleri",
       "Mutfak": "Mutfak Ürünleri",
       "Kaba": "Kaba Grubu",
