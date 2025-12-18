@@ -242,11 +242,16 @@ let products = [];
 let filteredProducts = [];
 let currentView = 'grid';
 const TARGET_CATEGORY = "Banyo Dolapları";
+// Eski verilerde kalan ürünler için eski isim de kabul edilsin
+const CATEGORY_MATCHES = ["Banyo Dolapları", "Banyo Ürünleri"];
 
 fetch("/api/public/products")
   .then(r => r.json())
   .then(data => {
-    products = data.filter(p => p.kategori && p.kategori.trim() === TARGET_CATEGORY);
+    products = data.filter(p => {
+      const kat = (p.kategori || "").trim();
+      return CATEGORY_MATCHES.includes(kat);
+    });
     filteredProducts = [...products];
     populateFilters();
     listele(filteredProducts);
