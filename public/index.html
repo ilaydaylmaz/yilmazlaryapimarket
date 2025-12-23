@@ -230,7 +230,7 @@
 <!-- Showroom Bölümü -->
 <section class="showroom-preview-section" style="padding: 60px 20px; background: var(--white);">
   <div class="container" style="max-width: 1400px; margin: 0 auto;">
-    <div class="showroom-grid" id="showroomGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+    <div class="showroom-grid" id="showroomGrid">
       <!-- Showroom fotoğrafları buraya yüklenecek -->
     </div>
   </div>
@@ -266,14 +266,16 @@
 }
 
 .showroom-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
   gap: 20px;
+  width: 100%;
 }
 
 .showroom-item {
   position: relative;
   width: 100%;
+  min-width: 0;
   height: 600px;
   border-radius: 12px;
   overflow: hidden;
