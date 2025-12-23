@@ -95,15 +95,6 @@
       <p>Yükleniyor...</p>
     </div>
   </div>
-
-  <!-- Showroom Galeri Bölümü -->
-  <div class="showroom-section">
-    <h2>Showroom'dan Görüntüler</h2>
-    <p>Banyo dolaplarımızı showroom'umuzda görebilirsiniz</p>
-    <div class="showroom-gallery" id="showroomGallery">
-      <!-- Showroom fotoğrafları buraya eklenecek -->
-    </div>
-  </div>
 </div>
 
 <footer>
@@ -161,17 +152,6 @@
     </div>
   </div>
 </footer>
-
-<!-- Image Lightbox Modal -->
-<div class="image-lightbox" id="imageLightbox">
-  <div class="image-lightbox-overlay" onclick="closeImageLightbox()"></div>
-  <div class="image-lightbox-content">
-    <button class="image-lightbox-close" type="button" onclick="closeImageLightbox()">×</button>
-    <button class="image-lightbox-nav prev" type="button" onclick="prevImageLightbox()">‹</button>
-    <img id="imageLightboxImg" src="" alt="Büyük görsel">
-    <button class="image-lightbox-nav next" type="button" onclick="nextImageLightbox()">›</button>
-  </div>
-</div>
 
 <!-- Search Popup Modal -->
 <div class="search-modal" id="searchModal">
@@ -249,14 +229,8 @@ if (typeof document !== "undefined") {
     
     // ESC tuşu ile kapat
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        if (searchModal && searchModal.classList.contains("active")) {
-          closeSearchModal();
-        }
-        const imgModal = document.getElementById("imageLightbox");
-        if (imgModal && imgModal.classList.contains("active")) {
-          closeImageLightbox();
-        }
+      if (e.key === "Escape" </footer></footer> searchModal </footer></footer> searchModal.classList.contains("active")) {
+        closeSearchModal();
       }
     });
   });
@@ -281,8 +255,6 @@ fetch("/api/public/products")
     filteredProducts = [...products];
     populateFilters();
     listele(filteredProducts);
-    // Showroom galerisini ürünler yüklendikten sonra başlat
-    initShowroomGallery();
   })
   .catch(err => {
     document.getElementById("urunler").innerHTML = `
@@ -437,113 +409,6 @@ document.getElementById("listView").addEventListener("click", () => {
 function detay(id) {
   location.href = "/urun.html?id=" + id;
 }
-
-// Image Lightbox Functions
-let imageLightboxImages = [];
-let imageLightboxIndex = 0;
-
-function openImageLightbox(src, group) {
-  const modal = document.getElementById("imageLightbox");
-  const img = document.getElementById("imageLightboxImg");
-  if (!modal || !img) return;
-
-  if (Array.isArray(group) && group.length > 0) {
-    imageLightboxImages = group;
-    imageLightboxIndex = group.indexOf(src);
-    if (imageLightboxIndex === -1) imageLightboxIndex = 0;
-  } else {
-    imageLightboxImages = [src];
-    imageLightboxIndex = 0;
-  }
-
-  img.src = imageLightboxImages[imageLightboxIndex];
-  modal.classList.add("active");
-  document.body.style.overflow = "hidden";
-}
-
-function closeImageLightbox() {
-  const modal = document.getElementById("imageLightbox");
-  if (!modal) return;
-  modal.classList.remove("active");
-  document.body.style.overflow = "";
-}
-
-function showImageLightboxAt(index) {
-  if (!imageLightboxImages.length) return;
-  const img = document.getElementById("imageLightboxImg");
-  if (!img) return;
-  const total = imageLightboxImages.length;
-  imageLightboxIndex = (index + total) % total;
-  img.src = imageLightboxImages[imageLightboxIndex];
-}
-
-function nextImageLightbox() {
-  showImageLightboxAt(imageLightboxIndex + 1);
-}
-
-function prevImageLightbox() {
-  showImageLightboxAt(imageLightboxIndex - 1);
-}
-
-// Showroom galeri fotoğrafları - Ürün adları ile eşleştirilecek
-let showroomImages = [
-  { src: '/uploads/showroom-banner.jpg', title: 'Showroom Görünümü', productName: '', productBrand: '' },
-  { src: '/uploads/showroom-2.jpg', title: 'Showroom Görünümü', productName: '', productBrand: '' },
-  { src: '/uploads/showroom-3.jpg', title: 'Showroom Görünümü', productName: '', productBrand: '' },
-  { src: '/uploads/showroom-4.jpg', title: 'Showroom Görünümü', productName: '', productBrand: '' },
-  { src: '/uploads/showroom-5.jpg', title: 'Showroom Görünümü', productName: '', productBrand: '' },
-];
-
-function initShowroomGallery() {
-  const gallery = document.getElementById('showroomGallery');
-  if (!gallery || showroomImages.length === 0) {
-    const showroomSection = document.querySelector('.showroom-section');
-    if (showroomSection) {
-      showroomSection.style.display = 'none';
-    }
-    return;
-  }
-
-  // Banyo ürünlerinden ilk birkaçını showroom fotoğraflarına eşleştir
-  if (products && products.length > 0) {
-    const banyoProducts = products.slice(0, showroomImages.length);
-    showroomImages = showroomImages.map((img, index) => {
-      if (banyoProducts[index]) {
-        return {
-          ...img,
-          productName: banyoProducts[index].ad || '',
-          productBrand: banyoProducts[index].marka || ''
-        };
-      }
-      return img;
-    });
-  }
-
-  gallery.innerHTML = showroomImages.map((img, index) => {
-    const hasProduct = img.productName && img.productName.trim() !== '';
-    return `
-    <div class="showroom-gallery-item" onclick="openShowroomLightbox(${index})">
-      <img src="${img.src}" alt="${img.productName || img.title}" loading="lazy" onerror="this.style.display='none'">
-      <div class="showroom-gallery-overlay">
-        <h3>${img.title}</h3>
-        ${hasProduct ? `<div class="product-name">${img.productName}</div>` : ''}
-        ${hasProduct && img.productBrand ? `<div class="product-brand">${img.productBrand}</div>` : ''}
-      </div>
-    </div>
-  `;
-  }).join('');
-}
-
-function openShowroomLightbox(index) {
-  const images = showroomImages.map(img => img.src);
-  openImageLightbox(images[index], images);
-  // Lightbox'ta doğru indeksi ayarla
-  if (window.imageLightboxIndex !== undefined) {
-    window.imageLightboxIndex = index;
-  }
-}
-
-// Showroom galerisi ürünler yüklendikten sonra initShowroomGallery() ile başlatılacak
 </script>
 
 </body>

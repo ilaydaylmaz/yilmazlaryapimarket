@@ -15,7 +15,7 @@
       <button class="btn-tab" id="productsTab" onclick="showTab('products')">📦 Ürünler</button>
       <button class="btn-tab" id="ceramicTab" onclick="showTab('ceramic')">🏺 Seramik Koleksiyonları</button>
       <button class="btn-tab active" id="messagesTab" onclick="showTab('messages')">💬 Mesajlar</button>
-      <a href="/logout" class="btn-logout">🚪 Çıkış Yap</a>
+      <a href="/logout" class="btn-logout" onclick="localStorage.removeItem('adminSession');">🚪 Çıkış Yap</a>
     </div>
   </div>
 

@@ -26,8 +26,12 @@ function login() {
     })
   })
   .then(res => {
-    if (res.ok) location.href = "/admin.html";
-    else document.getElementById("error").innerText = "Hatalı giriş";
+    if (res.ok) {
+      localStorage.setItem('adminSession', 'true');
+      location.href = "/admin.html";
+    } else {
+      document.getElementById("error").innerText = "Hatalı giriş";
+    }
   });
 }
 </script>
