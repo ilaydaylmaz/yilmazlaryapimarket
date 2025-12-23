@@ -144,19 +144,6 @@
         <textarea id="mesaj" name="mesaj" placeholder="Mesajınız" rows="6" required></textarea>
       </div>
 
-      <div class="form-group">
-        <div class="recaptcha-wrapper">
-          <label class="recaptcha-checkbox">
-            <input type="checkbox" id="recaptcha" name="recaptcha" required>
-            <span>Ben robot değilim</span>
-          </label>
-          <div class="recaptcha-info">
-            <div class="recaptcha-logo">reCAPTCHA</div>
-            <div class="recaptcha-links">Gizlilik - Şartlar</div>
-          </div>
-        </div>
-      </div>
-
       <div id="formMessage" class="form-message"></div>
 
       <button type="submit" class="btn-submit">Formu Gönder</button>
@@ -233,7 +220,7 @@
       >
       <button type="submit" class="search-button">Ara</button>
     </form>
-    <button class="search-close" id="searchClose">
+    <button class="search-close" id="searchClose" title="Kapat" aria-label="Arama penceresini kapat">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
         <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
       </svg>
@@ -316,12 +303,6 @@ document.getElementById("contactForm").addEventListener("submit", async (e) => {
   const messageDiv = document.getElementById("formMessage");
   const submitBtn = document.querySelector(".btn-submit");
   
-  // Validasyon
-  if (!document.getElementById("recaptcha").checked) {
-    messageDiv.innerHTML = '<span class="error">Lütfen "Ben robot değilim" kutusunu işaretleyin.</span>';
-    return;
-  }
-
   // Butonu devre dışı bırak
   submitBtn.disabled = true;
   submitBtn.textContent = "Gönderiliyor...";

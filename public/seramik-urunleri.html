@@ -292,6 +292,8 @@ fetch("/api/public/products")
     filteredProducts = [...products];
     populateFilters();
     listele(filteredProducts);
+    // Showroom galerisini ürünler yüklendikten sonra başlat
+    initShowroomGallery();
   })
   .catch(err => {
     document.getElementById("urunler").innerHTML = `
@@ -511,13 +513,13 @@ function prevImageLightbox() {
   showImageLightboxAt(imageLightboxIndex - 1);
 }
 
-// Showroom galeri fotoğrafları
-const showroomImages = [
-  { src: '/uploads/showroom-banner.jpg', title: 'Showroom Görünümü 1' },
-  { src: '/uploads/showroom-2.jpg', title: 'Showroom Görünümü 2' },
-  { src: '/uploads/showroom-3.jpg', title: 'Showroom Görünümü 3' },
-  { src: '/uploads/showroom-4.jpg', title: 'Showroom Görünümü 4' },
-  { src: '/uploads/showroom-5.jpg', title: 'Showroom Görünümü 5' },
+// Showroom galeri fotoğrafları - Ürün adları ile eşleştirilecek
+let showroomImages = [
+  { src: '/uploads/showroom-banner.jpg', title: 'Showroom Görünümü', productName: '', productBrand: '' },
+  { src: '/uploads/showroom-2.jpg', title: 'Showroom Görünümü', productName: '', productBrand: '' },
+  { src: '/uploads/showroom-3.jpg', title: 'Showroom Görünümü', productName: '', productBrand: '' },
+  { src: '/uploads/showroom-4.jpg', title: 'Showroom Görünümü', productName: '', productBrand: '' },
+  { src: '/uploads/showroom-5.jpg', title: 'Showroom Görünümü', productName: '', productBrand: '' },
 ];
 
 function initShowroomGallery() {
@@ -530,14 +532,34 @@ function initShowroomGallery() {
     return;
   }
 
-  gallery.innerHTML = showroomImages.map((img, index) => `
+  // Seramik ürünlerinden ilk birkaçını showroom fotoğraflarına eşleştir
+  if (products && products.length > 0) {
+    const seramikProducts = products.slice(0, showroomImages.length);
+    showroomImages = showroomImages.map((img, index) => {
+      if (seramikProducts[index]) {
+        return {
+          ...img,
+          productName: seramikProducts[index].ad || '',
+          productBrand: seramikProducts[index].marka || ''
+        };
+      }
+      return img;
+    });
+  }
+
+  gallery.innerHTML = showroomImages.map((img, index) => {
+    const hasProduct = img.productName && img.productName.trim() !== '';
+    return `
     <div class="showroom-gallery-item" onclick="openShowroomLightbox(${index})">
-      <img src="${img.src}" alt="${img.title}" loading="lazy" onerror="this.style.display='none'">
+      <img src="${img.src}" alt="${img.productName || img.title}" loading="lazy" onerror="this.style.display='none'">
       <div class="showroom-gallery-overlay">
         <h3>${img.title}</h3>
+        ${hasProduct ? `<div class="product-name">${img.productName}</div>` : ''}
+        ${hasProduct && img.productBrand ? `<div class="product-brand">${img.productBrand}</div>` : ''}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function openShowroomLightbox(index) {
@@ -549,8 +571,7 @@ function openShowroomLightbox(index) {
   }
 }
 
-// Sayfa yüklendiğinde showroom galerisini başlat
-document.addEventListener('DOMContentLoaded', initShowroomGallery);
+// Showroom galerisi ürünler yüklendikten sonra initShowroomGallery() ile başlatılacak
 </script>
 
 </body>
