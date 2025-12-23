@@ -236,8 +236,8 @@
     </div>
     
     <!-- Diğer fotoğraflar için slider -->
-    <div class="showroom-slider-wrapper" style="position: relative; width: 100%; overflow: hidden;">
-      <div class="showroom-slider" id="showroomSlider" style="display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; padding-bottom: 10px;">
+    <div class="showroom-slider-wrapper" style="position: relative; width: 100%; overflow: hidden; margin-top: 20px;">
+      <div class="showroom-slider" id="showroomSlider">
         <!-- Diğer showroom fotoğrafları buraya yüklenecek -->
       </div>
       <button class="showroom-slider-btn showroom-slider-prev" id="showroomPrev" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 10; transition: all 0.3s ease; opacity: 0;">
@@ -313,13 +313,20 @@
 }
 
 .showroom-slider {
-  display: flex;
+  display: flex !important;
   gap: 20px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 10px;
+  min-height: 520px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.showroom-slider::-webkit-scrollbar {
+  display: none;
 }
 
 .showroom-slider-item {
@@ -344,15 +351,6 @@
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-.showroom-slider::-webkit-scrollbar {
-  display: none;
-}
-
-.showroom-slider {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
 @media (max-width: 768px) {
