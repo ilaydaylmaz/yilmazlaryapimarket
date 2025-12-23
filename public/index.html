@@ -228,96 +228,58 @@
 </section>
 
 <!-- Showroom Bölümü -->
-<section class="showroom-preview-section" style="padding: 60px 20px; background: var(--white); overflow: hidden;">
+<section class="showroom-preview-section" style="padding: 60px 20px; background: var(--white);">
   <div class="container" style="max-width: 1400px; margin: 0 auto;">
-    <div class="showroom-slider-wrapper" style="position: relative; width: 100%; overflow: hidden;">
-      <div class="showroom-slider" id="showroomSlider" style="display: flex; gap: 0; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; padding-bottom: 10px; width: 100%;">
-        <!-- Showroom fotoğrafları buraya yüklenecek -->
-      </div>
-      <button class="showroom-slider-btn showroom-slider-prev" id="showroomPrev" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 10; transition: all 0.3s ease;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      <button class="showroom-slider-btn showroom-slider-next" id="showroomNext" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 10; transition: all 0.3s ease;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
+    <div class="showroom-grid" id="showroomGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+      <!-- Showroom fotoğrafları buraya yüklenecek -->
     </div>
   </div>
 </section>
 
 <style>
-.showroom-slider-wrapper {
+.showroom-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.showroom-grid-item {
   position: relative;
-}
-
-.showroom-slider-wrapper:hover .showroom-slider-btn {
-  opacity: 1;
-}
-
-.showroom-slider-btn {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.showroom-slider-btn:hover {
-  background: rgba(255,255,255,1) !important;
-  transform: translateY(-50%) scale(1.1);
-}
-
-.showroom-slider img {
-  scroll-snap-align: start;
-  flex: 0 0 100%;
   width: 100%;
-  min-width: 100%;
-  height: 500px;
-  object-fit: cover;
+  height: 600px;
   border-radius: 12px;
+  overflow: hidden;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.showroom-grid-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.showroom-grid-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
-.showroom-slider img:hover {
-  transform: scale(1.02);
-}
-
 @media (max-width: 768px) {
-  .showroom-slider img {
-    height: 300px;
-    flex: 0 0 100%;
+  .showroom-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
   }
   
-  .showroom-slider-btn {
-    width: 40px !important;
-    height: 40px !important;
-    opacity: 0.7;
+  .showroom-grid-item {
+    height: 400px;
   }
-  
-  .showroom-slider-prev {
-    left: 5px !important;
-  }
-  
-  .showroom-slider-next {
-    right: 5px !important;
-  }
-}
-
-/* Scrollbar gizle ama kaydırma çalışsın */
-.showroom-slider::-webkit-scrollbar {
-  display: none;
-}
-
-.showroom-slider {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 </style>
 
 <script>
-// Showroom slider
+// Showroom grid
 document.addEventListener('DOMContentLoaded', function() {
   const showroomImages = [
     '/uploads/showroom-2.jpg',
@@ -326,61 +288,26 @@ document.addEventListener('DOMContentLoaded', function() {
     '/uploads/showroom-5.jpg'
   ];
   
-  const slider = document.getElementById('showroomSlider');
-  const prevBtn = document.getElementById('showroomPrev');
-  const nextBtn = document.getElementById('showroomNext');
+  const grid = document.getElementById('showroomGrid');
   
-  if (slider) {
+  if (grid) {
     showroomImages.forEach((imagePath, index) => {
+      const item = document.createElement('div');
+      item.className = 'showroom-grid-item';
+      item.onclick = function() {
+        window.location.href = '/showroom.html';
+      };
+      
       const img = document.createElement('img');
       img.src = imagePath;
       img.alt = `Showroom ${index + 1}`;
-      img.onclick = function() {
-        window.location.href = '/showroom.html';
-      };
       img.onerror = function() {
-        this.style.display = 'none';
+        item.innerHTML = '<div style="width: 100%; height: 100%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #999;">Resim yüklenemedi</div>';
       };
-      slider.appendChild(img);
+      
+      item.appendChild(img);
+      grid.appendChild(item);
     });
-    
-    if (prevBtn && nextBtn) {
-      prevBtn.addEventListener('click', () => {
-        slider.scrollBy({ left: -slider.offsetWidth, behavior: 'smooth' });
-      });
-      
-      nextBtn.addEventListener('click', () => {
-        slider.scrollBy({ left: slider.offsetWidth, behavior: 'smooth' });
-      });
-      
-      // Otomatik kaydırma (opsiyonel)
-      let autoScrollInterval;
-      function startAutoScroll() {
-        autoScrollInterval = setInterval(() => {
-          const scrollLeft = slider.scrollLeft;
-          const scrollWidth = slider.scrollWidth;
-          const clientWidth = slider.clientWidth;
-          
-          if (scrollLeft + clientWidth >= scrollWidth - 10) {
-            slider.scrollTo({ left: 0, behavior: 'smooth' });
-          } else {
-            slider.scrollBy({ left: clientWidth, behavior: 'smooth' });
-          }
-        }, 5000);
-      }
-      
-      // Mouse üzerine gelince durdur
-      slider.addEventListener('mouseenter', () => {
-        clearInterval(autoScrollInterval);
-      });
-      
-      slider.addEventListener('mouseleave', () => {
-        startAutoScroll();
-      });
-      
-      // İlk yüklemede başlat
-      startAutoScroll();
-    }
   }
 });
 </script>
