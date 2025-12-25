@@ -1488,8 +1488,11 @@ function silCeramicUrun(id) {
 }
 
 
-// Sayfa yüklendiğinde
-yukle();
+// Sayfa yüklendiğinde - varsayılan olarak mesajlar sekmesini aç
+document.addEventListener("DOMContentLoaded", function() {
+  // İlk yüklemede mesajlar sekmesini göster
+  showTab('messages');
+});
 
 // Enter tuşu ile form gönderme
 document.getElementById("productForm").addEventListener("keypress", (e) => {
