@@ -1612,7 +1612,50 @@ input[type="search"]:focus {
 }
 
 .urun:hover img {
-  transform: scale(1.05);
+  transform: scale(1.1);
+}
+
+/* Quick View Button */
+.urun-quick-view {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.urun:hover .urun-quick-view {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: all;
+}
+
+.urun-quick-view:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: translate(-50%, -50%) scale(1.05);
+  box-shadow: 0 6px 25px rgba(196, 0, 0, 0.4);
+}
+
+.urun-quick-view svg {
+  width: 18px;
+  height: 18px;
 }
 
 .urun-badge {
@@ -4409,24 +4452,35 @@ input[type="search"]:focus {
   box-shadow: 0 4px 15px rgba(196, 0, 0, 0.3);
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transform: translateY(20px) scale(0.8);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 999;
 }
 
 .scroll-to-top.visible {
   opacity: 1;
   visibility: visible;
+  transform: translateY(0) scale(1);
 }
 
 .scroll-to-top:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(196, 0, 0, 0.4);
+  transform: translateY(-8px) scale(1.1);
+  box-shadow: 0 8px 25px rgba(196, 0, 0, 0.5);
   background: var(--primary-dark);
+}
+
+.scroll-to-top:active {
+  transform: translateY(-5px) scale(1.05);
 }
 
 .scroll-to-top svg {
   width: 24px;
   height: 24px;
+  transition: transform 0.3s ease;
+}
+
+.scroll-to-top:hover svg {
+  transform: translateY(-2px);
 }
 
 /* WHATSAPP FLOATING BUTTON */
@@ -4665,6 +4719,61 @@ a, button, .btn {
 .form-group input:valid:not(:placeholder-shown) ~ .form-success-icon,
 .form-group textarea:valid:not(:placeholder-shown) ~ .form-success-icon {
   opacity: 1;
+}
+
+/* FORM SUCCESS/ERROR ANIMATIONS */
+.form-message {
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 0;
+  overflow: hidden;
+}
+
+.form-message.show-success,
+.form-message.show-error {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 200px;
+}
+
+.form-message .success {
+  color: #27ae60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.form-message .error {
+  color: #e74c3c;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.form-message .success-animated,
+.form-message .error-animated {
+  animation: messageSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes messageSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px) scale(0.9);
+  }
+  50% {
+    transform: translateX(5px) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 /* SEARCH AUTCOMPLETE */

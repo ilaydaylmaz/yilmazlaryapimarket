@@ -355,10 +355,28 @@ document.getElementById("contactForm").addEventListener("submit", async (e) => {
     const result = await response.json();
 
     if (result.success) {
-      messageDiv.innerHTML = '<span class="success">Formunuz başarıyla gönderildi! En kısa sürede size dönüş yapacağız.</span>';
+      // Başarı animasyonu
+      messageDiv.innerHTML = '<span class="success success-animated">✓ Formunuz başarıyla gönderildi! En kısa sürede size dönüş yapacağız.</span>';
+      messageDiv.classList.add('show-success');
+      
+      // Formu resetle
       document.getElementById("contactForm").reset();
+      
+      // Form alanlarındaki success icon'ları kaldır
+      document.querySelectorAll('.form-success-icon').forEach(icon => {
+        icon.style.opacity = '0';
+      });
+      
+      // 3 saniye sonra mesajı kaldır
+      setTimeout(() => {
+        messageDiv.classList.remove('show-success');
+        setTimeout(() => {
+          messageDiv.innerHTML = '';
+        }, 300);
+      }, 5000);
     } else {
-      messageDiv.innerHTML = '<span class="error">Bir hata oluştu. Lütfen tekrar deneyin.</span>';
+      messageDiv.innerHTML = '<span class="error error-animated">✗ Bir hata oluştu. Lütfen tekrar deneyin.</span>';
+      messageDiv.classList.add('show-error');
     }
   } catch (error) {
     messageDiv.innerHTML = '<span class="error">Bir hata oluştu. Lütfen tekrar deneyin.</span>';
