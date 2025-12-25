@@ -997,6 +997,14 @@ let allMessages = [];
 let selectedMessageId = null;
 
 function yukleMesajlar() {
+  const liste = document.getElementById("messagesList");
+  const sayac = document.getElementById("mesaj-sayisi");
+  const yukleniyor = document.getElementById("mesaj-yukleniyor");
+  
+  // Yükleniyor göstergesi
+  yukleniyor.style.display = "inline";
+  liste.innerHTML = '<div class="empty-state">⏳ Mesajlar yükleniyor...</div>';
+  
   // Cache'i önle
   const cacheBuster = `?t=${Date.now()}`;
   
@@ -1012,12 +1020,10 @@ function yukleMesajlar() {
       return r.json();
     })
     .then(data => {
-      console.log(`${data.length} mesaj yüklendi`);
       allMessages = data;
-      const liste = document.getElementById("messagesList");
-      const sayac = document.getElementById("mesaj-sayisi");
       
       sayac.textContent = data.length;
+      yukleniyor.style.display = "none";
       
       if (data.length === 0) {
         liste.innerHTML = '<div class="empty-state">Henüz mesaj yok.</div>';
@@ -1064,8 +1070,10 @@ function yukleMesajlar() {
       });
     })
     .catch(error => {
-      console.error("Mesaj yükleme hatası:", error);
-      document.getElementById("messagesList").innerHTML = '<div class="empty-state">❌ Mesajlar yüklenirken bir hata oluştu!</div>';
+      const liste = document.getElementById("messagesList");
+      const yukleniyor = document.getElementById("mesaj-yukleniyor");
+      yukleniyor.style.display = "none";
+      liste.innerHTML = `<div class="empty-state">❌ Mesajlar yüklenirken bir hata oluştu!<br><small>Hata: ${error.message}</small><br><button onclick="yukleMesajlar()" class="btn btn-primary" style="margin-top: 10px;">Tekrar Dene</button></div>`;
     });
 }
 
