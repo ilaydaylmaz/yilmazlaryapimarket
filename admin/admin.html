@@ -1017,12 +1017,22 @@ let allMessages = [];
 let selectedMessageId = null;
 
 function yukleMesajlar() {
+  // Önce elementlerin var olduğundan emin ol
+  const messagesSection = document.getElementById("messagesSection");
+  if (!messagesSection) {
+    alert("❌ Mesajlar bölümü bulunamadı. Sayfayı yenileyin (F5).");
+    return;
+  }
+  
+  // Bölümü görünür yap
+  messagesSection.style.display = "block";
+  
   const liste = document.getElementById("messagesList");
   const sayac = document.getElementById("mesaj-sayisi");
   const yukleniyor = document.getElementById("mesaj-yukleniyor");
   
   if (!liste || !sayac) {
-    alert("❌ Mesajlar bölümü bulunamadı. Sayfayı yenileyin.");
+    alert("❌ Mesaj listesi bulunamadı. Sayfayı yenileyin (F5).");
     return;
   }
   
