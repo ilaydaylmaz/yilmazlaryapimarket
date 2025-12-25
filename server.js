@@ -796,6 +796,7 @@ app.post("/api/contact", async (req, res) => {
       
       try {
         fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2), 'utf8');
+        console.log(`✅ Mesaj kaydedildi: ${contact.adSoyad} - Toplam ${contacts.length} mesaj`);
       } catch (err) {
         console.error("Contacts dosyası yazma hatası:", err);
         throw new Error("Form kaydedilemedi. Lütfen tekrar deneyin.");

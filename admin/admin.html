@@ -1009,8 +1009,13 @@ function yukleMesajlar() {
   const sayac = document.getElementById("mesaj-sayisi");
   const yukleniyor = document.getElementById("mesaj-yukleniyor");
   
+  if (!liste || !sayac) {
+    alert("❌ Mesajlar bölümü bulunamadı. Sayfayı yenileyin.");
+    return;
+  }
+  
   // Yükleniyor göstergesi
-  yukleniyor.style.display = "inline";
+  if (yukleniyor) yukleniyor.style.display = "inline";
   liste.innerHTML = '<div class="empty-state">⏳ Mesajlar yükleniyor...</div>';
   
   // Cache'i önle
@@ -1024,17 +1029,28 @@ function yukleMesajlar() {
     }
   })
     .then(r => {
-      if (!r.ok) throw new Error("Mesajlar yüklenemedi");
+      if (r.status === 401) {
+        throw new Error("Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
+      }
+      if (!r.ok) {
+        return r.text().then(text => {
+          throw new Error(`Sunucu hatası: ${r.status} - ${text}`);
+        });
+      }
       return r.json();
     })
     .then(data => {
+      if (!Array.isArray(data)) {
+        throw new Error("Geçersiz veri formatı");
+      }
+      
       allMessages = data;
       
       sayac.textContent = data.length;
-      yukleniyor.style.display = "none";
+      if (yukleniyor) yukleniyor.style.display = "none";
       
       if (data.length === 0) {
-        liste.innerHTML = '<div class="empty-state">Henüz mesaj yok.</div>';
+        liste.innerHTML = '<div class="empty-state">📭 Henüz mesaj yok.<br><small>İletişim formundan gönderilen mesajlar burada görünecek.</small></div>';
         return;
       }
       
@@ -1080,8 +1096,16 @@ function yukleMesajlar() {
     .catch(error => {
       const liste = document.getElementById("messagesList");
       const yukleniyor = document.getElementById("mesaj-yukleniyor");
-      yukleniyor.style.display = "none";
-      liste.innerHTML = `<div class="empty-state">❌ Mesajlar yüklenirken bir hata oluştu!<br><small>Hata: ${error.message}</small><br><button onclick="yukleMesajlar()" class="btn btn-primary" style="margin-top: 10px;">Tekrar Dene</button></div>`;
+      if (yukleniyor) yukleniyor.style.display = "none";
+      
+      let errorMessage = error.message || "Bilinmeyen hata";
+      
+      // Oturum hatası ise özel mesaj
+      if (errorMessage.includes("401") || errorMessage.includes("Oturum")) {
+        liste.innerHTML = `<div class="empty-state">🔒 Oturum süresi dolmuş!<br><small>Lütfen tekrar giriş yapın.</small><br><a href="/login.html" class="btn btn-primary" style="margin-top: 10px; display: inline-block;">Giriş Yap</a></div>`;
+      } else {
+        liste.innerHTML = `<div class="empty-state">❌ Mesajlar yüklenirken bir hata oluştu!<br><small>Hata: ${errorMessage}</small><br><button onclick="yukleMesajlar()" class="btn btn-primary" style="margin-top: 10px;">🔄 Tekrar Dene</button></div>`;
+      }
     });
 }
 
