@@ -987,16 +987,28 @@ function showTab(tab) {
   } else {
     document.getElementById('productsSection').style.display = 'none';
     document.getElementById('ceramicSection').style.display = 'none';
-    document.getElementById('messagesSection').style.display = 'block';
+    const messagesSection = document.getElementById('messagesSection');
+    if (messagesSection) {
+      messagesSection.style.display = 'block';
+    }
     document.getElementById('productsTab').classList.remove('active');
     document.getElementById('ceramicTab').classList.remove('active');
     document.getElementById('messagesTab').classList.add('active');
-    yukleMesajlar();
     
-    // Her 10 saniyede bir mesajları otomatik yenile
-    setInterval(() => {
+    // Mesajları yükle
+    setTimeout(() => {
       yukleMesajlar();
-    }, 10000);
+    }, 100);
+    
+    // Her 10 saniyede bir mesajları otomatik yenile (sadece bir kez)
+    if (!window.messagesAutoRefreshStarted) {
+      window.messagesAutoRefreshStarted = true;
+      setInterval(() => {
+        if (messagesSection && messagesSection.style.display !== 'none') {
+          yukleMesajlar();
+        }
+      }, 10000);
+    }
   }
 }
 
