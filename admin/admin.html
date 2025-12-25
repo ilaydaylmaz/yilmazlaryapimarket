@@ -984,6 +984,11 @@ function showTab(tab) {
     document.getElementById('ceramicTab').classList.remove('active');
     document.getElementById('messagesTab').classList.add('active');
     yukleMesajlar();
+    
+    // Her 10 saniyede bir mesajları otomatik yenile
+    setInterval(() => {
+      yukleMesajlar();
+    }, 10000);
   }
 }
 
@@ -992,12 +997,22 @@ let allMessages = [];
 let selectedMessageId = null;
 
 function yukleMesajlar() {
-  fetch("/api/contacts")
+  // Cache'i önle
+  const cacheBuster = `?t=${Date.now()}`;
+  
+  fetch("/api/contacts" + cacheBuster, {
+    method: "GET",
+    headers: {
+      "Cache-Control": "no-cache",
+      "Pragma": "no-cache"
+    }
+  })
     .then(r => {
       if (!r.ok) throw new Error("Mesajlar yüklenemedi");
       return r.json();
     })
     .then(data => {
+      console.log(`${data.length} mesaj yüklendi`);
       allMessages = data;
       const liste = document.getElementById("messagesList");
       const sayac = document.getElementById("mesaj-sayisi");

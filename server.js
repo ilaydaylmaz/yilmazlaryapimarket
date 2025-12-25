@@ -849,6 +849,11 @@ Bu mesaj ${new Date().toLocaleString('tr-TR')} tarihinde gönderilmiştir.
 // Mesajları listele
 app.get("/api/contacts", auth, async (req, res) => {
   try {
+    // Cache'i önle
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     let contacts = [];
     
     if (isMongoDBEnabled()) {
@@ -869,12 +874,22 @@ app.get("/api/contacts", auth, async (req, res) => {
     } else {
       // JSON fallback
       if (fs.existsSync(CONTACTS_FILE)) {
-        contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE));
-        // Tarihe göre sırala (en yeni önce)
-        contacts.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+        try {
+          contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE, 'utf8'));
+          // Tarihe göre sırala (en yeni önce)
+          contacts.sort((a, b) => {
+            const dateA = new Date(a.tarih || 0);
+            const dateB = new Date(b.tarih || 0);
+            return dateB - dateA;
+          });
+        } catch (err) {
+          console.error("Contacts dosyası okuma hatası:", err);
+          contacts = [];
+        }
       }
     }
     
+    console.log(`Toplam ${contacts.length} mesaj yüklendi`);
     res.json(contacts);
   } catch (error) {
     console.error("Mesaj listeleme hatası:", error);
