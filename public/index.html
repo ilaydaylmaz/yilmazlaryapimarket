@@ -237,7 +237,28 @@
     </div>
     <div class="popular-products-scroll-wrapper">
       <div class="popular-products-grid" id="popularProductsGrid">
-        <div class="loading-state">Yükleniyor...</div>
+        <div class="loading-state" id="popularLoadingState">
+          <div class="skeleton-product-card" style="min-width: 250px; height: 350px;">
+            <div class="skeleton skeleton-image"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+          </div>
+          <div class="skeleton-product-card" style="min-width: 250px; height: 350px;">
+            <div class="skeleton skeleton-image"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+          </div>
+          <div class="skeleton-product-card" style="min-width: 250px; height: 350px;">
+            <div class="skeleton skeleton-image"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+          </div>
+          <div class="skeleton-product-card" style="min-width: 250px; height: 350px;">
+            <div class="skeleton skeleton-image"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="section-footer">
@@ -364,6 +385,10 @@ function handleSearch(event) {
   closeSearchModal();
   
   if (searchTerm) {
+    // Son aramalara ekle
+    if (typeof addToRecentSearches === 'function') {
+      addToRecentSearches(searchTerm);
+    }
     window.location.href = `/urunler.html?arama=${encodeURIComponent(searchTerm)}`;
   } else {
     window.location.href = '/urunler.html';
@@ -432,6 +457,12 @@ function loadPopularProducts() {
       // İlk 8 ürünü al (veya rastgele seç)
       const popularProducts = data.slice(0, 8);
       
+      // Loading state'i kaldır
+      const loadingState = document.getElementById('popularLoadingState');
+      if (loadingState) {
+        loadingState.remove();
+      }
+      
       grid.innerHTML = "";
       
       popularProducts.forEach(product => {
@@ -449,6 +480,7 @@ function loadPopularProducts() {
           imageUrl = product.resimBase64;
         }
         
+        const imageUrlSafe = imageUrl.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
         card.innerHTML = `
           <a href="/urun.html?id=${product.id}" class="product-link">
             <div class="product-image-wrapper">
@@ -570,6 +602,8 @@ function initScrollAnimations() {
 }
 
 </script>
+<script src="/assets/js/search-autocomplete.js"></script>
+<script src="/assets/js/lazy-loading.js"></script>
 <script src="/assets/js/floating-buttons.js"></script>
 </body>
 </html>

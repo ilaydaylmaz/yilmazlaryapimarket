@@ -98,8 +98,31 @@
   <div id="sonuc" class="results-info"></div>
 
   <div class="urunler" id="urunler">
-    <div class="loading-state">
-      <p>Yükleniyor...</p>
+    <div class="loading-state" id="loadingState">
+      <div class="skeleton-product-card">
+        <div class="skeleton skeleton-image"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text" style="width: 40%;"></div>
+      </div>
+      <div class="skeleton-product-card">
+        <div class="skeleton skeleton-image"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text" style="width: 40%;"></div>
+      </div>
+      <div class="skeleton-product-card">
+        <div class="skeleton skeleton-image"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text" style="width: 40%;"></div>
+      </div>
+      <div class="skeleton-product-card">
+        <div class="skeleton skeleton-image"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text"></div>
+        <div class="skeleton skeleton-text" style="width: 40%;"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -390,6 +413,12 @@ function listele(data) {
   `;
 
   div.className = currentView === 'grid' ? 'urunler' : 'urunler-list';
+  // Loading state'i kaldır
+  const loadingState = document.getElementById('loadingState');
+  if (loadingState) {
+    loadingState.remove();
+  }
+  
   div.innerHTML = "";
 
   data.forEach(p => {
@@ -485,6 +514,8 @@ function detay(id) {
 <script>
 </script>
 
+<script src="/assets/js/floating-buttons.js"></script>
+<script src="/assets/js/lazy-loading.js"></script>
 <script src="/assets/js/floating-buttons.js"></script>
 </body>
 </html>

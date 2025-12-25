@@ -129,19 +129,35 @@
     <form id="contactForm" class="contact-form">
       <div class="form-row">
         <div class="form-group">
-          <input type="text" id="adSoyad" name="adSoyad" placeholder="Ad Soyad" required>
+          <input type="text" id="adSoyad" name="adSoyad" placeholder="Ad Soyad" required minlength="2" pattern="[A-Za-zÇĞİÖŞÜçğıöşü\s]+">
+          <span class="form-error-message">Lütfen geçerli bir ad soyad girin (en az 2 karakter)</span>
+          <svg class="form-success-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
         </div>
         <div class="form-group">
           <input type="email" id="email" name="email" placeholder="E-Mail" required>
+          <span class="form-error-message">Lütfen geçerli bir e-posta adresi girin</span>
+          <svg class="form-success-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
         </div>
       </div>
 
       <div class="form-group">
-        <input type="tel" id="telefon" name="telefon" placeholder="Telefon Numaranız" required>
+        <input type="tel" id="telefon" name="telefon" placeholder="Telefon Numaranız" required pattern="[0-9\s\+\-\(\)]+" minlength="10">
+        <span class="form-error-message">Lütfen geçerli bir telefon numarası girin (en az 10 karakter)</span>
+        <svg class="form-success-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
       </div>
 
       <div class="form-group">
-        <textarea id="mesaj" name="mesaj" placeholder="Mesajınız" rows="6" required></textarea>
+        <textarea id="mesaj" name="mesaj" placeholder="Mesajınız" rows="6" required minlength="10"></textarea>
+        <span class="form-error-message">Lütfen en az 10 karakterlik bir mesaj yazın</span>
+        <svg class="form-success-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
       </div>
 
       <div class="form-group">

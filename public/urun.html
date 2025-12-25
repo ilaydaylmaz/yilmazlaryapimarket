@@ -416,7 +416,52 @@ fetch("/api/public/products?details=true")
         `;
       }
       
+      // Breadcrumb oluştur
+      const getCategoryUrl = (kategori) => {
+        const categoryMap = {
+          'Boya Ürünleri': '/boya-urunleri.html',
+          'Hırdavat Ürünleri': '/hirdavat-urunleri.html',
+          'Elektrik Ürünleri': '/elektrik-urunleri.html',
+          'Tesisat Ürünleri': '/tesisat-urunleri.html',
+          'Yapı Malzemeleri': '/yapi-malzemeleri.html',
+          'El Aletleri Ürünleri': '/el-aletleri-urunleri.html',
+          'Elektrikli El Aletleri': '/elektrikli-el-aletleri-urunleri.html',
+          'Seramik Ürünleri': '/seramik-urunleri.html',
+          'Banyo Dolapları': '/banyo-urunleri.html',
+          'Parke Ürünleri': '/parke-urunleri.html',
+          'Kaba Grubu': '/kaba-grubu.html',
+          'Mutfak Ürünleri': '/mutfak-urunleri.html'
+        };
+        return categoryMap[kategori] || '/urunler.html';
+      };
+      
+      const categoryUrl = p.kategori ? getCategoryUrl(p.kategori) : '/urunler.html';
+      const categoryName = p.kategori || 'Ürünler';
+      
+      const breadcrumbHTML = `
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol class="breadcrumb-list">
+            <li class="breadcrumb-item">
+              <a href="/">Ana Sayfa</a>
+            </li>
+            <li class="breadcrumb-separator">/</li>
+            <li class="breadcrumb-item">
+              <a href="/urunler.html">Ürünler</a>
+            </li>
+            ${p.kategori ? `
+              <li class="breadcrumb-separator">/</li>
+              <li class="breadcrumb-item">
+                <a href="${categoryUrl}">${categoryName}</a>
+              </li>
+            ` : ''}
+            <li class="breadcrumb-separator">/</li>
+            <li class="breadcrumb-item">${p.ad || 'Ürün'}</li>
+          </ol>
+        </nav>
+      `;
+      
       document.getElementById("detay").innerHTML = `
+        ${breadcrumbHTML}
         <div class="product-detail">
           <div>
             ${resimGalerisiHTML}
