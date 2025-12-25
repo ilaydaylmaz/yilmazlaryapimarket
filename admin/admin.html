@@ -105,15 +105,7 @@
 
     <!-- Mesajlar Bölümü -->
     <div id="messagesSection" class="messages-section" style="display: none;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2>💬 İletişim Formu Mesajları (<span id="mesaj-sayisi">0</span>)</h2>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <button onclick="yukleMesajlar()" class="btn btn-secondary" style="padding: 8px 20px; font-size: 0.95rem;" title="Mesajları Yenile">
-            🔄 Yenile
-          </button>
-          <span id="mesaj-yukleniyor" style="display: none; color: var(--primary-color); font-size: 0.9rem;">⏳ Yükleniyor...</span>
-        </div>
-      </div>
+      <h2>💬 İletişim Formu Mesajları (<span id="mesaj-sayisi">0</span>)</h2>
       <div class="messages-list" id="messagesList">
         <div class="empty-state">Yükleniyor...</div>
       </div>
@@ -987,28 +979,11 @@ function showTab(tab) {
   } else {
     document.getElementById('productsSection').style.display = 'none';
     document.getElementById('ceramicSection').style.display = 'none';
-    const messagesSection = document.getElementById('messagesSection');
-    if (messagesSection) {
-      messagesSection.style.display = 'block';
-    }
+    document.getElementById('messagesSection').style.display = 'block';
     document.getElementById('productsTab').classList.remove('active');
     document.getElementById('ceramicTab').classList.remove('active');
     document.getElementById('messagesTab').classList.add('active');
-    
-    // Mesajları yükle
-    setTimeout(() => {
-      yukleMesajlar();
-    }, 100);
-    
-    // Her 10 saniyede bir mesajları otomatik yenile (sadece bir kez)
-    if (!window.messagesAutoRefreshStarted) {
-      window.messagesAutoRefreshStarted = true;
-      setInterval(() => {
-        if (messagesSection && messagesSection.style.display !== 'none') {
-          yukleMesajlar();
-        }
-      }, 10000);
-    }
+    yukleMesajlar();
   }
 }
 
@@ -1017,62 +992,20 @@ let allMessages = [];
 let selectedMessageId = null;
 
 function yukleMesajlar() {
-  // Önce elementlerin var olduğundan emin ol
-  const messagesSection = document.getElementById("messagesSection");
-  if (!messagesSection) {
-    alert("❌ Mesajlar bölümü bulunamadı. Sayfayı yenileyin (F5).");
-    return;
-  }
-  
-  // Bölümü görünür yap
-  messagesSection.style.display = "block";
-  
-  const liste = document.getElementById("messagesList");
-  const sayac = document.getElementById("mesaj-sayisi");
-  const yukleniyor = document.getElementById("mesaj-yukleniyor");
-  
-  if (!liste || !sayac) {
-    alert("❌ Mesaj listesi bulunamadı. Sayfayı yenileyin (F5).");
-    return;
-  }
-  
-  // Yükleniyor göstergesi
-  if (yukleniyor) yukleniyor.style.display = "inline";
-  liste.innerHTML = '<div class="empty-state">⏳ Mesajlar yükleniyor...</div>';
-  
-  // Cache'i önle
-  const cacheBuster = `?t=${Date.now()}`;
-  
-  fetch("/api/contacts" + cacheBuster, {
-    method: "GET",
-    headers: {
-      "Cache-Control": "no-cache",
-      "Pragma": "no-cache"
-    }
-  })
+  fetch("/api/contacts")
     .then(r => {
-      if (r.status === 401) {
-        throw new Error("Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
-      }
-      if (!r.ok) {
-        return r.text().then(text => {
-          throw new Error(`Sunucu hatası: ${r.status} - ${text}`);
-        });
-      }
+      if (!r.ok) throw new Error("Mesajlar yüklenemedi");
       return r.json();
     })
     .then(data => {
-      if (!Array.isArray(data)) {
-        throw new Error("Geçersiz veri formatı");
-      }
-      
       allMessages = data;
+      const liste = document.getElementById("messagesList");
+      const sayac = document.getElementById("mesaj-sayisi");
       
       sayac.textContent = data.length;
-      if (yukleniyor) yukleniyor.style.display = "none";
       
       if (data.length === 0) {
-        liste.innerHTML = '<div class="empty-state">📭 Henüz mesaj yok.<br><small>İletişim formundan gönderilen mesajlar burada görünecek.</small></div>';
+        liste.innerHTML = '<div class="empty-state">Henüz mesaj yok.</div>';
         return;
       }
       
@@ -1116,18 +1049,8 @@ function yukleMesajlar() {
       });
     })
     .catch(error => {
-      const liste = document.getElementById("messagesList");
-      const yukleniyor = document.getElementById("mesaj-yukleniyor");
-      if (yukleniyor) yukleniyor.style.display = "none";
-      
-      let errorMessage = error.message || "Bilinmeyen hata";
-      
-      // Oturum hatası ise özel mesaj
-      if (errorMessage.includes("401") || errorMessage.includes("Oturum")) {
-        liste.innerHTML = `<div class="empty-state">🔒 Oturum süresi dolmuş!<br><small>Lütfen tekrar giriş yapın.</small><br><a href="/login.html" class="btn btn-primary" style="margin-top: 10px; display: inline-block;">Giriş Yap</a></div>`;
-      } else {
-        liste.innerHTML = `<div class="empty-state">❌ Mesajlar yüklenirken bir hata oluştu!<br><small>Hata: ${errorMessage}</small><br><button onclick="yukleMesajlar()" class="btn btn-primary" style="margin-top: 10px;">🔄 Tekrar Dene</button></div>`;
-      }
+      console.error("Mesaj yükleme hatası:", error);
+      document.getElementById("messagesList").innerHTML = '<div class="empty-state">❌ Mesajlar yüklenirken bir hata oluştu!</div>';
     });
 }
 
@@ -1488,11 +1411,8 @@ function silCeramicUrun(id) {
 }
 
 
-// Sayfa yüklendiğinde - varsayılan olarak mesajlar sekmesini aç
-document.addEventListener("DOMContentLoaded", function() {
-  // İlk yüklemede mesajlar sekmesini göster
-  showTab('messages');
-});
+// Sayfa yüklendiğinde
+yukle();
 
 // Enter tuşu ile form gönderme
 document.getElementById("productForm").addEventListener("keypress", (e) => {

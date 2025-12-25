@@ -796,7 +796,6 @@ app.post("/api/contact", async (req, res) => {
       
       try {
         fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2), 'utf8');
-        console.log(`✅ Mesaj kaydedildi: ${contact.adSoyad} - Toplam ${contacts.length} mesaj`);
       } catch (err) {
         console.error("Contacts dosyası yazma hatası:", err);
         throw new Error("Form kaydedilemedi. Lütfen tekrar deneyin.");
@@ -850,11 +849,6 @@ Bu mesaj ${new Date().toLocaleString('tr-TR')} tarihinde gönderilmiştir.
 // Mesajları listele
 app.get("/api/contacts", auth, async (req, res) => {
   try {
-    // Cache'i önle
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    
     let contacts = [];
     
     if (isMongoDBEnabled()) {
@@ -875,22 +869,12 @@ app.get("/api/contacts", auth, async (req, res) => {
     } else {
       // JSON fallback
       if (fs.existsSync(CONTACTS_FILE)) {
-        try {
-          contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE, 'utf8'));
-          // Tarihe göre sırala (en yeni önce)
-          contacts.sort((a, b) => {
-            const dateA = new Date(a.tarih || 0);
-            const dateB = new Date(b.tarih || 0);
-            return dateB - dateA;
-          });
-        } catch (err) {
-          console.error("Contacts dosyası okuma hatası:", err);
-          contacts = [];
-        }
+        contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE));
+        // Tarihe göre sırala (en yeni önce)
+        contacts.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
       }
     }
     
-    console.log(`Toplam ${contacts.length} mesaj yüklendi`);
     res.json(contacts);
   } catch (error) {
     console.error("Mesaj listeleme hatası:", error);
@@ -935,7 +919,7 @@ app.post("/api/contacts/:id/reply", auth, async (req, res) => {
         <p>Size gönderdiğiniz mesajınıza cevap vermek istiyoruz:</p>
         <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
           <p><strong>Orijinal Mesajınız:</strong></p>
-          <p>${(contact.mesaj || '').replace(/\n/g, '<br>')}</p>
+          <p>${contact.mesaj.replace(/\n/g, '<br>')}</p>
         </div>
         <div style="background: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0;">
           <p><strong>Cevabımız:</strong></p>
@@ -951,7 +935,7 @@ Merhaba ${contact.adSoyad},
 Size gönderdiğiniz mesajınıza cevap vermek istiyoruz:
 
 Orijinal Mesajınız:
-${contact.mesaj || ''}
+${contact.mesaj}
 
 Cevabımız:
 ${cevap}
@@ -961,10 +945,7 @@ Bu mesaj ${new Date().toLocaleString('tr-TR')} tarihinde gönderilmiştir.
 Yılmazlar Yapı Market - Kırklareli / Vize
       `;
       
-      // Email göndermeyi arka planda yap (hata olsa bile cevap kaydedilsin)
-      sendEmail(contact.email, emailSubject, emailHtml, emailText).catch(err => {
-        console.error("Cevap email gönderme hatası (cevap kaydedildi):", err);
-      });
+      await sendEmail(contact.email, emailSubject, emailHtml, emailText);
       
       res.json({ success: true, message: "Cevap başarıyla gönderildi!" });
     } else {
@@ -979,27 +960,21 @@ Yılmazlar Yapı Market - Kırklareli / Vize
         return res.status(404).json({ success: false, message: "Mesaj bulunamadı." });
       }
       
-      const contact = contacts[contactIndex];
-      
       contacts[contactIndex].cevaplandı = true;
       contacts[contactIndex].cevap = cevap.trim();
       contacts[contactIndex].cevapTarihi = new Date().toISOString();
       
-      try {
-        fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2), 'utf8');
-      } catch (err) {
-        console.error("Contacts dosyası yazma hatası:", err);
-        throw new Error("Cevap kaydedilemedi. Lütfen tekrar deneyin.");
-      }
+      fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2));
       
       // Mail gönder
+      const contact = contacts[contactIndex];
       const emailSubject = `Yılmazlar Yapı Market - Mesajınıza Cevap`;
       const emailHtml = `
         <h2>Merhaba ${contact.adSoyad},</h2>
         <p>Size gönderdiğiniz mesajınıza cevap vermek istiyoruz:</p>
         <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
           <p><strong>Orijinal Mesajınız:</strong></p>
-          <p>${(contact.mesaj || '').replace(/\n/g, '<br>')}</p>
+          <p>${contact.mesaj.replace(/\n/g, '<br>')}</p>
         </div>
         <div style="background: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0;">
           <p><strong>Cevabımız:</strong></p>
@@ -1015,7 +990,7 @@ Merhaba ${contact.adSoyad},
 Size gönderdiğiniz mesajınıza cevap vermek istiyoruz:
 
 Orijinal Mesajınız:
-${contact.mesaj || ''}
+${contact.mesaj}
 
 Cevabımız:
 ${cevap}
@@ -1025,10 +1000,7 @@ Bu mesaj ${new Date().toLocaleString('tr-TR')} tarihinde gönderilmiştir.
 Yılmazlar Yapı Market - Kırklareli / Vize
       `;
       
-      // Email göndermeyi arka planda yap (hata olsa bile cevap kaydedilsin)
-      sendEmail(contact.email, emailSubject, emailHtml, emailText).catch(err => {
-        console.error("Cevap email gönderme hatası (cevap kaydedildi):", err);
-      });
+      await sendEmail(contact.email, emailSubject, emailHtml, emailText);
       
       res.json({ success: true, message: "Cevap başarıyla gönderildi!" });
     }
