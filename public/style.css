@@ -4448,6 +4448,7 @@ input[type="search"]:focus {
   text-decoration: none;
   border: none;
   cursor: pointer;
+  overflow: hidden;
 }
 
 .whatsapp-float:hover {
@@ -4465,6 +4466,7 @@ input[type="search"]:focus {
   height: 32px;
   fill: white;
   display: block;
+  pointer-events: none;
 }
 
 @keyframes pulse-whatsapp {
