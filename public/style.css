@@ -4441,29 +4441,38 @@ input[type="search"]:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+  box-shadow: 0 4px 20px rgba(37, 211, 102, 0.5);
   z-index: 999;
   transition: all 0.3s ease;
   animation: pulse-whatsapp 2s infinite;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
 }
 
 .whatsapp-float:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 25px rgba(37, 211, 102, 0.6);
+  box-shadow: 0 6px 30px rgba(37, 211, 102, 0.7);
+  background: #20BA5A;
+}
+
+.whatsapp-float:active {
+  transform: scale(0.95);
 }
 
 .whatsapp-float svg {
   width: 32px;
   height: 32px;
   fill: white;
+  display: block;
 }
 
 @keyframes pulse-whatsapp {
   0%, 100% {
-    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+    box-shadow: 0 4px 20px rgba(37, 211, 102, 0.5);
   }
   50% {
-    box-shadow: 0 4px 25px rgba(37, 211, 102, 0.7);
+    box-shadow: 0 4px 30px rgba(37, 211, 102, 0.8);
   }
 }
 
