@@ -334,7 +334,26 @@ document.getElementById("contactForm").addEventListener("submit", async (e) => {
       body: JSON.stringify(formData)
     });
 
+    // Response durumunu kontrol et
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { message: `Sunucu hatası: ${response.status} ${response.statusText}` };
+      }
+      
+      messageDiv.innerHTML = `<span class="error error-animated">✗ ${errorData.message || 'Bir hata oluştu. Lütfen tekrar deneyin.'}</span>`;
+      messageDiv.classList.add('show-error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Formu Gönder";
+      console.error('API Error:', errorData);
+      return;
+    }
+
     const result = await response.json();
+    console.log('API Response:', result);
 
     if (result.success) {
       // Başarı animasyonu

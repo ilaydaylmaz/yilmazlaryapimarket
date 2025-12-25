@@ -738,13 +738,30 @@ app.post("/api/contact", async (req, res) => {
       await contactsCollection.insertOne(mongoContact);
     } else {
       // JSON fallback
+      // data klasörünü oluştur
+      const dataDir = path.dirname(CONTACTS_FILE);
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      
       let contacts = [];
       if (fs.existsSync(CONTACTS_FILE)) {
-        contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE));
+        try {
+          contacts = JSON.parse(fs.readFileSync(CONTACTS_FILE, 'utf8'));
+        } catch (err) {
+          console.error("Contacts dosyası okuma hatası:", err);
+          contacts = [];
+        }
       }
       contact.cevaplandı = false;
       contacts.push(contact);
-      fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2));
+      
+      try {
+        fs.writeFileSync(CONTACTS_FILE, JSON.stringify(contacts, null, 2), 'utf8');
+      } catch (err) {
+        console.error("Contacts dosyası yazma hatası:", err);
+        throw new Error("Form kaydedilemedi. Lütfen tekrar deneyin.");
+      }
     }
 
     // Mail gönder (admin'e bildirim)
@@ -782,7 +799,8 @@ Bu mesaj ${new Date().toLocaleString('tr-TR')} tarihinde gönderilmiştir.
     res.json({ success: true, message: "Formunuz başarıyla gönderildi!" });
   } catch (error) {
     console.error("Contact form error:", error);
-    res.status(500).json({ success: false, message: "Bir hata oluştu. Lütfen tekrar deneyin." });
+    const errorMessage = error.message || "Bir hata oluştu. Lütfen tekrar deneyin.";
+    res.status(500).json({ success: false, message: errorMessage });
   }
 });
 
