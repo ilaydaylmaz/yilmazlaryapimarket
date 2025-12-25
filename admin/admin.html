@@ -14,7 +14,6 @@
     <div class="header-actions">
       <button class="btn-tab" id="productsTab" onclick="showTab('products')">📦 Ürünler</button>
       <button class="btn-tab" id="ceramicTab" onclick="showTab('ceramic')">🏺 Seramik Koleksiyonları</button>
-      <button class="btn-tab" id="showroomTab" onclick="showTab('showroom')">🏢 Showroom</button>
       <button class="btn-tab active" id="messagesTab" onclick="showTab('messages')">💬 Mesajlar</button>
       <a href="/logout" class="btn-logout" onclick="localStorage.removeItem('adminSession');">🚪 Çıkış Yap</a>
     </div>
@@ -347,23 +346,6 @@
       </div>
     </div>
 
-    <!-- Showroom Bölümü -->
-    <div id="showroomSection" class="showroom-section" style="display: none;">
-      <h2>🏢 Showroom Yönetimi</h2>
-      
-      <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <h3>ℹ️ Bilgi</h3>
-        <p>Showroom fotoğraflarınızı ve hotspot'larınızı yönetmek için <a href="/showroom.html?edit=1" target="_blank" style="color: #007bff; text-decoration: underline;">Showroom Düzenleme Sayfası</a>'na gidin.</p>
-        <p style="margin-top: 10px;">Orada fotoğraflar üzerine tıklayarak hotspot ekleyebilir, mevcut hotspot'ları silebilir ve ayarları kaydedebilirsiniz.</p>
-      </div>
-
-      <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <h3>📸 Showroom Fotoğrafları</h3>
-        <div id="showroomImagesList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
-          <!-- Showroom fotoğrafları buraya yüklenecek -->
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -981,37 +963,22 @@ function showTab(tab) {
   if (tab === 'products') {
     document.getElementById('productsSection').style.display = 'block';
     document.getElementById('ceramicSection').style.display = 'none';
-    document.getElementById('showroomSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'none';
     document.getElementById('productsTab').classList.add('active');
     document.getElementById('ceramicTab').classList.remove('active');
-    document.getElementById('showroomTab').classList.remove('active');
     document.getElementById('messagesTab').classList.remove('active');
     yukle();
   } else if (tab === 'ceramic') {
     document.getElementById('productsSection').style.display = 'none';
     document.getElementById('ceramicSection').style.display = 'block';
-    document.getElementById('showroomSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'none';
     document.getElementById('productsTab').classList.remove('active');
     document.getElementById('ceramicTab').classList.add('active');
-    document.getElementById('showroomTab').classList.remove('active');
     document.getElementById('messagesTab').classList.remove('active');
     yukleCeramicCollections();
-  } else if (tab === 'showroom') {
-    document.getElementById('productsSection').style.display = 'none';
-    document.getElementById('ceramicSection').style.display = 'none';
-    document.getElementById('showroomSection').style.display = 'block';
-    document.getElementById('messagesSection').style.display = 'none';
-    document.getElementById('productsTab').classList.remove('active');
-    document.getElementById('ceramicTab').classList.remove('active');
-    document.getElementById('showroomTab').classList.add('active');
-    document.getElementById('messagesTab').classList.remove('active');
-    loadShowroomImages();
   } else {
     document.getElementById('productsSection').style.display = 'none';
     document.getElementById('ceramicSection').style.display = 'none';
-    document.getElementById('showroomSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'block';
     document.getElementById('productsTab').classList.remove('active');
     document.getElementById('ceramicTab').classList.remove('active');
@@ -1443,36 +1410,6 @@ function silCeramicUrun(id) {
     });
 }
 
-// Showroom fotoğraflarını yükle
-function loadShowroomImages() {
-  const showroomImages = [
-    '/uploads/showroom-2.jpg',
-    '/uploads/showroom-3.jpg',
-    '/uploads/showroom-4.jpg',
-    '/uploads/showroom-5.jpg'
-  ];
-  
-  const container = document.getElementById('showroomImagesList');
-  if (!container) return;
-  
-  container.innerHTML = '';
-  
-  showroomImages.forEach(imagePath => {
-    const imgDiv = document.createElement('div');
-    imgDiv.style.cssText = 'position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
-    
-    const img = document.createElement('img');
-    img.src = imagePath;
-    img.style.cssText = 'width: 100%; height: 150px; object-fit: cover; display: block;';
-    img.onerror = function() {
-      this.style.display = 'none';
-      imgDiv.innerHTML = '<div style="width: 100%; height: 150px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #999;">Resim yok</div>';
-    };
-    
-    imgDiv.appendChild(img);
-    container.appendChild(imgDiv);
-  });
-}
 
 // Sayfa yüklendiğinde
 yukle();
