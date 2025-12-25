@@ -4905,6 +4905,19 @@ a, button, .btn {
   width: 100%;
 }
 
+/* IMAGE OPTIMIZATION - Responsive Images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Critical CSS - Above the fold */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    scroll-behavior: smooth;
+  }
+}
+
 @media (max-width: 768px) {
   .loading-state {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -4913,6 +4926,16 @@ a, button, .btn {
   
   .skeleton-product-card {
     height: 300px;
+  }
+  
+  .urun-quick-view {
+    padding: 10px 18px;
+    font-size: 0.85rem;
+  }
+  
+  .urun-quick-view svg {
+    width: 16px;
+    height: 16px;
   }
 }
   
