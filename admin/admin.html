@@ -105,7 +105,15 @@
 
     <!-- Mesajlar Bölümü -->
     <div id="messagesSection" class="messages-section" style="display: none;">
-      <h2>💬 İletişim Formu Mesajları (<span id="mesaj-sayisi">0</span>)</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>💬 İletişim Formu Mesajları (<span id="mesaj-sayisi">0</span>)</h2>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button onclick="yukleMesajlar()" class="btn btn-secondary" style="padding: 8px 20px; font-size: 0.95rem;" title="Mesajları Yenile">
+            🔄 Yenile
+          </button>
+          <span id="mesaj-yukleniyor" style="display: none; color: var(--primary-color); font-size: 0.9rem;">⏳ Yükleniyor...</span>
+        </div>
+      </div>
       <div class="messages-list" id="messagesList">
         <div class="empty-state">Yükleniyor...</div>
       </div>
