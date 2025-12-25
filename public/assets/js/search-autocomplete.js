@@ -157,6 +157,7 @@ function updateSelectedSuggestion(suggestions) {
 }
 
 function selectSearchTerm(term) {
+  addToRecentSearches(term);
   window.location.href = `/urunler.html?arama=${encodeURIComponent(term)}`;
 }
 
