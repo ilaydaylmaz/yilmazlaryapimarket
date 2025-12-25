@@ -104,6 +104,44 @@ const DATA_FILE = "./data/products.json";
 const CONTACTS_FILE = "./data/contacts.json";
 
 /* =======================
+   EMAIL FUNCTION
+======================= */
+async function sendEmail(to, subject, html, text) {
+  // SMTP ayarları yoksa email gönderme
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log("SMTP ayarları yapılandırılmamış, email gönderilmedi.");
+    return Promise.resolve();
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+
+    const mailOptions = {
+      from: `"Yılmazlar Yapı Market" <${process.env.SMTP_USER}>`,
+      to: to,
+      subject: subject,
+      text: text,
+      html: html
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email gönderildi:", info.messageId);
+    return info;
+  } catch (error) {
+    console.error("Email gönderme hatası:", error);
+    throw error;
+  }
+}
+
+/* =======================
    AUTH MIDDLEWARE
 ======================= */
 function auth(req, res, next) {
