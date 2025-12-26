@@ -14,7 +14,6 @@
     <div class="header-actions">
       <button class="btn-tab" id="productsTab" onclick="showTab('products')">📦 Ürünler</button>
       <button class="btn-tab" id="ceramicTab" onclick="showTab('ceramic')">🏺 Seramik Koleksiyonları</button>
-      <button class="btn-tab" id="showroomTab" onclick="showTab('showroom')">🏪 Showroom / Teşhir</button>
       <button class="btn-tab active" id="messagesTab" onclick="showTab('messages')">💬 Mesajlar</button>
       <a href="/logout" class="btn-logout" onclick="localStorage.removeItem('adminSession');">🚪 Çıkış Yap</a>
     </div>
@@ -99,32 +98,6 @@
       <div class="ceramic-collections">
         <h3>📋 Mevcut Seramik Koleksiyonları</h3>
         <div id="ceramicCollectionsList" class="collections-list">
-          <div class="empty-state">Yükleniyor...</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Showroom / Teşhir Bölümü -->
-    <div id="showroomSection" class="showroom-section" style="display: none;">
-      <h2>🏪 Showroom / Teşhir Fotoğrafları</h2>
-      
-      <!-- Fotoğraf Yükleme Formu -->
-      <div class="showroom-form-card">
-        <h3>➕ Yeni Fotoğraf Ekle</h3>
-        <form id="showroomForm" enctype="multipart/form-data" onsubmit="event.preventDefault(); ekleShowroomFoto();">
-          <div class="form-group">
-            <label for="showroomImages">Fotoğraflar (Birden fazla seçebilirsiniz) *</label>
-            <input type="file" id="showroomImages" name="images" multiple accept="image/*" required>
-            <small>Maksimum 10 fotoğraf yükleyebilirsiniz. JPG, PNG formatları desteklenir.</small>
-          </div>
-          <button type="submit" class="btn btn-primary">📤 Fotoğrafları Yükle</button>
-        </form>
-      </div>
-      
-      <!-- Fotoğraf Listesi -->
-      <div class="showroom-list">
-        <h3>📸 Mevcut Fotoğraflar</h3>
-        <div id="showroomList" class="showroom-grid">
           <div class="empty-state">Yükleniyor...</div>
         </div>
       </div>
@@ -1084,41 +1057,25 @@ function showTab(tab) {
   if (tab === 'products') {
     document.getElementById('productsSection').style.display = 'block';
     document.getElementById('ceramicSection').style.display = 'none';
-    document.getElementById('showroomSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'none';
     document.getElementById('productsTab').classList.add('active');
     document.getElementById('ceramicTab').classList.remove('active');
-    document.getElementById('showroomTab').classList.remove('active');
     document.getElementById('messagesTab').classList.remove('active');
     yukle();
   } else if (tab === 'ceramic') {
     document.getElementById('productsSection').style.display = 'none';
     document.getElementById('ceramicSection').style.display = 'block';
-    document.getElementById('showroomSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'none';
     document.getElementById('productsTab').classList.remove('active');
     document.getElementById('ceramicTab').classList.add('active');
-    document.getElementById('showroomTab').classList.remove('active');
     document.getElementById('messagesTab').classList.remove('active');
     yukleCeramicCollections();
-  } else if (tab === 'showroom') {
-    document.getElementById('productsSection').style.display = 'none';
-    document.getElementById('ceramicSection').style.display = 'none';
-    document.getElementById('showroomSection').style.display = 'block';
-    document.getElementById('messagesSection').style.display = 'none';
-    document.getElementById('productsTab').classList.remove('active');
-    document.getElementById('ceramicTab').classList.remove('active');
-    document.getElementById('showroomTab').classList.add('active');
-    document.getElementById('messagesTab').classList.remove('active');
-    yukleShowroomFoto();
   } else {
     document.getElementById('productsSection').style.display = 'none';
     document.getElementById('ceramicSection').style.display = 'none';
-    document.getElementById('showroomSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'block';
     document.getElementById('productsTab').classList.remove('active');
     document.getElementById('ceramicTab').classList.remove('active');
-    document.getElementById('showroomTab').classList.remove('active');
     document.getElementById('messagesTab').classList.add('active');
     yukleMesajlar();
   }
@@ -1547,120 +1504,6 @@ function silCeramicUrun(id) {
     });
 }
 
-
-// Showroom fonksiyonları
-function yukleShowroomFoto() {
-  fetch('/api/showroom')
-    .then(r => r.json())
-    .then(data => {
-      const listDiv = document.getElementById('showroomList');
-      const images = data.images || [];
-      
-      if (images.length === 0) {
-        listDiv.innerHTML = '<div class="empty-state">Henüz fotoğraf eklenmemiş. Yukarıdaki formdan fotoğraf ekleyebilirsiniz.</div>';
-        return;
-      }
-      
-      listDiv.innerHTML = images.map(img => `
-        <div class="showroom-item">
-          <div class="showroom-image-wrapper">
-            <img src="${img.url}" alt="${img.title || 'Showroom fotoğrafı'}" loading="lazy">
-            <div class="showroom-overlay">
-              <button class="btn btn-danger btn-small" onclick="silShowroomFoto('${img.id}')">🗑️ Sil</button>
-            </div>
-          </div>
-          <div class="showroom-info">
-            <input type="text" class="showroom-title-input" placeholder="Başlık (opsiyonel)" value="${img.title || ''}" 
-                   onchange="guncelleShowroomFoto('${img.id}', 'title', this.value)">
-            <textarea class="showroom-desc-input" placeholder="Açıklama (opsiyonel)" 
-                      onchange="guncelleShowroomFoto('${img.id}', 'description', this.value)">${img.description || ''}</textarea>
-          </div>
-        </div>
-      `).join('');
-    })
-    .catch(err => {
-      console.error('Showroom yükleme hatası:', err);
-      document.getElementById('showroomList').innerHTML = '<div class="empty-state">❌ Fotoğraflar yüklenirken bir hata oluştu!</div>';
-    });
-}
-
-function ekleShowroomFoto() {
-  const form = document.getElementById('showroomForm');
-  const formData = new FormData(form);
-  const files = document.getElementById('showroomImages').files;
-  
-  if (files.length === 0) {
-    alert('Lütfen en az bir fotoğraf seçin!');
-    return;
-  }
-  
-  if (files.length > 10) {
-    alert('Maksimum 10 fotoğraf yükleyebilirsiniz!');
-    return;
-  }
-  
-  // Tüm dosyaları FormData'ya ekle
-  for (let i = 0; i < files.length; i++) {
-    formData.append('images', files[i]);
-  }
-  
-  fetch('/api/showroom', {
-    method: 'POST',
-    body: formData
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.success) {
-      alert('✅ Fotoğraflar başarıyla yüklendi!');
-      form.reset();
-      yukleShowroomFoto();
-    } else {
-      throw new Error(data.message || 'Yükleme başarısız');
-    }
-  })
-  .catch(err => {
-    alert('❌ Hata: ' + err.message);
-    console.error('Showroom yükleme hatası:', err);
-  });
-}
-
-function guncelleShowroomFoto(id, field, value) {
-  fetch(`/api/showroom/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ [field]: value })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (!data.success) {
-      throw new Error(data.message || 'Güncelleme başarısız');
-    }
-  })
-  .catch(err => {
-    console.error('Showroom güncelleme hatası:', err);
-  });
-}
-
-function silShowroomFoto(id) {
-  if (!confirm('Bu fotoğrafı silmek istediğinize emin misiniz?')) {
-    return;
-  }
-  
-  fetch(`/api/showroom/${id}`, { method: 'DELETE' })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        alert('✅ Fotoğraf başarıyla silindi!');
-        yukleShowroomFoto();
-      } else {
-        throw new Error(data.message || 'Silme başarısız');
-      }
-    })
-    .catch(err => {
-      alert('❌ Hata: ' + err.message);
-      console.error('Showroom silme hatası:', err);
-    });
-}
 
 // Sayfa yüklendiğinde
 yukle();

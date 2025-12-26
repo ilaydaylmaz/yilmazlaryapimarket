@@ -230,22 +230,6 @@
 </section>
 
 
-<!-- Showroom / Teşhir Bölümü -->
-<section class="showroom-preview-section">
-  <div class="container">
-    <div class="section-header">
-      <h2>🏪 Showroom / Teşhir Alanımız</h2>
-      <p class="section-subtitle">Geniş ürün yelpazemizi showroom alanımızda keşfedin</p>
-    </div>
-    <div id="showroomPreview" class="showroom-preview-grid">
-      <div class="loading-state">Yükleniyor...</div>
-    </div>
-    <div class="section-footer" style="text-align: center; margin-top: 30px;">
-      <a href="/showroom.html" class="btn btn-primary">Tüm Showroom Fotoğraflarını Gör</a>
-    </div>
-  </div>
-</section>
-
 <!-- Popüler Ürünler Bölümü -->
 <section class="popular-products-section">
   <div class="container">
@@ -625,49 +609,6 @@ function initScrollAnimations() {
   }
 }
 
-</script>
-
-<script>
-// Showroom Preview
-function loadShowroomPreview() {
-  fetch('/api/public/showroom')
-    .then(r => r.json())
-    .then(data => {
-      const preview = document.getElementById('showroomPreview');
-      const images = (data.images || []).slice(0, 4); // İlk 4 fotoğraf
-      
-      if (images.length === 0) {
-        preview.innerHTML = '<div class="empty-state">Henüz showroom fotoğrafı eklenmemiş.</div>';
-        return;
-      }
-      
-      preview.innerHTML = images.map(img => `
-        <div class="showroom-preview-item" onclick="window.location.href='/showroom.html'">
-          <div class="showroom-preview-image-wrapper">
-            <img src="${img.url}" alt="${img.title || 'Showroom fotoğrafı'}" loading="lazy" class="lazy-image">
-            <div class="showroom-preview-overlay">
-              <span class="showroom-preview-view-btn">👁️ Görüntüle</span>
-            </div>
-          </div>
-          ${img.title ? `<h3>${img.title}</h3>` : ''}
-        </div>
-      `).join('');
-      
-      // Lazy loading için
-      if (typeof initLazyLoading === 'function') {
-        initLazyLoading();
-      }
-    })
-    .catch(err => {
-      console.error('Showroom preview yükleme hatası:', err);
-      document.getElementById('showroomPreview').innerHTML = '<div class="empty-state">Showroom fotoğrafları yüklenirken bir hata oluştu.</div>';
-    });
-}
-
-// Sayfa yüklendiğinde
-document.addEventListener('DOMContentLoaded', () => {
-  loadShowroomPreview();
-});
 </script>
 <script>
 // Service Worker Registration
