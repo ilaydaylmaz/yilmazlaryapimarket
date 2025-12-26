@@ -143,7 +143,7 @@
       <!-- Sağ Taraf: Görsel Alanı -->
       <div class="showcase-image-area">
         <a href="/boya-urunleri.html" id="showcaseLink" class="showcase-image-wrapper">
-          <img id="showcaseImage" src="/uploads/categories/boya.jpg" alt="Boya" class="showcase-image">
+          <img id="showcaseImage" src="/uploads/categories/boya.jpg" alt="Boya" class="showcase-image" style="opacity: 1; display: block;">
         </a>
         <div class="showcase-category-title">
           <h3 id="showcaseCategoryTitle">Boya</h3>
@@ -640,6 +640,8 @@ function initCategoryShowcase() {
       const categoryName = this.getAttribute('data-category');
       const categoryUrl = this.getAttribute('href');
       
+      console.log('Kategori hover:', categoryName, 'Görsel:', imageUrl);
+      
       if (imageUrl && categoryName && categoryUrl) {
         // Fade out
         showcaseImage.style.opacity = '0';
@@ -649,6 +651,7 @@ function initCategoryShowcase() {
           // Görseli yükle
           const newImage = new Image();
           newImage.onload = function() {
+            console.log('Görsel yüklendi:', imageUrl);
             showcaseImage.src = imageUrl;
             showcaseImage.alt = categoryName;
             showcaseCategoryTitle.textContent = categoryName;
@@ -666,6 +669,37 @@ function initCategoryShowcase() {
           };
           newImage.src = imageUrl;
         }, 150);
+      }
+    });
+    
+    // Click event de ekle (mobil için)
+    item.addEventListener('click', function(e) {
+      // Mobilde hover çalışmayabilir, click ile de değiştir
+      if (window.innerWidth <= 968) {
+        e.preventDefault();
+        const imageUrl = this.getAttribute('data-image');
+        const categoryName = this.getAttribute('data-category');
+        const categoryUrl = this.getAttribute('href');
+        
+        if (imageUrl && categoryName && categoryUrl) {
+          showcaseImage.style.opacity = '0';
+          showcaseImage.style.transition = 'opacity 0.3s ease';
+          
+          setTimeout(() => {
+            const newImage = new Image();
+            newImage.onload = function() {
+              showcaseImage.src = imageUrl;
+              showcaseImage.alt = categoryName;
+              showcaseCategoryTitle.textContent = categoryName;
+              showcaseLink.href = categoryUrl;
+              showcaseImage.style.opacity = '1';
+            };
+            newImage.onerror = function() {
+              console.error('Görsel yüklenemedi:', imageUrl);
+            };
+            newImage.src = imageUrl;
+          }, 150);
+        }
       }
     });
   });
