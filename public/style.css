@@ -583,6 +583,43 @@
   background: rgba(255, 255, 255, 0.6);
 }
 
+/* Carousel Responsive */
+@media (max-width: 768px) {
+  .carousel-product-title {
+    font-size: 1.8rem;
+  }
+  
+  .carousel-product-brand {
+    font-size: 1rem;
+  }
+  
+  .carousel-product-link {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+  
+  .carousel-slide-content {
+    padding: 30px 15px;
+  }
+  
+  .carousel-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .carousel-prev {
+    left: 10px;
+  }
+  
+  .carousel-next {
+    right: 10px;
+  }
+  
+  .carousel-indicators {
+    bottom: 20px;
+  }
+}
+
 .hero::before {
   content: "";
   position: absolute;
