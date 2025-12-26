@@ -386,10 +386,6 @@
 /* HERO SECTION */
 .hero {
   background: linear-gradient(135deg, #1a1a2e 0%, #2d3436 50%, #636e72 100%);
-  background-image: url('/uploads/showroom-banner.jpg');
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
   text-align: center;
   padding: 140px 20px 120px;
   color: var(--white);
