@@ -62,6 +62,27 @@
 </header>
 
 <section class="hero">
+  <!-- Ürün Carousel -->
+  <div class="hero-product-carousel" id="heroProductCarousel">
+    <div class="carousel-track" id="carouselTrack">
+      <!-- Ürünler JavaScript ile eklenecek -->
+    </div>
+    <div class="carousel-overlay"></div>
+    <div class="carousel-controls">
+      <button class="carousel-btn carousel-prev" id="carouselPrev" aria-label="Önceki">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+      <button class="carousel-btn carousel-next" id="carouselNext" aria-label="Sonraki">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </button>
+    </div>
+    <div class="carousel-indicators" id="carouselIndicators"></div>
+  </div>
+  
   <div class="hero-background-elements">
     <div class="hero-circle hero-circle-1"></div>
     <div class="hero-circle hero-circle-2"></div>
@@ -558,8 +579,189 @@ function loadInstagramPosts() {
   }
 }
 
+// Hero Carousel - Ürün odaklı banner
+let heroCarousel = {
+  currentIndex: 0,
+  products: [],
+  intervalId: null,
+  
+  init() {
+    this.loadProducts();
+    this.setupControls();
+  },
+  
+  loadProducts() {
+    fetch("/api/public/products?t=" + Date.now(), {
+      cache: 'no-cache'
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data || data.length === 0) {
+          // Fallback: Varsayılan görsel göster
+          this.showFallback();
+          return;
+        }
+        
+        // Resimli ürünleri filtrele ve ilk 6-8 ürünü al
+        this.products = data
+          .filter(p => p.resim || p.resimBase64)
+          .slice(0, 8);
+        
+        if (this.products.length === 0) {
+          this.showFallback();
+          return;
+        }
+        
+        this.renderCarousel();
+        this.startAutoPlay();
+      })
+      .catch(error => {
+        console.error("Carousel ürün yükleme hatası:", error);
+        this.showFallback();
+      });
+  },
+  
+  renderCarousel() {
+    const track = document.getElementById('carouselTrack');
+    const indicators = document.getElementById('carouselIndicators');
+    
+    if (!track || !indicators) return;
+    
+    track.innerHTML = '';
+    indicators.innerHTML = '';
+    
+    this.products.forEach((product, index) => {
+      let imageUrl = '';
+      if (product.resimBase64) {
+        imageUrl = product.resimBase64;
+      } else if (product.resim) {
+        imageUrl = product.resim.startsWith('/') || product.resim.startsWith('data:') 
+          ? product.resim 
+          : `/uploads/${product.resim}`;
+      }
+      
+      if (!imageUrl) return;
+      
+      // Carousel slide
+      const slide = document.createElement('div');
+      slide.className = `carousel-slide ${index === 0 ? 'active' : ''}`;
+      slide.style.backgroundImage = `url(${imageUrl})`;
+      slide.style.backgroundSize = 'cover';
+      slide.style.backgroundPosition = 'center';
+      slide.style.backgroundRepeat = 'no-repeat';
+      
+      // Slide overlay content
+      const overlayContent = document.createElement('div');
+      overlayContent.className = 'carousel-slide-content';
+      overlayContent.innerHTML = `
+        <div class="carousel-product-info">
+          <h3 class="carousel-product-title">${product.ad || 'Ürün'}</h3>
+          ${product.marka ? `<p class="carousel-product-brand">${product.marka}</p>` : ''}
+          ${product.kategori ? `<span class="carousel-product-category">${product.kategori}</span>` : ''}
+          <a href="/urun.html?id=${product.id}" class="carousel-product-link">
+            Detayları Gör
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+      `;
+      
+      slide.appendChild(overlayContent);
+      track.appendChild(slide);
+      
+      // Indicator
+      const indicator = document.createElement('button');
+      indicator.className = `carousel-indicator ${index === 0 ? 'active' : ''}`;
+      indicator.setAttribute('aria-label', `Slide ${index + 1}`);
+      indicator.addEventListener('click', () => this.goToSlide(index));
+      indicators.appendChild(indicator);
+    });
+  },
+  
+  showFallback() {
+    const track = document.getElementById('carouselTrack');
+    if (track) {
+      track.innerHTML = '<div class="carousel-slide active" style="background-image: url(\'/uploads/showroom-banner.jpg\'); background-size: cover; background-position: center;"></div>';
+    }
+  },
+  
+  setupControls() {
+    const prevBtn = document.getElementById('carouselPrev');
+    const nextBtn = document.getElementById('carouselNext');
+    
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => this.prevSlide());
+    }
+    
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => this.nextSlide());
+    }
+    
+    // Pause on hover
+    const carousel = document.getElementById('heroProductCarousel');
+    if (carousel) {
+      carousel.addEventListener('mouseenter', () => this.pauseAutoPlay());
+      carousel.addEventListener('mouseleave', () => this.startAutoPlay());
+    }
+  },
+  
+  goToSlide(index) {
+    if (index < 0 || index >= this.products.length) return;
+    
+    this.currentIndex = index;
+    this.updateCarousel();
+  },
+  
+  nextSlide() {
+    this.currentIndex = (this.currentIndex + 1) % this.products.length;
+    this.updateCarousel();
+  },
+  
+  prevSlide() {
+    this.currentIndex = (this.currentIndex - 1 + this.products.length) % this.products.length;
+    this.updateCarousel();
+  },
+  
+  updateCarousel() {
+    const slides = document.querySelectorAll('.carousel-slide');
+    const indicators = document.querySelectorAll('.carousel-indicator');
+    
+    slides.forEach((slide, index) => {
+      if (index === this.currentIndex) {
+        slide.classList.add('active');
+      } else {
+        slide.classList.remove('active');
+      }
+    });
+    
+    indicators.forEach((indicator, index) => {
+      if (index === this.currentIndex) {
+        indicator.classList.add('active');
+      } else {
+        indicator.classList.remove('active');
+      }
+    });
+  },
+  
+  startAutoPlay() {
+    this.pauseAutoPlay();
+    this.intervalId = setInterval(() => {
+      this.nextSlide();
+    }, 5000); // 5 saniyede bir değiş
+  },
+  
+  pauseAutoPlay() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+  }
+};
+
 // Sayfa yüklendiğinde popüler ürünleri ve Instagram postlarını yükle
 document.addEventListener('DOMContentLoaded', () => {
+  heroCarousel.init();
   loadPopularProducts();
   loadInstagramPosts();
   initScrollAnimations();
