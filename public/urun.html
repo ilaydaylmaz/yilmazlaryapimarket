@@ -436,8 +436,14 @@ fetch("/api/public/products?details=true")
       
       // Video URL'ini oluştur
       let videoUrl = null;
-      if (p.video) {
-        videoUrl = p.video.startsWith('/') ? p.video : `/uploads/${p.video}`;
+      if (p.video && p.video.trim() !== '') {
+        // API'den gelen video zaten /uploads/ ile başlıyorsa direkt kullan
+        if (p.video.startsWith('/')) {
+          videoUrl = p.video;
+        } else {
+          // Eğer videos/ ile başlıyorsa /uploads/ ekle
+          videoUrl = p.video.startsWith('videos/') ? `/uploads/${p.video}` : `/uploads/${p.video}`;
+        }
       }
       
       // Ana resim URL'i (ilk resim veya placeholder)
@@ -465,11 +471,10 @@ fetch("/api/public/products?details=true")
       
       // Resim galerisi HTML'i (video dahil)
       let resimGalerisiHTML = "";
-      const allMediaUrls = [...resimUrls];
-      const hasVideo = videoUrl !== null;
+      const hasVideo = videoUrl !== null && videoUrl.trim() !== '';
       
-      if (resimUrls.length > 1 || hasVideo) {
-        // Video varsa veya birden fazla resim varsa thumbnail göster
+      // Video varsa veya birden fazla resim varsa thumbnail göster
+      if (resimUrls.length > 1 || hasVideo || resimUrls.length === 0) {
         resimGalerisiHTML = `
           <div class="product-images-gallery">
             <div class="product-main-image" id="productMainMedia">
@@ -480,10 +485,15 @@ fetch("/api/public/products?details=true")
                   <source src="${videoUrl}" type="video/ogg">
                   Tarayıcınız video oynatmayı desteklemiyor.
                 </video>
-              ` : `
+              ` : resimUrls.length > 0 ? `
                 <img src="${resimUrl}" alt="${p.ad}" id="mainProductImage" loading="eager" onclick="openImageLightbox('${resimUrls[0]}', ${JSON.stringify(resimUrls)})" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'400\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'400\\' height=\\'400\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'18\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
+              ` : `
+                <div style="width: 100%; padding: 40px; text-align: center; background: var(--light-bg); border-radius: 8px;">
+                  <p style="color: var(--text-light);">Resim veya video bulunamadı.</p>
+                </div>
               `}
             </div>
+            ${(resimUrls.length > 0 || hasVideo) ? `
             <div class="product-thumbnails">
               ${resimUrls.map((url, index) => {
                 // URL'yi base64 encode et veya güvenli hale getir
@@ -505,6 +515,7 @@ fetch("/api/public/products?details=true")
                 </div>
               ` : ''}
             </div>
+            ` : ''}
           </div>
         `;
       } else {
