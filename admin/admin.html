@@ -114,7 +114,8 @@
           <label for="showroomImage">Showroom Fotoğrafı</label>
           <input type="file" id="showroomImage" accept="image/*" onchange="previewShowroomImage(this)">
           <div class="image-preview" id="showroomImagePreview" style="margin-top: 15px;">
-            <img id="showroomPreviewImg" src="/uploads/showroom-banner.jpg" alt="Mevcut Showroom" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <img id="showroomPreviewImg" src="/uploads/showroom-banner.jpg" alt="Mevcut Showroom" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <p style="display: none; padding: 40px; text-align: center; color: #999; background: #f8f9fa; border-radius: 8px;">Henüz showroom fotoğrafı yüklenmemiş</p>
           </div>
           <button type="button" class="btn btn-primary" onclick="uploadShowroomImage()" style="margin-top: 15px;">📤 Fotoğrafı Yükle</button>
         </div>
@@ -126,7 +127,11 @@
         
         <div class="showroom-editor-wrapper" style="position: relative; margin: 20px 0;">
           <div id="showroomEditor" style="position: relative; display: inline-block; max-width: 100%; border: 2px dashed #ddd; border-radius: 8px; padding: 10px; background: #f9f9f9;">
-            <img id="showroomEditorImage" src="/uploads/showroom-banner.jpg" alt="Showroom" style="max-width: 100%; height: auto; display: block; border-radius: 4px; cursor: crosshair;" onclick="addHotspot(event)">
+            <img id="showroomEditorImage" src="/uploads/showroom-banner.jpg" alt="Showroom" style="max-width: 100%; height: auto; display: block; border-radius: 4px; cursor: crosshair;" onclick="addHotspot(event)" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <div style="display: none; padding: 60px; text-align: center; background: #f8f9fa; border-radius: 4px; color: #999;">
+              <p style="font-size: 1.1rem; margin-bottom: 10px;">📸 Showroom Fotoğrafı Yok</p>
+              <p>Yukarıdaki formdan showroom fotoğrafı yükleyin</p>
+            </div>
             <div id="showroomEditorHotspots" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
           </div>
         </div>
@@ -1600,7 +1605,25 @@ function initShowroomEditor() {
       if (data.hotspots) {
         showroomHotspots = data.hotspots;
       }
-      renderShowroomEditor();
+      // Fotoğrafı yükle
+      const editorImg = document.getElementById('showroomEditorImage');
+      if (editorImg) {
+        editorImg.src = '/uploads/showroom-banner.jpg?t=' + Date.now();
+        editorImg.onload = () => {
+          editorImg.style.display = 'block';
+          const placeholder = editorImg.nextElementSibling;
+          if (placeholder) placeholder.style.display = 'none';
+          renderShowroomEditor();
+        };
+        editorImg.onerror = () => {
+          editorImg.style.display = 'none';
+          const placeholder = editorImg.nextElementSibling;
+          if (placeholder) placeholder.style.display = 'block';
+          renderShowroomEditor();
+        };
+      } else {
+        renderShowroomEditor();
+      }
     })
     .catch(err => {
       console.error('Showroom yükleme hatası:', err);
@@ -1614,6 +1637,12 @@ function renderShowroomEditor() {
   
   container.innerHTML = '';
   container.style.pointerEvents = 'none';
+  
+  // Fotoğraf yoksa hotpoint'leri gösterme
+  const editorImg = document.getElementById('showroomEditorImage');
+  if (!editorImg || editorImg.style.display === 'none' || !editorImg.src || editorImg.src === window.location.origin + '/') {
+    return;
+  }
   
   showroomHotspots.forEach((hotspot, index) => {
     const hotspotEl = document.createElement('div');
@@ -1645,6 +1674,11 @@ function renderShowroomEditor() {
 }
 
 function addHotspot(event) {
+  // Placeholder'a tıklandıysa işlem yapma
+  if (event.target.tagName !== 'IMG') {
+    return;
+  }
+  
   const img = event.target;
   const rect = img.getBoundingClientRect();
   const x = ((event.clientX - rect.left) / rect.width) * 100;
@@ -1731,9 +1765,26 @@ function uploadShowroomImage() {
   .then(data => {
     if (data.success) {
       showSuccess('✅ Showroom fotoğrafı başarıyla yüklendi!');
-      document.getElementById('showroomEditorImage').src = '/uploads/showroom-banner.jpg?t=' + Date.now();
-      document.getElementById('showroomPreviewImg').src = '/uploads/showroom-banner.jpg?t=' + Date.now();
+      const editorImg = document.getElementById('showroomEditorImage');
+      const previewImg = document.getElementById('showroomPreviewImg');
+      const timestamp = Date.now();
+      
+      if (editorImg) {
+        editorImg.src = '/uploads/showroom-banner.jpg?t=' + timestamp;
+        editorImg.style.display = 'block';
+        const placeholder = editorImg.nextElementSibling;
+        if (placeholder) placeholder.style.display = 'none';
+      }
+      
+      if (previewImg) {
+        previewImg.src = '/uploads/showroom-banner.jpg?t=' + timestamp;
+        previewImg.style.display = 'block';
+        const placeholder = previewImg.nextElementSibling;
+        if (placeholder) placeholder.style.display = 'none';
+      }
+      
       input.value = '';
+      renderShowroomEditor();
     } else {
       alert('❌ Hata: ' + (data.message || 'Fotoğraf yüklenemedi'));
     }

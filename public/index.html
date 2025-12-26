@@ -239,8 +239,12 @@
     </div>
     <div class="showroom-container">
       <div class="showroom-image-wrapper" id="showroomWrapper">
-        <img id="showroomImage" src="/uploads/showroom-banner.jpg" alt="Showroom" onerror="this.style.display='none';">
+        <img id="showroomImage" src="" alt="Showroom" style="display: none;">
         <div id="showroomHotspots" class="showroom-hotspots"></div>
+        <div class="showroom-placeholder" style="padding: 60px; text-align: center; background: #f8f9fa; border-radius: 8px; color: #999;">
+          <p style="font-size: 1.2rem; margin-bottom: 10px;">📸 Showroom Fotoğrafı</p>
+          <p>Admin panelinden showroom fotoğrafı ekleyebilirsiniz</p>
+        </div>
       </div>
       <div id="showroomProducts" class="showroom-products" style="display: none;">
         <div class="showroom-products-header">
@@ -674,17 +678,12 @@ function initShowroom() {
   .then(([showroomData, productsData]) => {
     showroomHotspots = showroomData.hotspots || [];
     allProducts = productsData;
-    renderShowroomHotspots();
+    loadShowroomImage();
   })
   .catch(err => {
     console.error('Showroom yükleme hatası:', err);
-    // Varsayılan hotpoint'ler
-    showroomHotspots = [
-      { x: 25, y: 40, category: 'Seramik Ürünleri', title: 'Seramik Ürünleri' },
-      { x: 60, y: 50, category: 'Boya Ürünleri', title: 'Boya Ürünleri' },
-      { x: 75, y: 35, category: 'Hırdavat Ürünleri', title: 'Hırdavat Ürünleri' }
-    ];
-    renderShowroomHotspots();
+    showroomHotspots = [];
+    loadShowroomImage();
   });
   
   function renderShowroomHotspots() {
