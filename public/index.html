@@ -686,6 +686,29 @@ function initShowroom() {
     loadShowroomImage();
   });
   
+  function loadShowroomImage() {
+    const image = document.getElementById('showroomImage');
+    const wrapper = document.getElementById('showroomWrapper');
+    const placeholder = wrapper ? wrapper.querySelector('.showroom-placeholder') : null;
+    
+    if (!image || !wrapper) return;
+    
+    // Banner'ı yükle
+    image.src = '/uploads/showroom-banner.jpg?t=' + Date.now();
+    
+    image.onload = () => {
+      image.style.display = 'block';
+      if (placeholder) placeholder.style.display = 'none';
+      renderShowroomHotspots();
+    };
+    
+    image.onerror = () => {
+      image.style.display = 'none';
+      if (placeholder) placeholder.style.display = 'block';
+      renderShowroomHotspots();
+    };
+  }
+  
   function renderShowroomHotspots() {
     hotspotsContainer.innerHTML = '';
     
