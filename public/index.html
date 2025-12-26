@@ -102,6 +102,63 @@
   </div>
 </section>
 
+<!-- Ürün Grupları Showcase -->
+<section class="product-groups-showcase">
+  <div class="container">
+    <h2 class="showcase-title">Ürün Grupları</h2>
+    <div class="showcase-wrapper">
+      <!-- Sol Taraf: Kategori Listesi -->
+      <div class="showcase-categories">
+        <div class="category-list" id="categoryList">
+          <a href="/boya-urunleri.html" class="category-item active" data-category="Boya Ürünleri" data-image="/uploads/categories/boya.jpg">
+            <span>Boya Ürünleri</span>
+          </a>
+          <a href="/hirdavat-urunleri.html" class="category-item" data-category="Hırdavat Ürünleri" data-image="/uploads/categories/hirdavat.jpg">
+            <span>Hırdavat Ürünleri</span>
+          </a>
+          <a href="/elektrik-urunleri.html" class="category-item" data-category="Elektrik Ürünleri" data-image="/uploads/categories/elektrik.jpg">
+            <span>Elektrik Ürünleri</span>
+          </a>
+          <a href="/tesisat-urunleri.html" class="category-item" data-category="Tesisat Ürünleri" data-image="/uploads/categories/tesisat.jpg">
+            <span>Tesisat Ürünleri</span>
+          </a>
+          <a href="/yapi-malzemeleri.html" class="category-item" data-category="Yapı Malzemeleri" data-image="/uploads/categories/yapi-malzemeleri.jpg">
+            <span>Yapı Malzemeleri</span>
+          </a>
+          <a href="/el-aletleri-urunleri.html" class="category-item" data-category="El Aletleri Ürünleri" data-image="/uploads/categories/el-aletleri.jpg">
+            <span>El Aletleri Ürünleri</span>
+          </a>
+          <a href="/elektrikli-el-aletleri-urunleri.html" class="category-item" data-category="Elektrikli El Aletleri" data-image="/uploads/categories/elektrikli-el-aletleri.jpg">
+            <span>Elektrikli El Aletleri</span>
+          </a>
+          <a href="/seramik-urunleri.html" class="category-item" data-category="Seramik Ürünleri" data-image="/uploads/categories/seramik.jpg">
+            <span>Seramik Ürünleri</span>
+          </a>
+          <a href="/banyo-urunleri.html" class="category-item" data-category="Banyo Dolapları" data-image="/uploads/categories/banyo.jpg">
+            <span>Banyo Dolapları</span>
+          </a>
+          <a href="/parke-urunleri.html" class="category-item" data-category="Parke Ürünleri" data-image="/uploads/categories/parke.jpg">
+            <span>Parke Ürünleri</span>
+          </a>
+          <a href="/kaba-grubu.html" class="category-item" data-category="Kaba Grubu" data-image="/uploads/categories/kaba.jpg">
+            <span>Kaba Grubu</span>
+          </a>
+        </div>
+      </div>
+      
+      <!-- Sağ Taraf: Görsel Alanı -->
+      <div class="showcase-image-area">
+        <a href="/boya-urunleri.html" id="showcaseLink" class="showcase-image-wrapper">
+          <img id="showcaseImage" src="/uploads/categories/boya.jpg" alt="Boya Ürünleri" class="showcase-image">
+        </a>
+        <div class="showcase-category-title">
+          <h3 id="showcaseCategoryTitle">Boya Ürünleri</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- Markalar Bölümü -->
 <section class="brands-section">
 <div class="container">
@@ -558,11 +615,53 @@ function loadInstagramPosts() {
   }
 }
 
+// Kategori Showcase
+function initCategoryShowcase() {
+  const categoryItems = document.querySelectorAll('.category-item');
+  const showcaseImage = document.getElementById('showcaseImage');
+  const showcaseCategoryTitle = document.getElementById('showcaseCategoryTitle');
+  const showcaseLink = document.getElementById('showcaseLink');
+  
+  if (!categoryItems.length || !showcaseImage || !showcaseCategoryTitle || !showcaseLink) return;
+  
+  categoryItems.forEach(item => {
+    item.addEventListener('mouseenter', function(e) {
+      // Tüm aktif sınıfları kaldır
+      categoryItems.forEach(cat => cat.classList.remove('active'));
+      
+      // Hover edilen kategoriyi aktif yap
+      this.classList.add('active');
+      
+      // Görseli, başlığı ve linki güncelle
+      const imageUrl = this.getAttribute('data-image');
+      const categoryName = this.getAttribute('data-category');
+      const categoryUrl = this.getAttribute('href');
+      
+      if (imageUrl && categoryName && categoryUrl) {
+        // Fade out
+        showcaseImage.style.opacity = '0';
+        showcaseImage.style.transition = 'opacity 0.3s ease';
+        
+        setTimeout(() => {
+          showcaseImage.src = imageUrl;
+          showcaseImage.alt = categoryName;
+          showcaseCategoryTitle.textContent = categoryName;
+          showcaseLink.href = categoryUrl;
+          
+          // Fade in
+          showcaseImage.style.opacity = '1';
+        }, 150);
+      }
+    });
+  });
+}
+
 // Sayfa yüklendiğinde popüler ürünleri ve Instagram postlarını yükle
 document.addEventListener('DOMContentLoaded', () => {
   loadPopularProducts();
   loadInstagramPosts();
   initScrollAnimations();
+  initCategoryShowcase();
 });
 
 // Scroll Animations
