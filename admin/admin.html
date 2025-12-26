@@ -14,6 +14,7 @@
     <div class="header-actions">
       <button class="btn-tab" id="productsTab" onclick="showTab('products')">📦 Ürünler</button>
       <button class="btn-tab" id="ceramicTab" onclick="showTab('ceramic')">🏺 Seramik Koleksiyonları</button>
+      <button class="btn-tab" id="showroomTab" onclick="showTab('showroom')">🖼️ Showroom</button>
       <button class="btn-tab active" id="messagesTab" onclick="showTab('messages')">💬 Mesajlar</button>
       <a href="/logout" class="btn-logout" onclick="localStorage.removeItem('adminSession');">🚪 Çıkış Yap</a>
     </div>
@@ -99,6 +100,72 @@
         <h3>📋 Mevcut Seramik Koleksiyonları</h3>
         <div id="ceramicCollectionsList" class="collections-list">
           <div class="empty-state">Yükleniyor...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Showroom Bölümü -->
+    <div id="showroomSection" class="showroom-section" style="display: none;">
+      <h2>🖼️ Showroom Yönetimi</h2>
+      
+      <div class="showroom-form-card">
+        <h3>📸 Showroom Fotoğrafı</h3>
+        <div class="form-group">
+          <label for="showroomImage">Showroom Fotoğrafı</label>
+          <input type="file" id="showroomImage" accept="image/*" onchange="previewShowroomImage(this)">
+          <div class="image-preview" id="showroomImagePreview" style="margin-top: 15px;">
+            <img id="showroomPreviewImg" src="/uploads/showroom-banner.jpg" alt="Mevcut Showroom" style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          </div>
+          <button type="button" class="btn btn-primary" onclick="uploadShowroomImage()" style="margin-top: 15px;">📤 Fotoğrafı Yükle</button>
+        </div>
+      </div>
+      
+      <div class="showroom-hotspots-card" style="margin-top: 30px;">
+        <h3>📍 Hotpoint Yönetimi</h3>
+        <p style="color: #666; margin-bottom: 20px;">Hotpoint'leri eklemek için fotoğrafa tıklayın. Mevcut hotpoint'leri düzenlemek için üzerlerine tıklayın.</p>
+        
+        <div class="showroom-editor-wrapper" style="position: relative; margin: 20px 0;">
+          <div id="showroomEditor" style="position: relative; display: inline-block; max-width: 100%; border: 2px dashed #ddd; border-radius: 8px; padding: 10px; background: #f9f9f9;">
+            <img id="showroomEditorImage" src="/uploads/showroom-banner.jpg" alt="Showroom" style="max-width: 100%; height: auto; display: block; border-radius: 4px; cursor: crosshair;" onclick="addHotspot(event)">
+            <div id="showroomEditorHotspots" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
+          </div>
+        </div>
+        
+        <div class="form-group" style="margin-top: 20px;">
+          <label for="hotspotCategory">Kategori Seçin</label>
+          <select id="hotspotCategory" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
+            <option value="">Kategori Seçin</option>
+            <option value="Boya Ürünleri">Boya Ürünleri</option>
+            <option value="Hırdavat Ürünleri">Hırdavat Ürünleri</option>
+            <option value="Elektrik Ürünleri">Elektrik Ürünleri</option>
+            <option value="Tesisat Ürünleri">Tesisat Ürünleri</option>
+            <option value="Yapı Malzemeleri">Yapı Malzemeleri</option>
+            <option value="El Aletleri Ürünleri">El Aletleri Ürünleri</option>
+            <option value="Elektrikli El Aletleri">Elektrikli El Aletleri</option>
+            <option value="Seramik Ürünleri">Seramik Ürünleri</option>
+            <option value="Banyo Dolapları">Banyo Dolapları</option>
+            <option value="Parke Ürünleri">Parke Ürünleri</option>
+            <option value="Mutfak Ürünleri">Mutfak Ürünleri</option>
+            <option value="Kaba Grubu">Kaba Grubu</option>
+            <option value="Diğer">Diğer</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="hotspotTitle">Başlık (Opsiyonel)</label>
+          <input type="text" id="hotspotTitle" placeholder="Boş bırakılırsa kategori adı kullanılır" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
+        </div>
+        
+        <div id="showroomHotspotsList" style="margin-top: 30px;">
+          <h4>Mevcut Hotpoint'ler</h4>
+          <div id="hotspotsListContainer" style="margin-top: 15px;">
+            <div class="empty-state">Henüz hotpoint eklenmemiş</div>
+          </div>
+        </div>
+        
+        <div class="button-group" style="margin-top: 30px;">
+          <button type="button" class="btn btn-primary" onclick="saveShowroomSettings()">💾 Ayarları Kaydet</button>
+          <button type="button" class="btn btn-secondary" onclick="resetShowroomEditor()">🔄 Sıfırla</button>
         </div>
       </div>
     </div>
@@ -1057,25 +1124,41 @@ function showTab(tab) {
   if (tab === 'products') {
     document.getElementById('productsSection').style.display = 'block';
     document.getElementById('ceramicSection').style.display = 'none';
+    document.getElementById('showroomSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'none';
     document.getElementById('productsTab').classList.add('active');
     document.getElementById('ceramicTab').classList.remove('active');
+    document.getElementById('showroomTab').classList.remove('active');
     document.getElementById('messagesTab').classList.remove('active');
     yukle();
   } else if (tab === 'ceramic') {
     document.getElementById('productsSection').style.display = 'none';
     document.getElementById('ceramicSection').style.display = 'block';
+    document.getElementById('showroomSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'none';
     document.getElementById('productsTab').classList.remove('active');
     document.getElementById('ceramicTab').classList.add('active');
+    document.getElementById('showroomTab').classList.remove('active');
     document.getElementById('messagesTab').classList.remove('active');
     yukleCeramicCollections();
+  } else if (tab === 'showroom') {
+    document.getElementById('productsSection').style.display = 'none';
+    document.getElementById('ceramicSection').style.display = 'none';
+    document.getElementById('showroomSection').style.display = 'block';
+    document.getElementById('messagesSection').style.display = 'none';
+    document.getElementById('productsTab').classList.remove('active');
+    document.getElementById('ceramicTab').classList.remove('active');
+    document.getElementById('showroomTab').classList.add('active');
+    document.getElementById('messagesTab').classList.remove('active');
+    initShowroomEditor();
   } else {
     document.getElementById('productsSection').style.display = 'none';
     document.getElementById('ceramicSection').style.display = 'none';
+    document.getElementById('showroomSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'block';
     document.getElementById('productsTab').classList.remove('active');
     document.getElementById('ceramicTab').classList.remove('active');
+    document.getElementById('showroomTab').classList.remove('active');
     document.getElementById('messagesTab').classList.add('active');
     yukleMesajlar();
   }
@@ -1504,6 +1587,199 @@ function silCeramicUrun(id) {
     });
 }
 
+
+// Showroom Editor
+let showroomHotspots = [];
+let editingHotspotIndex = null;
+
+function initShowroomEditor() {
+  // Mevcut hotpoint'leri yükle
+  fetch('/api/showroom')
+    .then(r => r.json())
+    .then(data => {
+      if (data.hotspots) {
+        showroomHotspots = data.hotspots;
+      }
+      renderShowroomEditor();
+    })
+    .catch(err => {
+      console.error('Showroom yükleme hatası:', err);
+      renderShowroomEditor();
+    });
+}
+
+function renderShowroomEditor() {
+  const container = document.getElementById('showroomEditorHotspots');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  container.style.pointerEvents = 'none';
+  
+  showroomHotspots.forEach((hotspot, index) => {
+    const hotspotEl = document.createElement('div');
+    hotspotEl.className = 'admin-hotspot';
+    hotspotEl.style.position = 'absolute';
+    hotspotEl.style.left = `${hotspot.x}%`;
+    hotspotEl.style.top = `${hotspot.y}%`;
+    hotspotEl.style.transform = 'translate(-50%, -50%)';
+    hotspotEl.style.width = '20px';
+    hotspotEl.style.height = '20px';
+    hotspotEl.style.background = '#c40000';
+    hotspotEl.style.border = '3px solid white';
+    hotspotEl.style.borderRadius = '50%';
+    hotspotEl.style.cursor = 'pointer';
+    hotspotEl.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+    hotspotEl.style.zIndex = '10';
+    hotspotEl.style.pointerEvents = 'all';
+    hotspotEl.title = hotspot.title || hotspot.category;
+    
+    hotspotEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      editHotspot(index);
+    });
+    
+    container.appendChild(hotspotEl);
+  });
+  
+  updateHotspotsList();
+}
+
+function addHotspot(event) {
+  const img = event.target;
+  const rect = img.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width) * 100;
+  const y = ((event.clientY - rect.top) / rect.height) * 100;
+  
+  const category = document.getElementById('hotspotCategory').value;
+  if (!category) {
+    alert('⚠️ Lütfen önce bir kategori seçin!');
+    return;
+  }
+  
+  const title = document.getElementById('hotspotTitle').value.trim() || category;
+  
+  showroomHotspots.push({
+    x: Math.round(x * 100) / 100,
+    y: Math.round(y * 100) / 100,
+    category: category,
+    title: title
+  });
+  
+  document.getElementById('hotspotCategory').value = '';
+  document.getElementById('hotspotTitle').value = '';
+  
+  renderShowroomEditor();
+}
+
+function editHotspot(index) {
+  const hotspot = showroomHotspots[index];
+  if (!hotspot) return;
+  
+  if (confirm(`Bu hotpoint'i silmek istediğinize emin misiniz?\n\nKategori: ${hotspot.category}\nBaşlık: ${hotspot.title}`)) {
+    showroomHotspots.splice(index, 1);
+    renderShowroomEditor();
+  }
+}
+
+function updateHotspotsList() {
+  const container = document.getElementById('hotspotsListContainer');
+  if (!container) return;
+  
+  if (showroomHotspots.length === 0) {
+    container.innerHTML = '<div class="empty-state">Henüz hotpoint eklenmemiş</div>';
+    return;
+  }
+  
+  container.innerHTML = showroomHotspots.map((hotspot, index) => `
+    <div style="background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #c40000; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <strong>${hotspot.title || hotspot.category}</strong>
+        <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">Kategori: ${hotspot.category}</p>
+        <p style="margin: 5px 0 0 0; color: #999; font-size: 0.85rem;">Pozisyon: X: ${hotspot.x}%, Y: ${hotspot.y}%</p>
+      </div>
+      <button type="button" class="btn btn-danger btn-small" onclick="editHotspot(${index})" style="margin-left: 15px;">🗑️ Sil</button>
+    </div>
+  `).join('');
+}
+
+function previewShowroomImage(input) {
+  const preview = document.getElementById('showroomPreviewImg');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      preview.src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function uploadShowroomImage() {
+  const input = document.getElementById('showroomImage');
+  if (!input.files || !input.files[0]) {
+    alert('⚠️ Lütfen bir fotoğraf seçin!');
+    return;
+  }
+  
+  const formData = new FormData();
+  formData.append('image', input.files[0]);
+  
+  fetch('/api/showroom/image', {
+    method: 'POST',
+    body: formData
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showSuccess('✅ Showroom fotoğrafı başarıyla yüklendi!');
+      document.getElementById('showroomEditorImage').src = '/uploads/showroom-banner.jpg?t=' + Date.now();
+      document.getElementById('showroomPreviewImg').src = '/uploads/showroom-banner.jpg?t=' + Date.now();
+      input.value = '';
+    } else {
+      alert('❌ Hata: ' + (data.message || 'Fotoğraf yüklenemedi'));
+    }
+  })
+  .catch(err => {
+    console.error('Fotoğraf yükleme hatası:', err);
+    alert('❌ Fotoğraf yüklenirken bir hata oluştu!');
+  });
+}
+
+function saveShowroomSettings() {
+  if (showroomHotspots.length === 0) {
+    if (!confirm('⚠️ Henüz hotpoint eklenmemiş. Yine de kaydetmek istiyor musunuz?')) {
+      return;
+    }
+  }
+  
+  fetch('/api/showroom', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      hotspots: showroomHotspots
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showSuccess('✅ Showroom ayarları başarıyla kaydedildi!');
+    } else {
+      alert('❌ Hata: ' + (data.message || 'Ayarlar kaydedilemedi'));
+    }
+  })
+  .catch(err => {
+    console.error('Ayarlar kaydetme hatası:', err);
+    alert('❌ Ayarlar kaydedilirken bir hata oluştu!');
+  });
+}
+
+function resetShowroomEditor() {
+  if (confirm('⚠️ Tüm hotpoint\'leri silmek istediğinize emin misiniz?')) {
+    showroomHotspots = [];
+    renderShowroomEditor();
+  }
+}
 
 // Sayfa yüklendiğinde
 yukle();

@@ -642,6 +642,96 @@ app.delete("/api/products/:id", auth, async (req, res) => {
 });
 
 /* =======================
+   SHOWROOM API
+======================= */
+const SHOWROOM_FILE = path.join(__dirname, "data", "showroom.json");
+
+// Showroom klasörünü oluştur
+if (!fs.existsSync(path.join(__dirname, "data"))) {
+  fs.mkdirSync(path.join(__dirname, "data"), { recursive: true });
+}
+
+// Showroom ayarlarını getir
+app.get("/api/showroom", auth, (req, res) => {
+  try {
+    if (fs.existsSync(SHOWROOM_FILE)) {
+      const data = JSON.parse(fs.readFileSync(SHOWROOM_FILE, 'utf8'));
+      res.json(data);
+    } else {
+      res.json({ hotspots: [] });
+    }
+  } catch (error) {
+    console.error("Showroom okuma hatası:", error);
+    res.json({ hotspots: [] });
+  }
+});
+
+// Showroom ayarlarını kaydet
+app.post("/api/showroom", auth, (req, res) => {
+  try {
+    const { hotspots } = req.body;
+    
+    if (!Array.isArray(hotspots)) {
+      return res.status(400).json({ success: false, message: "Hotspots bir array olmalı" });
+    }
+    
+    const data = {
+      hotspots: hotspots,
+      updatedAt: new Date().toISOString()
+    };
+    
+    fs.writeFileSync(SHOWROOM_FILE, JSON.stringify(data, null, 2), 'utf8');
+    res.json({ success: true, message: "Showroom ayarları kaydedildi" });
+  } catch (error) {
+    console.error("Showroom kaydetme hatası:", error);
+    res.status(500).json({ success: false, message: "Sunucu hatası" });
+  }
+});
+
+// Showroom fotoğrafı yükle
+app.post("/api/showroom/image", auth, upload.single("image"), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Fotoğraf yüklenmedi" });
+    }
+    
+    // Eski showroom-banner.jpg dosyasını sil
+    const oldBannerPath = path.join("public/uploads", "showroom-banner.jpg");
+    if (fs.existsSync(oldBannerPath)) {
+      try {
+        fs.unlinkSync(oldBannerPath);
+      } catch (e) {
+        console.error("Eski banner silme hatası:", e);
+      }
+    }
+    
+    // Yeni dosyayı showroom-banner.jpg olarak kaydet
+    const newBannerPath = path.join("public/uploads", "showroom-banner.jpg");
+    fs.renameSync(path.join("public/uploads", req.file.filename), newBannerPath);
+    
+    res.json({ success: true, message: "Showroom fotoğrafı yüklendi" });
+  } catch (error) {
+    console.error("Showroom fotoğraf yükleme hatası:", error);
+    res.status(500).json({ success: false, message: "Sunucu hatası" });
+  }
+});
+
+// Public showroom ayarları (hotpoint'ler için)
+app.get("/api/public/showroom", async (req, res) => {
+  try {
+    if (fs.existsSync(SHOWROOM_FILE)) {
+      const data = JSON.parse(fs.readFileSync(SHOWROOM_FILE, 'utf8'));
+      res.json(data);
+    } else {
+      res.json({ hotspots: [] });
+    }
+  } catch (error) {
+    console.error("Showroom okuma hatası:", error);
+    res.json({ hotspots: [] });
+  }
+});
+
+/* =======================
    SERVER
 ======================= */
 const PORT = process.env.PORT || 3000;

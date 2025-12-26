@@ -247,7 +247,9 @@
           <h3 id="showroomCategoryTitle"></h3>
           <button class="showroom-close-btn" onclick="closeShowroomProducts()">×</button>
         </div>
-        <div class="showroom-products-grid" id="showroomProductsGrid"></div>
+        <div class="showroom-products-scroll-wrapper">
+          <div class="showroom-products-grid" id="showroomProductsGrid"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -653,12 +655,7 @@ if ('serviceWorker' in navigator) {
 
 <script>
 // Showroom Hotpoint Sistemi
-const showroomHotspots = [
-  { x: 25, y: 40, category: 'Seramik Ürünleri', title: 'Seramik Ürünleri' },
-  { x: 60, y: 50, category: 'Boya Ürünleri', title: 'Boya Ürünleri' },
-  { x: 75, y: 35, category: 'Hırdavat Ürünleri', title: 'Hırdavat Ürünleri' }
-];
-
+let showroomHotspots = [];
 let allProducts = [];
 
 // Showroom hotpoint'lerini oluştur
@@ -669,16 +666,26 @@ function initShowroom() {
   
   if (!wrapper || !hotspotsContainer || !image) return;
   
-  // Ürünleri yükle
-  fetch('/api/public/products')
-    .then(r => r.json())
-    .then(data => {
-      allProducts = data;
-      renderShowroomHotspots();
-    })
-    .catch(err => {
-      console.error('Ürünler yüklenemedi:', err);
-    });
+  // Önce hotpoint'leri yükle, sonra ürünleri
+  Promise.all([
+    fetch('/api/public/showroom').then(r => r.json()),
+    fetch('/api/public/products').then(r => r.json())
+  ])
+  .then(([showroomData, productsData]) => {
+    showroomHotspots = showroomData.hotspots || [];
+    allProducts = productsData;
+    renderShowroomHotspots();
+  })
+  .catch(err => {
+    console.error('Showroom yükleme hatası:', err);
+    // Varsayılan hotpoint'ler
+    showroomHotspots = [
+      { x: 25, y: 40, category: 'Seramik Ürünleri', title: 'Seramik Ürünleri' },
+      { x: 60, y: 50, category: 'Boya Ürünleri', title: 'Boya Ürünleri' },
+      { x: 75, y: 35, category: 'Hırdavat Ürünleri', title: 'Hırdavat Ürünleri' }
+    ];
+    renderShowroomHotspots();
+  });
   
   function renderShowroomHotspots() {
     hotspotsContainer.innerHTML = '';
