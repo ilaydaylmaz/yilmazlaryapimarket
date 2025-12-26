@@ -299,64 +299,93 @@ function changeMainImage(url, allUrls, index) {
 
 function changeMainVideo(videoUrl) {
   const mainMedia = document.getElementById("productMainMedia");
-  const mainImg = document.getElementById("mainProductImage");
   
-  if (mainMedia) {
-    // Mevcut içeriği temizle
-    mainMedia.innerHTML = '';
-    
-    // Yeni videoyu ekle
-    const newVideo = document.createElement('video');
-    newVideo.id = 'mainProductVideo';
-    newVideo.controls = true;
-    newVideo.style.width = '100%';
-    newVideo.style.maxWidth = '100%';
-    newVideo.style.borderRadius = '8px';
-    newVideo.style.display = 'block';
-    
-    const source1 = document.createElement('source');
-    source1.src = videoUrl;
-    source1.type = 'video/mp4';
-    const source2 = document.createElement('source');
-    source2.src = videoUrl;
-    source2.type = 'video/webm';
-    const source3 = document.createElement('source');
-    source3.src = videoUrl;
-    source3.type = 'video/ogg';
-    
-    newVideo.appendChild(source1);
-    newVideo.appendChild(source2);
-    newVideo.appendChild(source3);
-    newVideo.appendChild(document.createTextNode('Tarayıcınız video oynatmayı desteklemiyor.'));
-    
-    mainMedia.appendChild(newVideo);
+  if (!mainMedia) {
+    console.error('productMainMedia element bulunamadı');
+    return;
   }
+  
+  // Mevcut içeriği temizle
+  mainMedia.innerHTML = '';
+  
+  // Yeni videoyu ekle
+  const newVideo = document.createElement('video');
+  newVideo.id = 'mainProductVideo';
+  newVideo.controls = true;
+  newVideo.style.width = '100%';
+  newVideo.style.maxWidth = '100%';
+  newVideo.style.borderRadius = '8px';
+  newVideo.style.display = 'block';
+  newVideo.preload = 'metadata';
+  
+  const source1 = document.createElement('source');
+  source1.src = videoUrl;
+  source1.type = 'video/mp4';
+  const source2 = document.createElement('source');
+  source2.src = videoUrl;
+  source2.type = 'video/webm';
+  const source3 = document.createElement('source');
+  source3.src = videoUrl;
+  source3.type = 'video/ogg';
+  
+  newVideo.appendChild(source1);
+  newVideo.appendChild(source2);
+  newVideo.appendChild(source3);
+  newVideo.appendChild(document.createTextNode('Tarayıcınız video oynatmayı desteklemiyor.'));
+  
+  mainMedia.appendChild(newVideo);
   
   // Thumbnail'ları güncelle
   document.querySelectorAll(".product-thumbnail").forEach((thumb) => {
     const mediaType = thumb.getAttribute('data-media-type');
-    const thumbVideoUrl = thumb.getAttribute('data-video-url');
-    if (mediaType === 'video' && thumbVideoUrl === videoUrl) {
-      thumb.classList.add("active");
+    if (mediaType === 'video') {
+      let thumbVideoUrl = thumb.getAttribute('data-video-url');
+      // HTML entity'leri decode et
+      thumbVideoUrl = decodeHtmlEntities(thumbVideoUrl);
+      // URL'leri normalize et (trailing slash, encoding vb.)
+      const normalizedVideoUrl = videoUrl.replace(/\/$/, '');
+      const normalizedThumbUrl = thumbVideoUrl.replace(/\/$/, '');
+      if (normalizedThumbUrl === normalizedVideoUrl || thumbVideoUrl === videoUrl) {
+        thumb.classList.add("active");
+      } else {
+        thumb.classList.remove("active");
+      }
     } else {
       thumb.classList.remove("active");
     }
   });
 }
 
+// HTML entity decode fonksiyonu
+function decodeHtmlEntities(str) {
+  if (!str) return str;
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = str;
+  return textarea.value;
+}
+
 // Thumbnail click event listener'ı ekle
 function initProductGallery() {
   document.querySelectorAll(".product-thumbnail").forEach((thumb) => {
-    thumb.addEventListener('click', function() {
+    // Eğer zaten event listener eklenmişse, önceki listener'ı kaldır
+    const newThumb = thumb.cloneNode(true);
+    thumb.parentNode.replaceChild(newThumb, thumb);
+    
+    newThumb.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
       const mediaType = this.getAttribute('data-media-type');
       
       if (mediaType === 'video') {
         // Video thumbnail'a tıklandı
-        const videoUrl = this.getAttribute('data-video-url');
+        let videoUrl = this.getAttribute('data-video-url');
         if (videoUrl) {
+          // HTML entity'leri decode et
+          videoUrl = decodeHtmlEntities(videoUrl);
           changeMainVideo(videoUrl);
         }
-      } else {
+      } else if (mediaType === 'image') {
         // Resim thumbnail'a tıklandı
         const index = parseInt(this.getAttribute('data-image-index'));
         // URL'yi direkt img src'den al (daha güvenli)
