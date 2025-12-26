@@ -68,21 +68,77 @@ function initSearchAutocomplete() {
   });
 }
 
+// Metni vurgula (highlight)
+function highlightText(text, query) {
+  if (!query || !text) return text;
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return text.replace(regex, '<mark>$1</mark>');
+}
+
+// Akıllı eşleştirme skoru hesapla
+function calculateMatchScore(product, query) {
+  const lowerQuery = query.toLowerCase();
+  const name = (product.ad || '').toLowerCase();
+  const brand = (product.marka || '').toLowerCase();
+  const category = (product.kategori || '').toLowerCase();
+  
+  let score = 0;
+  
+  // 1. Ürün adı başlangıçta eşleşiyor (en yüksek öncelik)
+  if (name.startsWith(lowerQuery)) {
+    score += 100;
+  }
+  
+  // 2. Ürün adında kelime başlangıcında eşleşiyor
+  const nameWords = name.split(/\s+/);
+  if (nameWords.some(word => word.startsWith(lowerQuery))) {
+    score += 50;
+  }
+  
+  // 3. Marka başlangıçta eşleşiyor
+  if (brand.startsWith(lowerQuery)) {
+    score += 40;
+  }
+  
+  // 4. Kategori başlangıçta eşleşiyor
+  if (category.startsWith(lowerQuery)) {
+    score += 30;
+  }
+  
+  // 5. Ürün adında içinde geçiyor
+  if (name.includes(lowerQuery)) {
+    score += 20;
+  }
+  
+  // 6. Marka içinde geçiyor
+  if (brand.includes(lowerQuery)) {
+    score += 10;
+  }
+  
+  // 7. Kategori içinde geçiyor
+  if (category.includes(lowerQuery)) {
+    score += 5;
+  }
+  
+  return score;
+}
+
 function showSuggestions(query) {
   const suggestionsContainer = document.getElementById('searchSuggestions');
   if (!suggestionsContainer) return;
   
   const lowerQuery = query.toLowerCase();
   
-  // Ürün araması
+  // Akıllı ürün araması - skorlama ile
   const productMatches = allProductsForSearch
-    .filter(p => {
-      const name = (p.ad || '').toLowerCase();
-      const brand = (p.marka || '').toLowerCase();
-      const category = (p.kategori || '').toLowerCase();
-      return name.includes(lowerQuery) || brand.includes(lowerQuery) || category.includes(lowerQuery);
-    })
-    .slice(0, 5);
+    .map(p => ({
+      product: p,
+      score: calculateMatchScore(p, query)
+    }))
+    .filter(item => item.score > 0) // Sadece eşleşenleri al
+    .sort((a, b) => b.score - a.score) // Yüksek skorlu önce
+    .slice(0, 8) // En fazla 8 öneri
+    .map(item => item.product);
   
   // Son arananlar
   const recentMatches = recentSearches
@@ -93,15 +149,16 @@ function showSuggestions(query) {
   
   // Son arananlar
   if (recentMatches.length > 0 && query.length >= 2) {
-    html += '<div class="search-recent-searches">Son Arananlar</div>';
+    html += '<div class="search-recent-searches">🕒 Son Arananlar</div>';
     recentMatches.forEach(term => {
+      const highlightedTerm = highlightText(term, query);
       html += `
         <div class="search-recent-item" onclick="selectSearchTerm('${term.replace(/'/g, "\\'")}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 8v4l3 3"/>
             <circle cx="12" cy="12" r="10"/>
           </svg>
-          <span>${term}</span>
+          <span>${highlightedTerm}</span>
         </div>
       `;
     });
@@ -109,18 +166,29 @@ function showSuggestions(query) {
   
   // Ürün önerileri
   if (productMatches.length > 0) {
+    if (recentMatches.length > 0) {
+      html += '<div class="search-suggestions-divider"></div>';
+    }
+    html += '<div class="search-recent-searches">🔍 Ürün Önerileri</div>';
+    
     productMatches.forEach(product => {
       const productUrl = `/urun.html?id=${product.id}`;
+      const highlightedName = highlightText(product.ad || 'İsimsiz Ürün', query);
+      const highlightedBrand = product.marka ? highlightText(product.marka, query) : '';
+      const highlightedCategory = product.kategori ? highlightText(product.kategori, query) : '';
+      
       html += `
         <div class="search-suggestion-item">
-          <a href="${productUrl}" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; width: 100%;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-            <div class="search-suggestion-text">
-              <div class="search-suggestion-title">${product.ad || 'İsimsiz Ürün'}</div>
-              <div class="search-suggestion-meta">
-                ${product.marka ? product.marka : ''} ${product.kategori ? '• ' + product.kategori : ''}
+          <a href="${productUrl}" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; width: 100%; padding: 12px; border-radius: 8px; transition: background 0.2s;">
+            <div class="search-suggestion-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+            <div class="search-suggestion-text" style="flex: 1; min-width: 0;">
+              <div class="search-suggestion-title" style="font-weight: 600; margin-bottom: 4px; color: var(--text-dark);">${highlightedName}</div>
+              <div class="search-suggestion-meta" style="font-size: 0.85rem; color: var(--text-light);">
+                ${highlightedBrand} ${highlightedCategory ? '• ' + highlightedCategory : ''}
               </div>
             </div>
           </a>

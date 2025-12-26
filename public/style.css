@@ -4906,6 +4906,45 @@ a, button, .btn {
   color: var(--text-light);
 }
 
+/* Search highlight */
+.search-suggestions mark {
+  background: var(--primary-color);
+  color: white;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.search-recent-item mark {
+  background: var(--primary-color);
+  color: white;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.search-suggestions-divider {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 8px 0;
+}
+
+.search-suggestion-item a:hover {
+  background: #f8f9fa !important;
+}
+
+.search-suggestion-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--light-bg);
+  border-radius: 8px;
+  color: var(--primary-color);
+}
+
 /* LAZY LOADING */
 .lazy-image {
   opacity: 0;
