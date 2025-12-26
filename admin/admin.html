@@ -1614,8 +1614,61 @@ function silCeramicUrun(id) {
 // Showroom Editor
 let showroomHotspots = [];
 let editingHotspotIndex = null;
+let allProductsForShowroom = [];
+
+function toggleHotspotType() {
+  const type = document.querySelector('input[name="hotspotType"]:checked').value;
+  const categoryGroup = document.getElementById('hotspotCategoryGroup');
+  const productGroup = document.getElementById('hotspotProductGroup');
+  
+  if (type === 'product') {
+    categoryGroup.style.display = 'none';
+    productGroup.style.display = 'block';
+    loadProductsForHotspot();
+  } else {
+    categoryGroup.style.display = 'block';
+    productGroup.style.display = 'none';
+  }
+}
+
+function loadProductsForHotspot() {
+  const productSelect = document.getElementById('hotspotProduct');
+  if (!productSelect) return Promise.resolve();
+  
+  // Ürünler zaten yüklüyse kullan
+  if (allProductsForShowroom.length > 0) {
+    populateProductSelect();
+    return Promise.resolve();
+  }
+  
+  return fetch('/api/products?t=' + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      allProductsForShowroom = data;
+      populateProductSelect();
+    })
+    .catch(err => {
+      console.error('Ürünler yüklenemedi:', err);
+    });
+}
+
+function populateProductSelect() {
+  const productSelect = document.getElementById('hotspotProduct');
+  if (!productSelect) return;
+  
+  productSelect.innerHTML = '<option value="">Ürün Seçin</option>';
+  
+  allProductsForShowroom.forEach(product => {
+    const option = document.createElement('option');
+    option.value = product.id;
+    option.textContent = `${product.ad || 'İsimsiz'} ${product.marka ? `(${product.marka})` : ''}`;
+    productSelect.appendChild(option);
+  });
+}
 
 function initShowroomEditor() {
+  // Ürünleri yükle
+  loadProductsForHotspot();
   // Mevcut hotpoint'leri yükle
   fetch('/api/showroom')
     .then(r => r.json())
@@ -1765,6 +1818,14 @@ function updateHotspotsList() {
   
   if (showroomHotspots.length === 0) {
     container.innerHTML = '<div class="empty-state">Henüz hotpoint eklenmemiş</div>';
+    return;
+  }
+  
+  // Ürünler yüklenmemişse yükle
+  if (allProductsForShowroom.length === 0) {
+    loadProductsForHotspot().then(() => {
+      updateHotspotsList();
+    });
     return;
   }
   
