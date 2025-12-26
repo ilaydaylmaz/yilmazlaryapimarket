@@ -264,17 +264,79 @@ function prevImageLightbox() {
 }
 
 function changeMainImage(url, allUrls, index) {
+  const mainMedia = document.getElementById("productMainMedia");
   const mainImg = document.getElementById("mainProductImage");
-  if (mainImg) {
-    mainImg.src = url;
-    mainImg.setAttribute('data-image-index', index);
-    // Lightbox için onclick'i güncelle
-    mainImg.onclick = () => openImageLightbox(url, allUrls || [url]);
+  const mainVideo = document.getElementById("mainProductVideo");
+  
+  if (mainMedia) {
+    // Mevcut içeriği temizle
+    mainMedia.innerHTML = '';
+    
+    // Yeni resmi ekle
+    const newImg = document.createElement('img');
+    newImg.id = 'mainProductImage';
+    newImg.src = url;
+    newImg.alt = 'Ürün görseli';
+    newImg.loading = 'eager';
+    newImg.setAttribute('data-image-index', index);
+    newImg.onclick = () => openImageLightbox(url, allUrls || [url]);
+    newImg.onerror = function() {
+      this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
+    };
+    mainMedia.appendChild(newImg);
   }
   
   // Thumbnail'ları güncelle
   document.querySelectorAll(".product-thumbnail").forEach((thumb, i) => {
-    if (i === index) {
+    const mediaType = thumb.getAttribute('data-media-type');
+    if (mediaType === 'image' && i === index) {
+      thumb.classList.add("active");
+    } else {
+      thumb.classList.remove("active");
+    }
+  });
+}
+
+function changeMainVideo(videoUrl) {
+  const mainMedia = document.getElementById("productMainMedia");
+  const mainImg = document.getElementById("mainProductImage");
+  
+  if (mainMedia) {
+    // Mevcut içeriği temizle
+    mainMedia.innerHTML = '';
+    
+    // Yeni videoyu ekle
+    const newVideo = document.createElement('video');
+    newVideo.id = 'mainProductVideo';
+    newVideo.controls = true;
+    newVideo.style.width = '100%';
+    newVideo.style.maxWidth = '100%';
+    newVideo.style.borderRadius = '8px';
+    newVideo.style.display = 'block';
+    
+    const source1 = document.createElement('source');
+    source1.src = videoUrl;
+    source1.type = 'video/mp4';
+    const source2 = document.createElement('source');
+    source2.src = videoUrl;
+    source2.type = 'video/webm';
+    const source3 = document.createElement('source');
+    source3.src = videoUrl;
+    source3.type = 'video/ogg';
+    
+    newVideo.appendChild(source1);
+    newVideo.appendChild(source2);
+    newVideo.appendChild(source3);
+    newVideo.appendChild(document.createTextNode('Tarayıcınız video oynatmayı desteklemiyor.'));
+    
+    mainMedia.appendChild(newVideo);
+  }
+  
+  // Thumbnail'ları güncelle
+  document.querySelectorAll(".product-thumbnail").forEach((thumb) => {
+    const mediaType = thumb.getAttribute('data-media-type');
+    const thumbVideoUrl = thumb.getAttribute('data-video-url');
+    if (mediaType === 'video' && thumbVideoUrl === videoUrl) {
       thumb.classList.add("active");
     } else {
       thumb.classList.remove("active");
@@ -286,26 +348,37 @@ function changeMainImage(url, allUrls, index) {
 function initProductGallery() {
   document.querySelectorAll(".product-thumbnail").forEach((thumb) => {
     thumb.addEventListener('click', function() {
-      const index = parseInt(this.getAttribute('data-image-index'));
-      // URL'yi direkt img src'den al (daha güvenli)
-      const img = this.querySelector('img');
-      const url = img ? img.src : null;
+      const mediaType = this.getAttribute('data-media-type');
       
-      // Galeri container'ından tüm resim URL'lerini al
-      const gallery = this.closest('.product-images-gallery');
-      let allUrls = [];
-      
-      if (gallery) {
-        // Tüm thumbnail'lardan URL'leri topla (img src'den)
-        gallery.querySelectorAll('.product-thumbnail img').forEach((img) => {
-          if (img && img.src) {
-            allUrls.push(img.src);
-          }
-        });
-      }
-      
-      if (url && allUrls.length > 0) {
-        changeMainImage(url, allUrls, index);
+      if (mediaType === 'video') {
+        // Video thumbnail'a tıklandı
+        const videoUrl = this.getAttribute('data-video-url');
+        if (videoUrl) {
+          changeMainVideo(videoUrl);
+        }
+      } else {
+        // Resim thumbnail'a tıklandı
+        const index = parseInt(this.getAttribute('data-image-index'));
+        // URL'yi direkt img src'den al (daha güvenli)
+        const img = this.querySelector('img');
+        const url = img ? img.src : null;
+        
+        // Galeri container'ından tüm resim URL'lerini al
+        const gallery = this.closest('.product-images-gallery');
+        let allUrls = [];
+        
+        if (gallery) {
+          // Tüm resim thumbnail'larından URL'leri topla (sadece image type olanlar)
+          gallery.querySelectorAll('.product-thumbnail[data-media-type="image"] img').forEach((img) => {
+            if (img && img.src) {
+              allUrls.push(img.src);
+            }
+          });
+        }
+        
+        if (url && allUrls.length > 0) {
+          changeMainImage(url, allUrls, index);
+        }
       }
     });
   });
@@ -361,6 +434,12 @@ fetch("/api/public/products?details=true")
         }
       });
       
+      // Video URL'ini oluştur
+      let videoUrl = null;
+      if (p.video) {
+        videoUrl = p.video.startsWith('/') ? p.video : `/uploads/${p.video}`;
+      }
+      
       // Ana resim URL'i (ilk resim veya placeholder)
       let resimUrl = resimUrls.length > 0 ? resimUrls[0] : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
 
@@ -384,29 +463,52 @@ fetch("/api/public/products?details=true")
         `
         : "";
       
-      // Resim galerisi HTML'i
+      // Resim galerisi HTML'i (video dahil)
       let resimGalerisiHTML = "";
-      if (resimUrls.length > 1) {
+      const allMediaUrls = [...resimUrls];
+      const hasVideo = videoUrl !== null;
+      
+      if (resimUrls.length > 1 || hasVideo) {
+        // Video varsa veya birden fazla resim varsa thumbnail göster
         resimGalerisiHTML = `
           <div class="product-images-gallery">
-            <div class="product-main-image">
-              <img src="${resimUrl}" alt="${p.ad}" id="mainProductImage" loading="eager" onclick="openImageLightbox('${resimUrls[0]}', ${JSON.stringify(resimUrls)})" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'400\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'400\\' height=\\'400\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'18\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
+            <div class="product-main-image" id="productMainMedia">
+              ${hasVideo && resimUrls.length === 0 ? `
+                <video id="mainProductVideo" controls style="width: 100%; max-width: 100%; border-radius: 8px; display: block;">
+                  <source src="${videoUrl}" type="video/mp4">
+                  <source src="${videoUrl}" type="video/webm">
+                  <source src="${videoUrl}" type="video/ogg">
+                  Tarayıcınız video oynatmayı desteklemiyor.
+                </video>
+              ` : `
+                <img src="${resimUrl}" alt="${p.ad}" id="mainProductImage" loading="eager" onclick="openImageLightbox('${resimUrls[0]}', ${JSON.stringify(resimUrls)})" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'400\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'400\\' height=\\'400\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'18\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
+              `}
             </div>
             <div class="product-thumbnails">
               ${resimUrls.map((url, index) => {
                 // URL'yi base64 encode et veya güvenli hale getir
                 const safeUrl = url.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
                 return `
-                <div class="product-thumbnail ${index === 0 ? 'active' : ''}" data-image-index="${index}" data-image-url="${safeUrl}">
+                <div class="product-thumbnail ${index === 0 && !hasVideo ? 'active' : ''}" data-image-index="${index}" data-image-url="${safeUrl}" data-media-type="image">
                   <img src="${url}" alt="${p.ad} - Resim ${index + 1}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'100\\' height=\\'100\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'12\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
                 </div>
               `;
               }).join('')}
+              ${hasVideo ? `
+                <div class="product-thumbnail ${resimUrls.length === 0 ? 'active' : ''}" data-video-url="${videoUrl.replace(/'/g, "&#39;").replace(/"/g, "&quot;")}" data-media-type="video" style="position: relative; cursor: pointer;">
+                  <div style="position: relative; width: 100%; height: 100%; background: #000; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="white" style="opacity: 0.9;">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </div>
+                  <div style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold;">VIDEO</div>
+                </div>
+              ` : ''}
             </div>
           </div>
         `;
       } else {
-        // Tek resim varsa sadece ana resmi göster (thumbnail yok)
+        // Tek resim varsa ve video yoksa sadece ana resmi göster
         resimGalerisiHTML = `
           <div class="product-images-gallery">
             <div class="product-main-image">
@@ -460,29 +562,11 @@ fetch("/api/public/products?details=true")
         </nav>
       `;
       
-      // Video HTML'i
-      let videoHTML = "";
-      if (p.video) {
-        const videoUrl = p.video.startsWith('/') ? p.video : `/uploads/${p.video}`;
-        videoHTML = `
-          <div class="product-video" style="margin-top: 30px; padding: 20px; background: var(--light-bg); border-radius: 12px;">
-            <h3 style="margin-bottom: 15px;">🎥 Ürün Videosu</h3>
-            <video controls style="width: 100%; max-width: 800px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-              <source src="${videoUrl}" type="video/mp4">
-              <source src="${videoUrl}" type="video/webm">
-              <source src="${videoUrl}" type="video/ogg">
-              Tarayıcınız video oynatmayı desteklemiyor.
-            </video>
-          </div>
-        `;
-      }
-      
       document.getElementById("detay").innerHTML = `
         ${breadcrumbHTML}
         <div class="product-detail">
           <div>
             ${resimGalerisiHTML}
-            ${videoHTML}
           </div>
           <div class="product-info">
             <h2>${p.ad || 'İsimsiz Ürün'}</h2>
