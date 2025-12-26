@@ -683,6 +683,93 @@ body {
   padding: 30px;
 }
 
+.showroom-section {
+  padding: 30px;
+}
+
+.showroom-form-card,
+.showroom-hotspots-card {
+  background: #f8f9fa;
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.showroom-form-card h3,
+.showroom-hotspots-card h3 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.3rem;
+}
+
+.showroom-editor-wrapper {
+  text-align: center;
+}
+
+#showroomEditor {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+#showroomEditorImage {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+  cursor: crosshair;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+#showroomEditorHotspots {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.admin-hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background: #c40000;
+  border: 3px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  z-index: 10;
+  pointer-events: all;
+  transition: transform 0.2s ease;
+}
+
+.admin-hotspot:hover {
+  transform: translate(-50%, -50%) scale(1.3);
+  z-index: 15;
+}
+
+#hotspotsListContainer {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+#hotspotsListContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+#hotspotsListContainer::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+#hotspotsListContainer::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 4px;
+}
+
 .ceramic-form-card {
   background: #f8f9fa;
   border-radius: 8px;
