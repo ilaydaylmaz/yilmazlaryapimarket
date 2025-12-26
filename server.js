@@ -444,7 +444,7 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
       }
       
       // Video güncelleme
-      if (req.file && req.file.fieldname === 'video') {
+      if (req.files && req.files.video && req.files.video[0]) {
         // Eski video dosyasını sil
         if (videoData) {
           const oldVideoPath = path.join("public/uploads", videoData);
@@ -456,7 +456,7 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
             }
           }
         }
-        videoData = `videos/${req.file.filename}`;
+        videoData = `videos/${req.files.video[0].filename}`;
       }
       // Video silme (req.body'den gelir)
       if (req.body.silVideo === 'true' && videoData) {
@@ -560,7 +560,7 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
       }
       
       // Video güncelleme
-      if (req.file && req.file.fieldname === 'video') {
+      if (req.files && req.files.video && req.files.video[0]) {
         // Eski video dosyasını sil
         if (videoData) {
           const oldVideoPath = path.join("public/uploads", videoData);
@@ -572,7 +572,7 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
             }
           }
         }
-        videoData = `videos/${req.file.filename}`;
+        videoData = `videos/${req.files.video[0].filename}`;
       }
       // Video silme
       if (req.body.silVideo === 'true' && videoData) {
