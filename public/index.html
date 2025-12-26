@@ -643,31 +643,30 @@ function initCategoryShowcase() {
       console.log('Kategori hover:', categoryName, 'Görsel:', imageUrl);
       
       if (imageUrl && categoryName && categoryUrl) {
-        // Fade out
-        showcaseImage.style.opacity = '0';
-        showcaseImage.style.transition = 'opacity 0.3s ease';
+        // Görseli direkt yükle (fade animasyonu olmadan)
+        showcaseImage.src = imageUrl;
+        showcaseImage.alt = categoryName;
+        showcaseCategoryTitle.textContent = categoryName;
+        showcaseLink.href = categoryUrl;
         
-        setTimeout(() => {
-          // Görseli direkt yükle
-          showcaseImage.src = imageUrl;
-          showcaseImage.alt = categoryName;
-          showcaseCategoryTitle.textContent = categoryName;
-          showcaseLink.href = categoryUrl;
-          
-          // Görsel yüklendiğinde fade in
-          showcaseImage.onload = function() {
-            console.log('Görsel yüklendi:', imageUrl);
-            showcaseImage.style.opacity = '1';
-          };
-          
-          // Görsel yüklenemediğinde hata göster
-          showcaseImage.onerror = function() {
-            console.error('Görsel yüklenemedi:', imageUrl);
-            // Placeholder göster
-            showcaseImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="600"%3E%3Crect fill="%23f0f0f0" width="800" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="24" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EGörsel Bulunamadı%3C/text%3E%3C/svg%3E';
-            showcaseImage.style.opacity = '1';
-          };
-        }, 150);
+        // Görsel yüklendiğinde kontrol et
+        showcaseImage.onload = function() {
+          console.log('Görsel yüklendi:', imageUrl);
+          showcaseImage.style.opacity = '1';
+        };
+        
+        // Görsel yüklenemediğinde hata göster
+        showcaseImage.onerror = function() {
+          console.error('Görsel yüklenemedi:', imageUrl);
+          // Placeholder göster
+          showcaseImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="600"%3E%3Crect fill="%23f0f0f0" width="800" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="24" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EGörsel Bulunamadı%3C/text%3E%3C/svg%3E';
+          showcaseImage.style.opacity = '1';
+        };
+        
+        // Eğer görsel zaten yüklüyse (cache'den), direkt göster
+        if (showcaseImage.complete && showcaseImage.naturalHeight !== 0) {
+          showcaseImage.style.opacity = '1';
+        }
       }
     });
     
