@@ -695,8 +695,23 @@ function initShowroom() {
       // Hotspot animasyonu
       hotspotEl.innerHTML = '<div class="hotspot-pulse"></div><div class="hotspot-dot"></div>';
       
+      // Hover ile ürünleri göster
+      let hoverTimeout;
+      hotspotEl.addEventListener('mouseenter', (e) => {
+        e.stopPropagation();
+        hoverTimeout = setTimeout(() => {
+          showShowroomProducts(hotspot.category, hotspot.title);
+        }, 300); // 300ms gecikme ile daha akıcı
+      });
+      
+      hotspotEl.addEventListener('mouseleave', () => {
+        clearTimeout(hoverTimeout);
+      });
+      
+      // Tıklama ile de çalışsın
       hotspotEl.addEventListener('click', (e) => {
         e.stopPropagation();
+        clearTimeout(hoverTimeout);
         showShowroomProducts(hotspot.category, hotspot.title);
       });
       
@@ -749,7 +764,13 @@ function showShowroomProducts(category, title) {
 function closeShowroomProducts() {
   const productsContainer = document.getElementById('showroomProducts');
   if (productsContainer) {
-    productsContainer.style.display = 'none';
+    productsContainer.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    productsContainer.style.opacity = '0';
+    productsContainer.style.transform = 'translateY(20px)';
+    setTimeout(() => {
+      productsContainer.style.display = 'none';
+      currentShowroomCategory = null;
+    }, 300);
   }
 }
 
