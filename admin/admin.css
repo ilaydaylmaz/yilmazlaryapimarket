@@ -844,6 +844,110 @@ body {
   font-size: 1.1rem;
 }
 
+/* Showroom Section */
+.showroom-section {
+  padding: 20px;
+}
+
+.showroom-form-card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.showroom-form-card h3 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.showroom-list h3 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.showroom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.showroom-item {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.showroom-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.showroom-image-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 75%; /* 4:3 aspect ratio */
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.showroom-image-wrapper img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.showroom-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.showroom-item:hover .showroom-overlay {
+  opacity: 1;
+}
+
+.showroom-info {
+  padding: 15px;
+}
+
+.showroom-title-input,
+.showroom-desc-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  font-family: inherit;
+}
+
+.showroom-title-input:focus,
+.showroom-desc-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(196, 0, 0, 0.1);
+}
+
+.showroom-desc-input {
+  min-height: 60px;
+  resize: vertical;
+}
+
 @media (max-width: 768px) {
   .collections-list {
     grid-template-columns: 1fr;
@@ -859,6 +963,10 @@ body {
   }
   
   .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .showroom-grid {
     grid-template-columns: 1fr;
   }
 }
