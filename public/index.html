@@ -618,6 +618,15 @@ function initCategoryShowcase() {
   
   if (!categoryItems.length || !showcaseImage || !showcaseCategoryTitle || !showcaseLink) return;
   
+  // Tüm kategori görsellerini preload et
+  categoryItems.forEach(item => {
+    const imageUrl = item.getAttribute('data-image');
+    if (imageUrl) {
+      const img = new Image();
+      img.src = imageUrl;
+    }
+  });
+  
   categoryItems.forEach(item => {
     item.addEventListener('mouseenter', function(e) {
       // Tüm aktif sınıfları kaldır
