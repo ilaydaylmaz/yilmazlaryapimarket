@@ -31,13 +31,22 @@ app.use(express.static("public"));
 app.use("/admin", express.static("admin"));
 
 /* =======================
-   MULTER (RESİM UPLOAD)
+   MULTER (RESİM VE VİDEO UPLOAD)
 ======================= */
-// Resimleri hem dosya sistemine hem de base64 olarak kaydet
+// Tüm dosyaları field name'e göre farklı klasörlere kaydet
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    let uploadDir;
+    
+    // Video field'ı için videos klasörüne kaydet
+    if (file.fieldname === 'video') {
+      uploadDir = "public/uploads/videos";
+    } else {
+      // Resimler için normal uploads klasörüne kaydet
+      uploadDir = "public/uploads";
+    }
+    
     // Klasör yoksa oluştur
-    const uploadDir = "public/uploads";
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -49,44 +58,25 @@ const storage = multer.diskStorage({
   }
 });
 
-// Resim upload (5MB limit)
+// Tüm dosyaları kabul eden upload middleware (resim ve video)
 const upload = multer({ 
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit (video için)
   fileFilter: (req, file, cb) => {
-    // Sadece resim dosyaları
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
+    // Video field'ı için video dosyalarını kabul et
+    if (file.fieldname === 'video') {
+      if (file.mimetype.startsWith('video/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Video dosyası geçersiz format!'), false);
+      }
     } else {
-      cb(new Error('Sadece resim dosyaları kabul edilir!'), false);
-    }
-  }
-});
-
-// Video upload (100MB limit)
-const videoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = "public/uploads/videos";
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, Date.now() + ext);
-  }
-});
-
-const uploadVideo = multer({ 
-  storage: videoStorage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
-  fileFilter: (req, file, cb) => {
-    // Video dosyaları
-    if (file.mimetype.startsWith('video/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Sadece video dosyaları kabul edilir!'), false);
+      // Resim field'ları için resim dosyalarını kabul et
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Sadece resim dosyaları kabul edilir!'), false);
+      }
     }
   }
 });
@@ -279,40 +269,12 @@ app.get("/api/products", auth, async (req, res) => {
   }
 });
 
-// Video ve resim middleware'lerini birleştir
-const uploadProductFiles = (req, res, next) => {
-  // Önce resimleri işle (video field'ını ignore et)
-  upload.fields([
-    { name: "resim", maxCount: 1 }, 
-    { name: "resimler", maxCount: 10 }
-  ])(req, res, (err) => {
-    if (err) {
-      console.error("Resim upload hatası:", err);
-      return res.status(400).json({ success: false, message: err.message || "Resim yükleme hatası" });
-    }
-    
-    // Şimdi video'yu ayrı middleware ile işle (video opsiyonel)
-    // Video yoksa hata verme, sadece devam et
-    const videoMiddleware = uploadVideo.single("video");
-    videoMiddleware(req, res, (videoErr) => {
-      if (videoErr) {
-        // LIMIT_UNEXPECTED_FILE hatası video yoksa normal, görmezden gel
-        if (videoErr.code === 'LIMIT_UNEXPECTED_FILE' && !req.file) {
-          // Video yok, sorun değil
-          console.log("Video field yok, devam ediliyor");
-        } else if (videoErr.code === 'LIMIT_FILE_SIZE') {
-          console.warn("Video dosyası çok büyük (max 100MB), atlanıyor");
-        } else if (videoErr.message && videoErr.message.includes('Sadece video')) {
-          console.warn("Video formatı geçersiz, atlanıyor");
-        } else {
-          console.error("Video upload hatası:", videoErr);
-        }
-        // Video hatası kritik değil, devam et (video opsiyonel)
-      }
-      next();
-    });
-  });
-};
+// Tüm dosyaları (resim ve video) tek middleware ile işle
+const uploadProductFiles = upload.fields([
+  { name: "resim", maxCount: 1 }, 
+  { name: "resimler", maxCount: 10 },
+  { name: "video", maxCount: 1 }
+]);
 
 /* Ekle */
 app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
@@ -348,8 +310,8 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
     
     // Video dosyası
     let videoData = "";
-    if (req.file && req.file.fieldname === 'video') {
-      videoData = `videos/${req.file.filename}`;
+    if (req.files && req.files.video && req.files.video[0]) {
+      videoData = `videos/${req.files.video[0].filename}`;
     }
     
     const urun = {
