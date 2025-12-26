@@ -137,6 +137,17 @@
         </div>
         
         <div class="form-group" style="margin-top: 20px;">
+          <label>
+            <input type="radio" name="hotspotType" value="category" checked onchange="toggleHotspotType()">
+            Kategori Seç
+          </label>
+          <label style="margin-left: 20px;">
+            <input type="radio" name="hotspotType" value="product" onchange="toggleHotspotType()">
+            Ürün Seç
+          </label>
+        </div>
+        
+        <div id="hotspotCategoryGroup" class="form-group">
           <label for="hotspotCategory">Kategori Seçin</label>
           <select id="hotspotCategory" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
             <option value="">Kategori Seçin</option>
@@ -156,9 +167,16 @@
           </select>
         </div>
         
+        <div id="hotspotProductGroup" class="form-group" style="display: none;">
+          <label for="hotspotProduct">Ürün Seçin</label>
+          <select id="hotspotProduct" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
+            <option value="">Ürün Seçin</option>
+          </select>
+        </div>
+        
         <div class="form-group">
           <label for="hotspotTitle">Başlık (Opsiyonel)</label>
-          <input type="text" id="hotspotTitle" placeholder="Boş bırakılırsa kategori adı kullanılır" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
+          <input type="text" id="hotspotTitle" placeholder="Boş bırakılırsa kategori/ürün adı kullanılır" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
         </div>
         
         <div id="showroomHotspotsList" style="margin-top: 30px;">
@@ -1684,22 +1702,48 @@ function addHotspot(event) {
   const x = ((event.clientX - rect.left) / rect.width) * 100;
   const y = ((event.clientY - rect.top) / rect.height) * 100;
   
-  const category = document.getElementById('hotspotCategory').value;
-  if (!category) {
-    alert('⚠️ Lütfen önce bir kategori seçin!');
-    return;
+  const hotspotType = document.querySelector('input[name="hotspotType"]:checked').value;
+  let category = '';
+  let productId = '';
+  let title = '';
+  
+  if (hotspotType === 'product') {
+    productId = document.getElementById('hotspotProduct').value;
+    if (!productId) {
+      alert('⚠️ Lütfen önce bir ürün seçin!');
+      return;
+    }
+    const product = allProductsForShowroom.find(p => p.id === productId);
+    if (product) {
+      title = document.getElementById('hotspotTitle').value.trim() || product.ad;
+      category = product.kategori || '';
+    }
+  } else {
+    category = document.getElementById('hotspotCategory').value;
+    if (!category) {
+      alert('⚠️ Lütfen önce bir kategori seçin!');
+      return;
+    }
+    title = document.getElementById('hotspotTitle').value.trim() || category;
   }
   
-  const title = document.getElementById('hotspotTitle').value.trim() || category;
-  
-  showroomHotspots.push({
+  const hotspot = {
     x: Math.round(x * 100) / 100,
     y: Math.round(y * 100) / 100,
-    category: category,
     title: title
-  });
+  };
+  
+  if (productId) {
+    hotspot.productId = productId;
+    hotspot.category = category; // Ürünün kategorisini de kaydet
+  } else {
+    hotspot.category = category;
+  }
+  
+  showroomHotspots.push(hotspot);
   
   document.getElementById('hotspotCategory').value = '';
+  document.getElementById('hotspotProduct').value = '';
   document.getElementById('hotspotTitle').value = '';
   
   renderShowroomEditor();
@@ -1724,16 +1768,20 @@ function updateHotspotsList() {
     return;
   }
   
-  container.innerHTML = showroomHotspots.map((hotspot, index) => `
+  container.innerHTML = showroomHotspots.map((hotspot, index) => {
+    const product = hotspot.productId ? allProductsForShowroom.find(p => p.id === hotspot.productId) : null;
+    return `
     <div style="background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #c40000; display: flex; justify-content: space-between; align-items: center;">
       <div>
-        <strong>${hotspot.title || hotspot.category}</strong>
-        <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">Kategori: ${hotspot.category}</p>
-        <p style="margin: 5px 0 0 0; color: #999; font-size: 0.85rem;">Pozisyon: X: ${hotspot.x}%, Y: ${hotspot.y}%</p>
+        <strong>${hotspot.title || hotspot.category || 'İsimsiz'}</strong>
+        ${hotspot.productId ? `<p style="margin: 5px 0 0 0; color: #28a745; font-size: 0.9rem;">📦 Ürün: ${product ? product.ad : 'Bilinmeyen Ürün'}</p>` : ''}
+        ${hotspot.category ? `<p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">📁 Kategori: ${hotspot.category}</p>` : ''}
+        <p style="margin: 5px 0 0 0; color: #999; font-size: 0.85rem;">📍 Pozisyon: X: ${hotspot.x}%, Y: ${hotspot.y}%</p>
       </div>
       <button type="button" class="btn btn-danger btn-small" onclick="editHotspot(${index})" style="margin-left: 15px;">🗑️ Sil</button>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function previewShowroomImage(input) {

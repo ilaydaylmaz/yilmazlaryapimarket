@@ -706,7 +706,7 @@ function initShowroom() {
       hotspotEl.addEventListener('mouseenter', (e) => {
         e.stopPropagation();
         hoverTimeout = setTimeout(() => {
-          showShowroomProducts(hotspot.category, hotspot.title);
+          showShowroomProducts(hotspot.category, hotspot.title, hotspot.productId);
         }, 300); // 300ms gecikme ile daha akıcı
       });
       
@@ -718,7 +718,7 @@ function initShowroom() {
       hotspotEl.addEventListener('click', (e) => {
         e.stopPropagation();
         clearTimeout(hoverTimeout);
-        showShowroomProducts(hotspot.category, hotspot.title);
+        showShowroomProducts(hotspot.category, hotspot.title, hotspot.productId);
       });
       
       hotspotsContainer.appendChild(hotspotEl);
@@ -776,6 +776,7 @@ function closeShowroomProducts() {
     setTimeout(() => {
       productsContainer.style.display = 'none';
       currentShowroomCategory = null;
+      currentShowroomProductId = null;
     }, 300);
   }
 }
