@@ -283,6 +283,25 @@
           <small style="color: #666; display: block; margin-top: 5px;">💡 İpucu: Birden fazla resim seçmek için Ctrl (Windows) veya Cmd (Mac) tuşuna basılı tutarak tıklayın</small>
         </div>
         
+        <div class="form-group">
+          <label for="video">Ürün Videosu (Opsiyonel)</label>
+          <input type="file" id="video" accept="video/*" onchange="previewVideo(this)">
+          <div class="video-preview" id="videoPreview" style="display: none; margin-top: 10px;">
+            <video id="previewVideo" controls style="max-width: 100%; max-height: 300px; border-radius: 8px;">
+              Tarayıcınız video oynatmayı desteklemiyor.
+            </video>
+            <button type="button" onclick="removeVideo()" style="margin-top: 10px; padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">❌ Videoyu Kaldır</button>
+          </div>
+          <div id="existingVideo" style="display: none; margin-top: 10px;">
+            <p style="color: #28a745; font-weight: 600;">✓ Mevcut video var</p>
+            <video id="existingVideoPlayer" controls style="max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px;">
+              Tarayıcınız video oynatmayı desteklemiyor.
+            </video>
+            <button type="button" onclick="markVideoForDeletion()" style="margin-top: 10px; padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">🗑️ Videoyu Sil</button>
+          </div>
+          <small style="color: #666; display: block; margin-top: 5px;">💡 Maksimum dosya boyutu: 100MB. Desteklenen formatlar: MP4, WebM, OGG</small>
+        </div>
+        
         <!-- Eski tek resim desteği (geriye dönük uyumluluk) -->
         <div class="form-group" style="display: none;">
           <label for="resim">Ürün Resmi (Tek - Eski Format)</label>
@@ -472,6 +491,51 @@ function previewImages(input) {
   }
 }
 
+let videoToDelete = false;
+
+function previewVideo(input) {
+  const preview = document.getElementById("videoPreview");
+  const previewVideoEl = document.getElementById("previewVideo");
+  
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    const url = URL.createObjectURL(file);
+    previewVideoEl.src = url;
+    preview.style.display = "block";
+    videoToDelete = false;
+  } else {
+    preview.style.display = "none";
+  }
+}
+
+function removeVideo() {
+  document.getElementById("video").value = "";
+  document.getElementById("videoPreview").style.display = "none";
+  document.getElementById("previewVideo").src = "";
+}
+
+function showExistingVideo(product) {
+  const existingDiv = document.getElementById("existingVideo");
+  const existingPlayer = document.getElementById("existingVideoPlayer");
+  
+  if (product.video) {
+    const videoUrl = product.video.startsWith('/') ? product.video : `/uploads/${product.video}`;
+    existingPlayer.src = videoUrl;
+    existingDiv.style.display = "block";
+    videoToDelete = false;
+  } else {
+    existingDiv.style.display = "none";
+  }
+}
+
+function markVideoForDeletion() {
+  if (confirm("Videoyu silmek istediğinize emin misiniz?")) {
+    videoToDelete = true;
+    document.getElementById("existingVideo").style.display = "none";
+    document.getElementById("video").value = "";
+  }
+}
+
 function showSuccess(message) {
   const msg = document.getElementById("successMessage");
   msg.textContent = message;
@@ -598,9 +662,13 @@ function duzenle(id) {
   document.getElementById("aciklama").value = p.aciklama || "";
   document.getElementById("resim").value = "";
   document.getElementById("resimler").value = "";
+  document.getElementById("video").value = "";
   
   // Mevcut resimleri göster
   showExistingImages(p);
+  
+  // Mevcut videoyu göster
+  showExistingVideo(p);
   
   // Seramik ürünleri için özel alanlar
   toggleCeramicSpecs();
@@ -647,6 +715,12 @@ function duzenle(id) {
   document.getElementById("imagesPreview").innerHTML = "";
   document.getElementById("imagesPreview").classList.remove("show");
   silinecekResimIndeksleri = [];
+  
+  // Video önizlemesini temizle
+  document.getElementById("videoPreview").style.display = "none";
+  document.getElementById("existingVideo").style.display = "none";
+  document.getElementById("video").value = "";
+  videoToDelete = false;
   
   // Forma scroll
   document.querySelector(".form-section").scrollIntoView({ behavior: "smooth" });
@@ -760,6 +834,12 @@ function ekle() {
   if (resim) {
     formData.append("resim", resim);
   }
+  
+  // Video
+  const video = document.getElementById("video").files[0];
+  if (video) {
+    formData.append("video", video);
+  }
 
   const submitBtn = document.getElementById("submitBtn");
   const originalText = submitBtn.innerHTML;
@@ -856,6 +936,17 @@ function guncelle() {
     formData.append("resim", resim);
   }
   
+  // Video
+  const video = document.getElementById("video").files[0];
+  if (video) {
+    formData.append("video", video);
+  }
+  
+  // Video silme
+  if (videoToDelete) {
+    formData.append("silVideo", "true");
+  }
+  
   // Silinecek resimler
   const silinecekResimler = getSilinecekResimler();
   if (silinecekResimler.length > 0) {
@@ -945,6 +1036,9 @@ function temizle() {
   seciliId = null;
   document.getElementById("productForm").reset();
   document.getElementById("imagePreview").classList.remove("show");
+  document.getElementById("videoPreview").style.display = "none";
+  document.getElementById("existingVideo").style.display = "none";
+  videoToDelete = false;
   toggleCeramicSpecs();
   
   document.querySelectorAll(".product-item").forEach(item => {

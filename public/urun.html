@@ -460,11 +460,29 @@ fetch("/api/public/products?details=true")
         </nav>
       `;
       
+      // Video HTML'i
+      let videoHTML = "";
+      if (p.video) {
+        const videoUrl = p.video.startsWith('/') ? p.video : `/uploads/${p.video}`;
+        videoHTML = `
+          <div class="product-video" style="margin-top: 30px; padding: 20px; background: var(--light-bg); border-radius: 12px;">
+            <h3 style="margin-bottom: 15px;">🎥 Ürün Videosu</h3>
+            <video controls style="width: 100%; max-width: 800px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+              <source src="${videoUrl}" type="video/mp4">
+              <source src="${videoUrl}" type="video/webm">
+              <source src="${videoUrl}" type="video/ogg">
+              Tarayıcınız video oynatmayı desteklemiyor.
+            </video>
+          </div>
+        `;
+      }
+      
       document.getElementById("detay").innerHTML = `
         ${breadcrumbHTML}
         <div class="product-detail">
           <div>
             ${resimGalerisiHTML}
+            ${videoHTML}
           </div>
           <div class="product-info">
             <h2>${p.ad || 'İsimsiz Ürün'}</h2>

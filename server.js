@@ -49,9 +49,46 @@ const storage = multer.diskStorage({
   }
 });
 
+// Resim upload (5MB limit)
 const upload = multer({ 
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    // Sadece resim dosyaları
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Sadece resim dosyaları kabul edilir!'), false);
+    }
+  }
+});
+
+// Video upload (100MB limit)
+const videoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = "public/uploads/videos";
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + ext);
+  }
+});
+
+const uploadVideo = multer({ 
+  storage: videoStorage,
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
+  fileFilter: (req, file, cb) => {
+    // Video dosyaları
+    if (file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Sadece video dosyaları kabul edilir!'), false);
+    }
+  }
 });
 
 // Resmi base64'e çevir
@@ -243,7 +280,16 @@ app.get("/api/products", auth, async (req, res) => {
 });
 
 /* Ekle */
-app.post("/api/products", auth, upload.fields([{ name: "resim", maxCount: 1 }, { name: "resimler", maxCount: 10 }]), async (req, res) => {
+app.post("/api/products", auth, 
+  (req, res, next) => {
+    // Önce resimleri işle
+    upload.fields([{ name: "resim", maxCount: 1 }, { name: "resimler", maxCount: 10 }])(req, res, (err) => {
+      if (err) return next(err);
+      // Sonra videoyu işle
+      uploadVideo.single("video")(req, res, next);
+    });
+  },
+  async (req, res) => {
   try {
     let resimData = "";
     let resimBase64 = null;
@@ -274,6 +320,12 @@ app.post("/api/products", auth, upload.fields([{ name: "resim", maxCount: 1 }, {
       }
     }
     
+    // Video dosyası
+    let videoData = "";
+    if (req.file && req.file.fieldname === 'video') {
+      videoData = `videos/${req.file.filename}`;
+    }
+    
     const urun = {
       id: Date.now().toString(),
       ad: req.body.ad || "",
@@ -284,6 +336,7 @@ app.post("/api/products", auth, upload.fields([{ name: "resim", maxCount: 1 }, {
       resimBase64: resimBase64, // MongoDB'ye base64 olarak kaydet
       resimler: resimlerData.length > 0 ? resimlerData : (resimData ? [resimData] : []),
       resimlerBase64: resimlerBase64.length > 0 ? resimlerBase64 : (resimBase64 ? [resimBase64] : []),
+      video: videoData, // Video dosya yolu
       // Seramik ürünleri için özel alanlar
       urunKodu: req.body.urunKodu || "",
       doku: req.body.doku || "",
@@ -323,7 +376,16 @@ app.post("/api/products", auth, upload.fields([{ name: "resim", maxCount: 1 }, {
 });
 
 /* Güncelle */
-app.put("/api/products/:id", auth, upload.fields([{ name: "resim", maxCount: 1 }, { name: "resimler", maxCount: 10 }]), async (req, res) => {
+app.put("/api/products/:id", auth, 
+  (req, res, next) => {
+    // Önce resimleri işle
+    upload.fields([{ name: "resim", maxCount: 1 }, { name: "resimler", maxCount: 10 }])(req, res, (err) => {
+      if (err) return next(err);
+      // Sonra videoyu işle
+      uploadVideo.single("video")(req, res, next);
+    });
+  },
+  async (req, res) => {
   try {
     const productId = String(req.params.id);
     
@@ -339,6 +401,7 @@ app.put("/api/products/:id", auth, upload.fields([{ name: "resim", maxCount: 1 }
       let resimBase64 = existingProduct.resimBase64 || null;
       let resimlerData = existingProduct.resimler || (existingProduct.resim ? [existingProduct.resim] : []);
       let resimlerBase64 = existingProduct.resimlerBase64 || (existingProduct.resimBase64 ? [existingProduct.resimBase64] : []);
+      let videoData = existingProduct.video || "";
       
       // Tek resim güncelleme (eski format)
       if (req.files && req.files.resim && req.files.resim[0]) {
@@ -400,6 +463,34 @@ app.put("/api/products/:id", auth, upload.fields([{ name: "resim", maxCount: 1 }
         }
       }
       
+      // Video güncelleme
+      if (req.file && req.file.fieldname === 'video') {
+        // Eski video dosyasını sil
+        if (videoData) {
+          const oldVideoPath = path.join("public/uploads", videoData);
+          if (fs.existsSync(oldVideoPath)) {
+            try {
+              fs.unlinkSync(oldVideoPath);
+            } catch (e) {
+              console.error("Eski video silme hatası:", e);
+            }
+          }
+        }
+        videoData = `videos/${req.file.filename}`;
+      }
+      // Video silme (req.body'den gelir)
+      if (req.body.silVideo === 'true' && videoData) {
+        const oldVideoPath = path.join("public/uploads", videoData);
+        if (fs.existsSync(oldVideoPath)) {
+          try {
+            fs.unlinkSync(oldVideoPath);
+          } catch (e) {
+            console.error("Video silme hatası:", e);
+          }
+        }
+        videoData = "";
+      }
+      
       const updateData = {
         ad: req.body.ad || "",
         kategori: req.body.kategori || "",
@@ -409,6 +500,7 @@ app.put("/api/products/:id", auth, upload.fields([{ name: "resim", maxCount: 1 }
         resimBase64: resimBase64,
         resimler: resimlerData,
         resimlerBase64: resimlerBase64,
+        video: videoData,
         updatedAt: new Date(),
         // Seramik ürünleri için özel alanlar
         urunKodu: req.body.urunKodu || "",
@@ -462,6 +554,7 @@ app.put("/api/products/:id", auth, upload.fields([{ name: "resim", maxCount: 1 }
       let resimBase64 = products[index].resimBase64 || null;
       let resimlerData = products[index].resimler || (products[index].resim ? [products[index].resim] : []);
       let resimlerBase64 = products[index].resimlerBase64 || (products[index].resimBase64 ? [products[index].resimBase64] : []);
+      let videoData = products[index].video || "";
       
       // Tek resim güncelleme
       if (req.files && req.files.resim && req.files.resim[0]) {
@@ -486,6 +579,34 @@ app.put("/api/products/:id", auth, upload.fields([{ name: "resim", maxCount: 1 }
         resimlerBase64 = [...resimlerBase64, ...newResimlerBase64];
       }
       
+      // Video güncelleme
+      if (req.file && req.file.fieldname === 'video') {
+        // Eski video dosyasını sil
+        if (videoData) {
+          const oldVideoPath = path.join("public/uploads", videoData);
+          if (fs.existsSync(oldVideoPath)) {
+            try {
+              fs.unlinkSync(oldVideoPath);
+            } catch (e) {
+              console.error("Eski video silme hatası:", e);
+            }
+          }
+        }
+        videoData = `videos/${req.file.filename}`;
+      }
+      // Video silme
+      if (req.body.silVideo === 'true' && videoData) {
+        const oldVideoPath = path.join("public/uploads", videoData);
+        if (fs.existsSync(oldVideoPath)) {
+          try {
+            fs.unlinkSync(oldVideoPath);
+          } catch (e) {
+            console.error("Video silme hatası:", e);
+          }
+        }
+        videoData = "";
+      }
+      
       products[index] = {
         id: productId,
         ad: req.body.ad || "",
@@ -495,7 +616,8 @@ app.put("/api/products/:id", auth, upload.fields([{ name: "resim", maxCount: 1 }
         resim: resimData,
         resimBase64: resimBase64,
         resimler: resimlerData,
-        resimlerBase64: resimlerBase64
+        resimlerBase64: resimlerBase64,
+        video: videoData
       };
 
       fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
@@ -596,6 +718,7 @@ app.get("/api/public/products", async (req, res) => {
           resimler: p.resimler || (p.resim ? [p.resim] : []),
           // Liste sayfası için base64 array gönderme
           resimlerBase64: includeDetails ? (p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : [])) : [],
+          video: p.video ? `/uploads/${p.video}` : null,
         };
         
         // Detay sayfası için ek alanlar
@@ -641,6 +764,7 @@ app.get("/api/public/products", async (req, res) => {
           resimBase64: includeDetails ? (p.resimBase64 || null) : null,
           resimler: p.resimler || (p.resim ? [p.resim] : []),
           resimlerBase64: includeDetails ? (p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : [])) : [],
+          video: p.video ? `/uploads/${p.video}` : null,
         };
         
         // Liste sayfası için gereksiz alanları kaldır
