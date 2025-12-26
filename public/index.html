@@ -643,32 +643,25 @@ function initCategoryShowcase() {
       console.log('Kategori hover:', categoryName, 'Görsel:', imageUrl);
       
       if (imageUrl && categoryName && categoryUrl) {
-        // Önce görselin yüklenip yüklenmediğini kontrol et
-        const testImage = new Image();
+        // Görseli direkt yükle
+        showcaseImage.src = imageUrl;
+        showcaseImage.alt = categoryName;
+        showcaseCategoryTitle.textContent = categoryName;
+        showcaseLink.href = categoryUrl;
+        showcaseImage.style.opacity = '1';
         
-        testImage.onload = function() {
-          // Görsel yüklendi, şimdi göster
-          showcaseImage.src = imageUrl;
-          showcaseImage.alt = categoryName;
-          showcaseCategoryTitle.textContent = categoryName;
-          showcaseLink.href = categoryUrl;
-          showcaseImage.style.opacity = '1';
-          console.log('Görsel yüklendi:', imageUrl);
+        // Görsel yüklendiğinde kontrol et
+        showcaseImage.onload = function() {
+          console.log('✅ Görsel başarıyla yüklendi:', imageUrl);
         };
         
-        testImage.onerror = function() {
-          // Görsel yüklenemedi
-          console.error('Görsel yüklenemedi:', imageUrl);
+        // Görsel yüklenemediğinde hata göster
+        showcaseImage.onerror = function() {
+          console.error('❌ Görsel yüklenemedi:', imageUrl);
+          console.error('Görsel URL test:', window.location.origin + imageUrl);
           // Placeholder göster
           showcaseImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="600"%3E%3Crect fill="%23f0f0f0" width="800" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="24" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EGörsel Bulunamadı%3C/text%3E%3C/svg%3E';
-          showcaseImage.alt = categoryName;
-          showcaseCategoryTitle.textContent = categoryName;
-          showcaseLink.href = categoryUrl;
-          showcaseImage.style.opacity = '1';
         };
-        
-        // Görseli test et
-        testImage.src = imageUrl;
       }
     });
     
