@@ -281,24 +281,33 @@ app.get("/api/products", auth, async (req, res) => {
 
 // Video ve resim middleware'lerini birleştir
 const uploadProductFiles = (req, res, next) => {
-  // Önce resimleri işle
-  upload.fields([{ name: "resim", maxCount: 1 }, { name: "resimler", maxCount: 10 }])(req, res, (err) => {
+  // Önce resimleri işle (video field'ını ignore et)
+  upload.fields([
+    { name: "resim", maxCount: 1 }, 
+    { name: "resimler", maxCount: 10 }
+  ])(req, res, (err) => {
     if (err) {
       console.error("Resim upload hatası:", err);
       return res.status(400).json({ success: false, message: err.message || "Resim yükleme hatası" });
     }
     
-    // Video middleware'ini çağır (video opsiyonel, hata olsa bile devam et)
-    uploadVideo.single("video")(req, res, (videoErr) => {
+    // Şimdi video'yu ayrı middleware ile işle (video opsiyonel)
+    // Video yoksa hata verme, sadece devam et
+    const videoMiddleware = uploadVideo.single("video");
+    videoMiddleware(req, res, (videoErr) => {
       if (videoErr) {
-        console.error("Video upload hatası:", videoErr);
-        // Video hatası kritik değil, devam et (video opsiyonel)
-        if (videoErr.code === 'LIMIT_FILE_SIZE') {
+        // LIMIT_UNEXPECTED_FILE hatası video yoksa normal, görmezden gel
+        if (videoErr.code === 'LIMIT_UNEXPECTED_FILE' && !req.file) {
+          // Video yok, sorun değil
+          console.log("Video field yok, devam ediliyor");
+        } else if (videoErr.code === 'LIMIT_FILE_SIZE') {
           console.warn("Video dosyası çok büyük (max 100MB), atlanıyor");
         } else if (videoErr.message && videoErr.message.includes('Sadece video')) {
           console.warn("Video formatı geçersiz, atlanıyor");
+        } else {
+          console.error("Video upload hatası:", videoErr);
         }
-        // Hata olsa bile devam et (video opsiyonel)
+        // Video hatası kritik değil, devam et (video opsiyonel)
       }
       next();
     });
