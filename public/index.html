@@ -230,6 +230,29 @@
 </section>
 
 
+<!-- Showroom Bölümü -->
+<section class="showroom-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Showroom</h2>
+      <p class="section-subtitle">Mağazamızı keşfedin ve ürünlerimize tıklayarak inceleyin</p>
+    </div>
+    <div class="showroom-container">
+      <div class="showroom-image-wrapper" id="showroomWrapper">
+        <img id="showroomImage" src="/uploads/showroom-banner.jpg" alt="Showroom" onerror="this.style.display='none';">
+        <div id="showroomHotspots" class="showroom-hotspots"></div>
+      </div>
+      <div id="showroomProducts" class="showroom-products" style="display: none;">
+        <div class="showroom-products-header">
+          <h3 id="showroomCategoryTitle"></h3>
+          <button class="showroom-close-btn" onclick="closeShowroomProducts()">×</button>
+        </div>
+        <div class="showroom-products-grid" id="showroomProductsGrid"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- Popüler Ürünler Bölümü -->
 <section class="popular-products-section">
   <div class="container">
@@ -627,5 +650,114 @@ if ('serviceWorker' in navigator) {
 <script src="/assets/js/search-autocomplete.js"></script>
 <script src="/assets/js/lazy-loading.js"></script>
 <script src="/assets/js/floating-buttons.js"></script>
+
+<script>
+// Showroom Hotpoint Sistemi
+const showroomHotspots = [
+  { x: 25, y: 40, category: 'Seramik Ürünleri', title: 'Seramik Ürünleri' },
+  { x: 60, y: 50, category: 'Boya Ürünleri', title: 'Boya Ürünleri' },
+  { x: 75, y: 35, category: 'Hırdavat Ürünleri', title: 'Hırdavat Ürünleri' }
+];
+
+let allProducts = [];
+
+// Showroom hotpoint'lerini oluştur
+function initShowroom() {
+  const wrapper = document.getElementById('showroomWrapper');
+  const hotspotsContainer = document.getElementById('showroomHotspots');
+  const image = document.getElementById('showroomImage');
+  
+  if (!wrapper || !hotspotsContainer || !image) return;
+  
+  // Ürünleri yükle
+  fetch('/api/public/products')
+    .then(r => r.json())
+    .then(data => {
+      allProducts = data;
+      renderShowroomHotspots();
+    })
+    .catch(err => {
+      console.error('Ürünler yüklenemedi:', err);
+    });
+  
+  function renderShowroomHotspots() {
+    hotspotsContainer.innerHTML = '';
+    
+    showroomHotspots.forEach((hotspot, index) => {
+      const hotspotEl = document.createElement('div');
+      hotspotEl.className = 'showroom-hotspot';
+      hotspotEl.style.left = `${hotspot.x}%`;
+      hotspotEl.style.top = `${hotspot.y}%`;
+      hotspotEl.setAttribute('data-category', hotspot.category);
+      hotspotEl.setAttribute('data-title', hotspot.title);
+      hotspotEl.setAttribute('title', hotspot.title);
+      
+      // Hotspot animasyonu
+      hotspotEl.innerHTML = '<div class="hotspot-pulse"></div><div class="hotspot-dot"></div>';
+      
+      hotspotEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showShowroomProducts(hotspot.category, hotspot.title);
+      });
+      
+      hotspotsContainer.appendChild(hotspotEl);
+    });
+  }
+}
+
+// Showroom ürünlerini göster
+function showShowroomProducts(category, title) {
+  const productsContainer = document.getElementById('showroomProducts');
+  const productsGrid = document.getElementById('showroomProductsGrid');
+  const categoryTitle = document.getElementById('showroomCategoryTitle');
+  
+  if (!productsContainer || !productsGrid || !categoryTitle) return;
+  
+  // Kategoriye göre ürünleri filtrele
+  const filteredProducts = allProducts.filter(p => p.kategori === category).slice(0, 6);
+  
+  if (filteredProducts.length === 0) {
+    productsGrid.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--text-light);">Bu kategoride henüz ürün bulunmuyor.</p>';
+  } else {
+    categoryTitle.textContent = title;
+    productsGrid.innerHTML = filteredProducts.map(product => {
+      let imageUrl = product.resim || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="14" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
+      
+      if (imageUrl && !imageUrl.startsWith('/') && !imageUrl.startsWith('data:')) {
+        imageUrl = `/uploads/${imageUrl}`;
+      }
+      
+      return `
+        <div class="showroom-product-card" onclick="window.location.href='/urun.html?id=${product.id}'">
+          <div class="showroom-product-image">
+            <img src="${imageUrl}" alt="${product.ad}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'200\\' height=\\'200\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'200\\' height=\\'200\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'14\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
+          </div>
+          <div class="showroom-product-info">
+            <h4>${product.ad || 'İsimsiz Ürün'}</h4>
+            ${product.marka ? `<p>${product.marka}</p>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  productsContainer.style.display = 'block';
+  productsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Showroom ürünlerini kapat
+function closeShowroomProducts() {
+  const productsContainer = document.getElementById('showroomProducts');
+  if (productsContainer) {
+    productsContainer.style.display = 'none';
+  }
+}
+
+// Sayfa yüklendiğinde showroom'u başlat
+document.addEventListener('DOMContentLoaded', () => {
+  initShowroom();
+});
+</script>
+
 </body>
 </html>
