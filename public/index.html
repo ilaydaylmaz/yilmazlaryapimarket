@@ -110,43 +110,17 @@
       <!-- Sol Taraf: Kategori Listesi -->
       <div class="showcase-categories">
         <div class="category-list" id="categoryList">
-          <a href="/boya-urunleri.html" class="category-item active" data-category="Boya" data-image="/uploads/categories/boya.jpg">
-            <span>Boya</span>
-          </a>
-          <a href="/hirdavat-urunleri.html" class="category-item" data-category="Hırdavat" data-image="/uploads/categories/hirdavat.jpg">
-            <span>Hırdavat</span>
-          </a>
-          <a href="/elektrik-urunleri.html" class="category-item" data-category="Elektrik" data-image="/uploads/categories/elektrik.jpg">
-            <span>Elektrik</span>
-          </a>
-          <a href="/tesisat-urunleri.html" class="category-item" data-category="Tesisat" data-image="/uploads/categories/tesisat.jpg">
-            <span>Tesisat</span>
-          </a>
-          <a href="/yapi-malzemeleri.html" class="category-item" data-category="Yapı Malzemeleri" data-image="/uploads/categories/yapi-malzemeleri.jpg">
-            <span>Yapı Malzemeleri</span>
-          </a>
-          <a href="/elektrikli-el-aletleri-urunleri.html" class="category-item" data-category="Elektrikli El Aletleri" data-image="/uploads/categories/elektrikli-el-aletleri.jpg">
-            <span>Elektrikli El Aletleri</span>
-          </a>
-          <a href="/seramik-urunleri.html" class="category-item" data-category="Seramik ve Fayans" data-image="/uploads/categories/seramik.jpg">
-            <span>Seramik ve Fayans</span>
-          </a>
-          <a href="/banyo-urunleri.html" class="category-item" data-category="Banyo Dolapları" data-image="/uploads/categories/banyo.jpg">
-            <span>Banyo Dolapları</span>
-          </a>
-          <a href="/parke-urunleri.html" class="category-item" data-category="Parke" data-image="/uploads/categories/parke.jpg">
-            <span>Parke</span>
-          </a>
+          <div class="empty-state">Yükleniyor...</div>
         </div>
       </div>
       
       <!-- Sağ Taraf: Görsel Alanı -->
       <div class="showcase-image-area">
-        <a href="/boya-urunleri.html" id="showcaseLink" class="showcase-image-wrapper">
-          <img id="showcaseImage" src="/uploads/categories/boya.jpg" alt="Boya" class="showcase-image" style="opacity: 1; display: block;">
+        <a href="#" id="showcaseLink" class="showcase-image-wrapper">
+          <img id="showcaseImage" src="" alt="" class="showcase-image" style="opacity: 1; display: block;">
         </a>
         <div class="showcase-category-title">
-          <h3 id="showcaseCategoryTitle">Boya</h3>
+          <h3 id="showcaseCategoryTitle">Yükleniyor...</h3>
         </div>
       </div>
     </div>
@@ -610,6 +584,53 @@ function loadInstagramPosts() {
 }
 
 // Kategori Showcase
+let showcaseCategoriesData = [];
+
+function loadShowcaseCategories() {
+  fetch('/api/public/category-showcase')
+    .then(r => r.json())
+    .then(data => {
+      showcaseCategoriesData = data.categories || [];
+      renderShowcaseCategories();
+      initCategoryShowcase();
+    })
+    .catch(err => {
+      console.error('Kategori showcase yükleme hatası:', err);
+      document.getElementById('categoryList').innerHTML = '<div class="empty-state">Kategoriler yüklenemedi.</div>';
+    });
+}
+
+function renderShowcaseCategories() {
+  const categoryList = document.getElementById('categoryList');
+  const showcaseImage = document.getElementById('showcaseImage');
+  const showcaseCategoryTitle = document.getElementById('showcaseCategoryTitle');
+  const showcaseLink = document.getElementById('showcaseLink');
+  
+  if (!showcaseCategoriesData.length) {
+    categoryList.innerHTML = '<div class="empty-state">Henüz kategori eklenmemiş.</div>';
+    return;
+  }
+  
+  // Kategori listesini oluştur
+  categoryList.innerHTML = showcaseCategoriesData.map((cat, index) => {
+    const isActive = index === 0 ? 'active' : '';
+    return `
+      <a href="${cat.url}" class="category-item ${isActive}" data-category="${cat.name}" data-image="${cat.image}" data-url="${cat.url}">
+        <span>${cat.name}</span>
+      </a>
+    `;
+  }).join('');
+  
+  // İlk kategoriyi göster
+  if (showcaseCategoriesData.length > 0) {
+    const firstCategory = showcaseCategoriesData[0];
+    showcaseImage.src = firstCategory.image;
+    showcaseImage.alt = firstCategory.name;
+    showcaseCategoryTitle.textContent = firstCategory.name;
+    showcaseLink.href = firstCategory.url;
+  }
+}
+
 function initCategoryShowcase() {
   const categoryItems = document.querySelectorAll('.category-item');
   const showcaseImage = document.getElementById('showcaseImage');
@@ -638,9 +659,7 @@ function initCategoryShowcase() {
       // Görseli, başlığı ve linki güncelle
       const imageUrl = this.getAttribute('data-image');
       const categoryName = this.getAttribute('data-category');
-      const categoryUrl = this.getAttribute('href');
-      
-      console.log('Kategori hover:', categoryName, 'Görsel:', imageUrl);
+      const categoryUrl = this.getAttribute('data-url') || this.getAttribute('href');
       
       if (imageUrl && categoryName && categoryUrl) {
         // Görseli direkt yükle
@@ -658,7 +677,6 @@ function initCategoryShowcase() {
         // Görsel yüklenemediğinde hata göster
         showcaseImage.onerror = function() {
           console.error('❌ Görsel yüklenemedi:', imageUrl);
-          console.error('Görsel URL test:', window.location.origin + imageUrl);
           // Placeholder göster
           showcaseImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="600"%3E%3Crect fill="%23f0f0f0" width="800" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="24" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EGörsel Bulunamadı%3C/text%3E%3C/svg%3E';
         };
@@ -672,7 +690,7 @@ function initCategoryShowcase() {
         e.preventDefault();
         const imageUrl = this.getAttribute('data-image');
         const categoryName = this.getAttribute('data-category');
-        const categoryUrl = this.getAttribute('href');
+        const categoryUrl = this.getAttribute('data-url') || this.getAttribute('href');
         
         if (imageUrl && categoryName && categoryUrl) {
           showcaseImage.style.opacity = '0';
@@ -703,7 +721,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadPopularProducts();
   loadInstagramPosts();
   initScrollAnimations();
-  initCategoryShowcase();
+  loadShowcaseCategories();
 });
 
 // Scroll Animations
