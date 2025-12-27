@@ -38,45 +38,55 @@
   
   /* TOP INFO BAR */
   .top-info-bar {
-    background: var(--primary-color) !important;
+    background: #c40000 !important;
     color: #ffffff !important;
-    padding: 12px 20px;
-    font-size: 14px;
+    padding: 12px 20px !important;
+    font-size: 14px !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    position: relative;
-    z-index: 1001;
-    width: 100%;
-    margin: 0;
-    box-sizing: border-box;
-    line-height: 1.5;
+    position: relative !important;
+    z-index: 1001 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    line-height: 1.5 !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
   
   .top-info-bar .container {
-    max-width: 1400px;
-    margin: 0 auto;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
     display: flex !important;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 20px;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 20px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   
   .top-info-items {
     display: flex !important;
-    align-items: center;
-    gap: 30px;
-    flex-wrap: wrap;
+    align-items: center !important;
+    gap: 30px !important;
+    flex-wrap: wrap !important;
+    width: auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
   
   .top-info-item {
     display: flex !important;
-    align-items: center;
-    gap: 8px;
-    color: var(--white) !important;
-    text-decoration: none;
+    align-items: center !important;
+    gap: 8px !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
     transition: opacity 0.3s ease;
     visibility: visible !important;
     opacity: 1 !important;
+    width: auto !important;
+    height: auto !important;
   }
   
   .top-info-item:hover {
