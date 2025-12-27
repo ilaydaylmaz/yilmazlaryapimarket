@@ -1362,11 +1362,24 @@ html, body {
 }
 
 /* WELCOME MESSAGE */
+.welcome-section {
+  background: var(--white);
+  padding: 80px 20px;
+}
+
+.welcome-section .container {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  margin: 0 auto !important;
+  max-width: 1200px !important;
+}
+
 .welcome-message {
   text-align: center;
-  margin-top: 80px;
-  padding-top: 60px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin: 0;
+  padding: 0;
+  border: none;
 }
 
 .welcome-title {
@@ -1388,9 +1401,8 @@ html, body {
 
 /* Mobil Düzen */
 @media (max-width: 768px) {
-  .welcome-message {
-    margin-top: 50px;
-    padding-top: 40px;
+  .welcome-section {
+    padding: 60px 20px;
   }
   
   .welcome-title {
@@ -1403,9 +1415,8 @@ html, body {
 }
 
 @media (max-width: 480px) {
-  .welcome-message {
-    margin-top: 40px;
-    padding-top: 30px;
+  .welcome-section {
+    padding: 40px 20px;
   }
   
   .welcome-title {
