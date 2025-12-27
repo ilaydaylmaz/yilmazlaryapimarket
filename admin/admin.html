@@ -1631,9 +1631,32 @@ function yukleShowcaseImage(categoryId, input) {
           if (img) {
             img.src = data.imagePath;
           }
+          // Mevcut görsel bilgisini güncelle
+          const infoDiv = card.querySelector('.image-preview-info');
+          if (infoDiv) {
+            infoDiv.innerHTML = `<small>Mevcut: ${data.imagePath}</small>`;
+          }
         }
+        
+        // Otomatik olarak JSON dosyasına kaydet
+        fetch('/api/category-showcase', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ categories: showcaseCategories })
+        })
+        .then(r => r.json())
+        .then(saveData => {
+          if (saveData.success) {
+            console.log('✅ Kategori showcase otomatik kaydedildi');
+          }
+        })
+        .catch(err => {
+          console.error('Otomatik kaydetme hatası:', err);
+        });
       }
-      alert('✅ Görsel başarıyla yüklendi!');
+      alert('✅ Görsel başarıyla yüklendi ve kaydedildi!');
     } else {
       alert('❌ Hata: ' + (data.message || 'Görsel yüklenemedi'));
     }
