@@ -9,6 +9,7 @@ const { ObjectId } = require("mongodb");
 const nodemailer = require("nodemailer");
 const { getProductsCollection, getContactsCollection, getReviewsCollection, getBlogCollection, connectDB, isMongoDBEnabled } = require("./db");
 const https = require("https");
+const { exec } = require("child_process");
 
 const app = express();
 
@@ -1377,6 +1378,57 @@ app.get("/api/instagram/oembed", async (req, res) => {
 ======================= */
 const CATEGORY_SHOWCASE_FILE = path.join(__dirname, "data", "category-showcase.json");
 
+// Otomatik Git Commit Fonksiyonu
+function autoCommitCategoryImage(imagePath, categoryId) {
+  // Sadece AUTO_COMMIT=true ise çalışsın (production'da güvenlik için)
+  if (process.env.AUTO_COMMIT !== 'true') {
+    console.log('ℹ️ AUTO_COMMIT kapalı, görsel commit edilmeyecek');
+    return;
+  }
+
+  const imageRelativePath = `public/uploads/categories/${path.basename(imagePath)}`;
+  const commitMessage = `Kategori görseli güncellendi: ${categoryId}`;
+
+  console.log('🔄 Git commit başlatılıyor...');
+  
+  // Git add
+  exec(`git add "${imageRelativePath}"`, { cwd: __dirname }, (error, stdout, stderr) => {
+    if (error) {
+      console.error('❌ Git add hatası:', error.message);
+      return;
+    }
+    
+    // Git commit
+    exec(`git commit -m "${commitMessage}"`, { cwd: __dirname }, (error, stdout, stderr) => {
+      if (error) {
+        // Commit hatası olabilir (değişiklik yoksa)
+        if (error.message.includes('nothing to commit')) {
+          console.log('ℹ️ Commit edilecek değişiklik yok');
+        } else {
+          console.error('❌ Git commit hatası:', error.message);
+        }
+        return;
+      }
+      
+      console.log('✅ Git commit başarılı:', commitMessage);
+      
+      // Git push (opsiyonel - dikkatli kullanın)
+      if (process.env.AUTO_PUSH === 'true') {
+        exec('git push', { cwd: __dirname }, (error, stdout, stderr) => {
+          if (error) {
+            console.error('❌ Git push hatası:', error.message);
+            console.log('ℹ️ Manuel olarak push yapabilirsiniz: git push');
+          } else {
+            console.log('✅ Git push başarılı');
+          }
+        });
+      } else {
+        console.log('ℹ️ AUTO_PUSH kapalı, manuel push yapabilirsiniz: git push');
+      }
+    });
+  });
+}
+
 // Data klasörünü oluştur
 if (!fs.existsSync(path.join(__dirname, "data"))) {
   fs.mkdirSync(path.join(__dirname, "data"), { recursive: true });
@@ -1529,6 +1581,10 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
     }
     
     console.log('✅ Görsel başarıyla yüklendi:', newImagePath, 'Category ID:', categoryId);
+    
+    // Otomatik git commit (AUTO_COMMIT=true ise)
+    autoCommitCategoryImage(newPath, categoryId);
+    
     res.json({ success: true, imagePath: newImagePath, message: "Görsel yüklendi" });
   } catch (error) {
     console.error("❌ Kategori görsel yükleme hatası:", error);
