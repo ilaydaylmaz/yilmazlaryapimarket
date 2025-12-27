@@ -1172,6 +1172,56 @@
   flex: 0 0 100%;
 }
 
+/* WELCOME MESSAGE */
+.welcome-message {
+  background: var(--white);
+  padding: 60px 20px;
+  text-align: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.welcome-title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  margin: 0 0 15px 0;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.welcome-subtitle {
+  font-size: 1.3rem;
+  color: var(--text-dark);
+  margin: 0;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+/* Mobil Düzen */
+@media (max-width: 768px) {
+  .welcome-message {
+    padding: 40px 20px;
+  }
+  
+  .welcome-title {
+    font-size: 2rem;
+  }
+  
+  .welcome-subtitle {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-title {
+    font-size: 1.75rem;
+  }
+  
+  .welcome-subtitle {
+    font-size: 1rem;
+  }
+}
+
 /* PRODUCT GROUPS SHOWCASE */
 .product-groups-showcase {
   background: var(--white);
