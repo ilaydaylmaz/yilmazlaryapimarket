@@ -1481,6 +1481,11 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
 // Public kategori showcase (ana sayfa için)
 app.get("/api/public/category-showcase", (req, res) => {
   try {
+    // Cache'i önle
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
       const data = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
       res.json(data);

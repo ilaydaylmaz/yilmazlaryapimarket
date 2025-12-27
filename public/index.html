@@ -587,10 +587,12 @@ function loadInstagramPosts() {
 let showcaseCategoriesData = [];
 
 function loadShowcaseCategories() {
-  fetch('/api/public/category-showcase')
+  // Cache'i önlemek için timestamp ekle
+  fetch('/api/public/category-showcase?t=' + Date.now())
     .then(r => r.json())
     .then(data => {
       showcaseCategoriesData = data.categories || [];
+      console.log('Kategori showcase yüklendi:', showcaseCategoriesData.length, 'kategori');
       renderShowcaseCategories();
       initCategoryShowcase();
     })
