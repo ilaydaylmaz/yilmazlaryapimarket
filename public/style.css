@@ -38,21 +38,22 @@
   
   /* TOP INFO BAR */
   .top-info-bar {
-    background: var(--primary-color);
-    color: var(--white);
+    background: var(--primary-color) !important;
+    color: var(--white) !important;
     padding: 12px 20px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     z-index: 1001;
     width: 100%;
     margin: 0;
+    box-sizing: border-box;
   }
   
   .top-info-bar .container {
     max-width: 1400px;
     margin: 0 auto;
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
@@ -60,19 +61,21 @@
   }
   
   .top-info-items {
-    display: flex;
+    display: flex !important;
     align-items: center;
     gap: 30px;
     flex-wrap: wrap;
   }
   
   .top-info-item {
-    display: flex;
+    display: flex !important;
     align-items: center;
     gap: 8px;
-    color: var(--white);
+    color: var(--white) !important;
     text-decoration: none;
     transition: opacity 0.3s ease;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
   
   .top-info-item:hover {
@@ -81,29 +84,41 @@
   
   .top-info-item i {
     font-size: 1rem;
+    color: var(--white) !important;
+    visibility: visible !important;
   }
   
   .top-info-item span {
-    font-size: 0.9rem;
-    color: var(--white);
+    font-size: 0.95rem;
+    color: var(--white) !important;
     font-weight: 400;
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: inline-block;
   }
   
   .top-info-social {
-    display: flex;
+    display: flex !important;
     align-items: center;
     gap: 15px;
   }
   
   .top-info-social a {
-    color: var(--white);
-    font-size: 1.2rem;
+    color: var(--white) !important;
+    font-size: 1.3rem;
     transition: opacity 0.3s ease;
     text-decoration: none;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
   
   .top-info-social a:hover {
     opacity: 0.8;
+  }
+  
+  .top-info-social a i {
+    color: var(--white) !important;
+    visibility: visible !important;
   }
   
   /* Mobil Düzen */
