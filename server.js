@@ -1501,7 +1501,8 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
     
     categoryId = cleanCategoryId; // Temizlenmiş categoryId'yi kullan
     
-    const newImagePath = `/uploads/categories/${req.file.filename}`;
+    // Yeni dosya adını kullan (yeniden adlandırılmış dosya)
+    const newImagePath = `/uploads/categories/${newFilename}`;
     console.log('📁 Yeni görsel yolu:', newImagePath);
     
     // Eski görseli sil (eğer varsa ve farklıysa)
