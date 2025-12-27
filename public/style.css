@@ -1431,7 +1431,10 @@ html, body {
 /* PRODUCT GROUPS SHOWCASE */
 .product-groups-showcase {
   background: var(--white);
-  padding: 100px 20px;
+  padding: 40px 20px;
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: center;
 }
 
 .product-groups-showcase .container {
@@ -1440,23 +1443,25 @@ html, body {
   border-radius: 0 !important;
   margin: 0 auto !important;
   max-width: 1400px !important;
+  width: 100%;
 }
 
 .showcase-title {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--text-dark);
   text-align: center;
-  margin-bottom: 60px;
+  margin-bottom: 30px;
   letter-spacing: -0.5px;
 }
 
 .showcase-wrapper {
   display: grid;
   grid-template-columns: 300px 1fr;
-  gap: 60px;
+  gap: 40px;
   max-width: 1400px;
   margin: 0 auto;
+  align-items: start;
 }
 
 .showcase-categories {
@@ -1509,13 +1514,16 @@ html, body {
 .showcase-image-area {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 20px;
+  height: 100%;
 }
 
 .showcase-image-wrapper {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  flex: 1;
+  min-height: 400px;
+  max-height: calc(100vh - 350px);
   overflow: hidden;
   border-radius: 0;
   background: var(--light-bg);
@@ -1546,7 +1554,7 @@ html, body {
 }
 
 .showcase-category-title h3 {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 600;
   color: var(--text-dark);
   margin: 0;
@@ -1603,9 +1611,14 @@ html, body {
     font-size: 1.5rem;
   }
   
+  .product-groups-showcase {
+    min-height: auto;
+    padding: 40px 20px;
+  }
+  
   .showcase-title {
-    font-size: 2rem;
-    margin-bottom: 40px;
+    font-size: 1.75rem;
+    margin-bottom: 30px;
   }
 }
 
