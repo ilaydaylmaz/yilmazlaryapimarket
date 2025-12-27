@@ -1442,36 +1442,10 @@ const uploadCategoryImage = multer({
       cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-      // Multer'da req.body henüz hazır olmayabilir, bu yüzden req.body'yi kontrol et
-      let categoryId = (req.body && req.body.categoryId) ? req.body.categoryId : null;
-      
-      // Eğer categoryId yoksa, dosya adından veya başka bir yerden almaya çalış
-      if (!categoryId || categoryId === 'category' || categoryId === 'undefined') {
-        // Dosya adından kategori adını çıkarmaya çalış (son çare)
-        const baseName = path.basename(file.originalname, path.extname(file.originalname));
-        categoryId = baseName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-        console.log('⚠️ categoryId bulunamadı, dosya adından çıkarıldı:', categoryId);
-      }
-      
-      console.log('📝 Dosya adı oluşturuluyor - categoryId:', categoryId, 'req.body:', req.body);
-      
-      // Dosya adını güvenli hale getir (özel karakterleri temizle)
-      categoryId = categoryId.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
-      // Birden fazla tireyi tek tireye çevir
-      categoryId = categoryId.replace(/-+/g, '-');
-      // Başta ve sonda tire varsa kaldır
-      categoryId = categoryId.replace(/^-+|-+$/g, '');
-      
+      // Geçici dosya adı - endpoint'te categoryId'ye göre yeniden adlandırılacak
       const ext = path.extname(file.originalname).toLowerCase();
-      // Eğer categoryId hala boşsa veya sadece tire ise, timestamp kullan
-      if (!categoryId || categoryId === '-' || categoryId.length === 0 || categoryId === 'category') {
-        categoryId = 'category-' + Date.now();
-        console.log('⚠️ categoryId geçersiz, timestamp kullanılıyor:', categoryId);
-      }
-      
-      const filename = `${categoryId}${ext}`;
-      console.log('✅ Dosya adı:', filename);
-      cb(null, filename);
+      const tempFilename = `temp-${Date.now()}-${Math.random().toString(36).substring(7)}${ext}`;
+      cb(null, tempFilename);
     }
   }),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
@@ -1492,27 +1466,40 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
       return res.status(400).json({ success: false, message: "Görsel yüklenmedi" });
     }
     
-    // categoryId'yi kontrol et - dosya adından da alabiliriz
+    // categoryId'yi kontrol et
     let categoryId = req.body.categoryId;
     
-    // Eğer categoryId yoksa veya geçersizse, dosya adından çıkar
-    if (!categoryId || categoryId === 'category' || categoryId === 'undefined') {
-      const filename = req.file.filename;
-      // Dosya adından uzantıyı kaldır ve categoryId'yi çıkar
-      categoryId = path.basename(filename, path.extname(filename));
-      // Eğer dosya adı "category-timestamp" formatındaysa, hata ver
-      if (categoryId.startsWith('category-')) {
-        fs.unlinkSync(req.file.path);
-        return res.status(400).json({ success: false, message: "Category ID gerekli. Lütfen sayfayı yenileyin ve tekrar deneyin." });
-      }
-      console.log('⚠️ categoryId req.body\'den alınamadı, dosya adından çıkarıldı:', categoryId);
-    }
-    
-    if (!categoryId || categoryId === 'category') {
+    if (!categoryId || categoryId === 'category' || categoryId === 'undefined' || categoryId === 'null') {
       // Yüklenen dosyayı sil
       fs.unlinkSync(req.file.path);
-      return res.status(400).json({ success: false, message: "Category ID gerekli" });
+      return res.status(400).json({ success: false, message: "Category ID gerekli. Lütfen sayfayı yenileyin ve tekrar deneyin." });
     }
+    
+    // categoryId'yi temizle ve dosya adı oluştur
+    let cleanCategoryId = String(categoryId).replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
+    cleanCategoryId = cleanCategoryId.replace(/-+/g, '-');
+    cleanCategoryId = cleanCategoryId.replace(/^-+|-+$/g, '');
+    
+    if (!cleanCategoryId || cleanCategoryId === '-' || cleanCategoryId.length === 0) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ success: false, message: "Geçersiz Category ID" });
+    }
+    
+    // Dosyayı categoryId'ye göre yeniden adlandır
+    const ext = path.extname(req.file.filename);
+    const newFilename = `${cleanCategoryId}${ext}`;
+    const newPath = path.join(path.dirname(req.file.path), newFilename);
+    
+    // Eğer aynı isimde dosya varsa sil
+    if (fs.existsSync(newPath) && newPath !== req.file.path) {
+      fs.unlinkSync(newPath);
+    }
+    
+    // Dosyayı yeniden adlandır
+    fs.renameSync(req.file.path, newPath);
+    console.log('✅ Dosya yeniden adlandırıldı:', req.file.filename, '->', newFilename);
+    
+    categoryId = cleanCategoryId; // Temizlenmiş categoryId'yi kullan
     
     const newImagePath = `/uploads/categories/${req.file.filename}`;
     console.log('📁 Yeni görsel yolu:', newImagePath);
