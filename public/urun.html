@@ -718,7 +718,7 @@ fetch("/api/public/products?details=true")
             
             ${akcaliGallery}
             <div style="margin-top: 30px;">
-              <a href="/urunler.html" class="btn" style="display: inline-block; background: var(--light-bg); color: var(--text-dark); border: 2px solid #e0e0e0;">← Tüm Ürünlere Dön</a>
+              <a href="${categoryUrl}" class="btn" style="display: inline-block; background: var(--light-bg); color: var(--text-dark); border: 2px solid #e0e0e0;">← ${p.kategori ? categoryName + ' Ürünlerine Dön' : 'Tüm Ürünlere Dön'}</a>
             </div>
           </div>
         </div>
