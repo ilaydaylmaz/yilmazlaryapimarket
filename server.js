@@ -1562,39 +1562,87 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
     
     categoryId = cleanCategoryId; // Temizlenmiş categoryId'yi kullan
     
+    // Görseli base64'e çevir (Git'te kalması için)
+    const imageBuffer = fs.readFileSync(newPath);
+    const imageBase64 = imageBuffer.toString('base64');
+    const mimeType = req.file.mimetype || 'image/jpeg';
+    const imageDataUri = `data:${mimeType};base64,${imageBase64}`;
+    
     // Yeni dosya adını kullan (yeniden adlandırılmış dosya)
     const newImagePath = `/uploads/categories/${newFilename}`;
     console.log('📁 Yeni görsel yolu:', newImagePath);
+    console.log('📦 Base64 görsel boyutu:', Math.round(imageBase64.length / 1024), 'KB');
     
-    // Eski görseli sil (eğer varsa ve farklıysa)
+    // JSON dosyasını güncelle - base64 görseli ekle
     try {
+      let showcaseData = { categories: [] };
       if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
-        const data = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
-        const category = data.categories?.find(c => c.id === categoryId);
-        if (category && category.image) {
-          const oldImagePath = category.image.replace(/^\//, ''); // Başındaki / işaretini kaldır
-          const fullOldPath = path.join('public', oldImagePath);
-          const newImagePathClean = newImagePath.replace(/^\//, '');
-          
-          // Eski görsel farklı bir dosya ise sil
-          if (oldImagePath !== newImagePathClean && fs.existsSync(fullOldPath) && oldImagePath.includes('/categories/')) {
+        showcaseData = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
+      }
+      
+      // Kategoriyi bul veya oluştur
+      let category = showcaseData.categories?.find(c => c.id === categoryId);
+      if (!category) {
+        category = { id: categoryId, name: categoryId, image: newImagePath, imageBase64: imageDataUri };
+        if (!showcaseData.categories) {
+          showcaseData.categories = [];
+        }
+        showcaseData.categories.push(category);
+      } else {
+        // Mevcut kategoriyi güncelle
+        category.image = newImagePath;
+        category.imageBase64 = imageDataUri;
+      }
+      
+      showcaseData.updatedAt = new Date().toISOString();
+      
+      // JSON dosyasını kaydet
+      fs.writeFileSync(CATEGORY_SHOWCASE_FILE, JSON.stringify(showcaseData, null, 2), 'utf8');
+      console.log('✅ Base64 görsel JSON dosyasına kaydedildi');
+      
+      // Eski görseli sil (eğer varsa ve farklıysa)
+      if (category.image && category.image !== newImagePath) {
+        const oldImagePath = category.image.replace(/^\//, '');
+        const fullOldPath = path.join('public', oldImagePath);
+        if (fs.existsSync(fullOldPath) && oldImagePath.includes('/categories/')) {
+          try {
             fs.unlinkSync(fullOldPath);
-            console.log('🗑️ Eski görsel silindi:', fullOldPath);
-          } else {
-            console.log('ℹ️ Eski görsel aynı veya bulunamadı, silinmedi');
+            console.log('🗑️ Eski görsel dosyası silindi:', fullOldPath);
+          } catch (unlinkError) {
+            console.warn('⚠️ Eski görsel silme hatası (önemli değil):', unlinkError.message);
           }
         }
       }
-    } catch (oldImageError) {
-      console.warn('⚠️ Eski görsel silme hatası (önemli değil):', oldImageError.message);
+    } catch (jsonError) {
+      console.error('❌ JSON dosyası güncelleme hatası:', jsonError);
+      // Hata olsa bile devam et
     }
     
     console.log('✅ Görsel başarıyla yüklendi:', newImagePath, 'Category ID:', categoryId);
     
-    // Otomatik git commit (AUTO_COMMIT=true ise)
+    // Otomatik git commit (hem dosya hem JSON)
     autoCommitCategoryImage(newPath, categoryId);
+    // JSON dosyasını da commit et
+    try {
+      exec(`git add "${CATEGORY_SHOWCASE_FILE}"`, { cwd: __dirname }, (error) => {
+        if (!error) {
+          exec(`git commit -m "Kategori görseli base64 olarak kaydedildi: ${categoryId}"`, { cwd: __dirname }, (error) => {
+            if (!error) {
+              console.log('✅ JSON dosyası commit edildi');
+            }
+          });
+        }
+      });
+    } catch (gitError) {
+      console.warn('⚠️ Git commit hatası (önemli değil):', gitError.message);
+    }
     
-    res.json({ success: true, imagePath: newImagePath, message: "Görsel yüklendi" });
+    res.json({ 
+      success: true, 
+      imagePath: newImagePath, 
+      imageBase64: imageDataUri,
+      message: "Görsel yüklendi ve base64 olarak kaydedildi" 
+    });
   } catch (error) {
     console.error("❌ Kategori görsel yükleme hatası:", error);
     res.status(500).json({ success: false, message: "Sunucu hatası: " + error.message });
