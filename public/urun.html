@@ -636,13 +636,18 @@ fetch("/api/public/products?details=true")
       const getCategoryUrl = (kategori) => {
         const categoryMap = {
           'Boya Ürünleri': '/boya-urunleri.html',
+          'Boya': '/boya-urunleri.html',
           'Hırdavat Ürünleri': '/hirdavat-urunleri.html',
+          'Hırdavat': '/hirdavat-urunleri.html',
           'Elektrik Ürünleri': '/elektrik-urunleri.html',
+          'Elektrik': '/elektrik-urunleri.html',
           'Tesisat Ürünleri': '/tesisat-urunleri.html',
+          'Tesisat': '/tesisat-urunleri.html',
           'Yapı Malzemeleri': '/yapi-malzemeleri.html',
           'El Aletleri Ürünleri': '/el-aletleri-urunleri.html',
           'Elektrikli El Aletleri': '/elektrikli-el-aletleri-urunleri.html',
           'Seramik Ürünleri': '/seramik-urunleri.html',
+          'Seramik ve Fayans': '/seramik-urunleri.html',
           'Banyo Dolapları': '/banyo-urunleri.html',
           'Parke Ürünleri': '/parke-urunleri.html',
           'Kaba Grubu': '/kaba-grubu.html',
@@ -651,8 +656,22 @@ fetch("/api/public/products?details=true")
         return categoryMap[kategori] || '/urunler.html';
       };
       
+      // Kategori adını düzenle (sadece kategori adı, "Ürünleri" ekleme)
+      const getCategoryDisplayName = (kategori) => {
+        if (!kategori) return 'Tüm Ürünler';
+        // "Ürünleri" ile bitiyorsa kaldır
+        if (kategori.endsWith(' Ürünleri')) {
+          return kategori.replace(' Ürünleri', '');
+        }
+        // "ve Fayans" gibi özel durumlar
+        if (kategori === 'Seramik ve Fayans') {
+          return 'Seramik ve Fayans';
+        }
+        return kategori;
+      };
+      
       const categoryUrl = p.kategori ? getCategoryUrl(p.kategori) : '/urunler.html';
-      const categoryName = p.kategori || 'Ürünler';
+      const categoryName = p.kategori ? getCategoryDisplayName(p.kategori) : 'Tüm Ürünler';
       
       const breadcrumbHTML = `
         <nav class="breadcrumb" aria-label="Breadcrumb">
