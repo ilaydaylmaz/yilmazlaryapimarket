@@ -20,9 +20,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // Form data için
 
 app.use(session({
-  secret: "yapi-market-secret",
+  secret: process.env.SESSION_SECRET || "yapi-market-secret",
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    secure: false, // HTTPS için true yapın
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 saat
+  }
 }));
 
 /* =======================

@@ -1553,7 +1553,9 @@ document.getElementById("productForm").addEventListener("keypress", (e) => {
 let showcaseCategories = [];
 
 function yukleShowcaseCategories() {
-  fetch('/api/category-showcase')
+  fetch('/api/category-showcase', {
+    credentials: 'include'
+  })
     .then(r => {
       if (!r.ok) {
         throw new Error('HTTP ' + r.status + ': ' + r.statusText);
@@ -1580,6 +1582,7 @@ function yukleShowcaseCategories() {
         // Varsayılan kategorileri kaydet
         fetch('/api/category-showcase', {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json'
           },
@@ -1663,6 +1666,7 @@ function yukleShowcaseImage(categoryId, input) {
   
   fetch('/api/category-showcase/image', {
     method: 'POST',
+    credentials: 'include',
     body: formData
   })
   .then(r => {
@@ -1704,7 +1708,9 @@ function yukleShowcaseImage(categoryId, input) {
         }
         
         // JSON dosyasından mevcut kategorileri al, sadece bu kategoriyi güncelle
-        fetch('/api/category-showcase')
+        fetch('/api/category-showcase', {
+          credentials: 'include'
+        })
           .then(r => {
             if (!r.ok) {
               // Eğer JSON dosyası yoksa, varsayılan kategorileri kullan
@@ -1740,6 +1746,7 @@ function yukleShowcaseImage(categoryId, input) {
             // Güncellenmiş kategorileri kaydet
             return fetch('/api/category-showcase', {
               method: 'POST',
+              credentials: 'include',
               headers: {
                 'Content-Type': 'application/json'
               },
@@ -1792,6 +1799,7 @@ function kaydetShowcaseCategory(categoryId) {
   
   fetch('/api/category-showcase', {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json'
     },
