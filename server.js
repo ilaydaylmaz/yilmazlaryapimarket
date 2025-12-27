@@ -600,6 +600,7 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
         id: productId,
         ad: req.body.ad || "",
         kategori: req.body.kategori || "",
+        altKategori: req.body.altKategori || "",
         marka: req.body.marka || "",
         aciklama: req.body.aciklama || "",
         resim: resimData,
