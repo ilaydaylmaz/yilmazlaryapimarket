@@ -39,15 +39,16 @@
   /* TOP INFO BAR */
   .top-info-bar {
     background: var(--primary-color) !important;
-    color: var(--white) !important;
+    color: #ffffff !important;
     padding: 12px 20px;
-    font-size: 0.95rem;
+    font-size: 14px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     z-index: 1001;
     width: 100%;
     margin: 0;
     box-sizing: border-box;
+    line-height: 1.5;
   }
   
   .top-info-bar .container {
@@ -90,13 +91,14 @@
   }
   
   .top-info-item span {
-    font-size: 0.95rem;
+    font-size: 14px !important;
     color: #ffffff !important;
     font-weight: 400;
     visibility: visible !important;
     opacity: 1 !important;
     display: inline-block !important;
     white-space: nowrap;
+    line-height: 1.5;
   }
   
   .top-info-social {
