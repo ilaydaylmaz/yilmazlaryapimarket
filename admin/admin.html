@@ -1623,28 +1623,42 @@ function yukleShowcaseImage(categoryId, input) {
     method: 'POST',
     body: formData
   })
-  .then(r => r.json())
+  .then(r => {
+    if (!r.ok) {
+      throw new Error('HTTP ' + r.status);
+    }
+    return r.json();
+  })
   .then(data => {
     if (data.success) {
+      console.log('✅ Görsel yüklendi, categoryId:', categoryId, 'imagePath:', data.imagePath);
+      
       // Görseli güncelle
       const category = showcaseCategories.find(c => c.id === categoryId);
       if (category) {
         category.image = data.imagePath;
+        console.log('✅ Kategori bulundu ve görsel güncellendi:', category);
+        
         // Görseli sayfada güncelle
         const card = document.querySelector(`[data-category-id="${categoryId}"]`);
         if (card) {
           const img = card.querySelector('img');
           if (img) {
-            img.src = data.imagePath;
+            // Cache'i önlemek için timestamp ekle
+            img.src = data.imagePath + '?t=' + Date.now();
+            console.log('✅ Görsel src güncellendi:', img.src);
           }
           // Mevcut görsel bilgisini güncelle
           const infoDiv = card.querySelector('.image-preview-info');
           if (infoDiv) {
             infoDiv.innerHTML = `<small>Mevcut: ${data.imagePath}</small>`;
           }
+        } else {
+          console.warn('⚠️ Card bulunamadı:', categoryId);
         }
         
         // Otomatik olarak JSON dosyasına kaydet
+        console.log('💾 JSON dosyasına kaydediliyor...', showcaseCategories.length, 'kategori');
         fetch('/api/category-showcase', {
           method: 'POST',
           headers: {
@@ -1652,7 +1666,12 @@ function yukleShowcaseImage(categoryId, input) {
           },
           body: JSON.stringify({ categories: showcaseCategories })
         })
-        .then(r => r.json())
+        .then(r => {
+          if (!r.ok) {
+            throw new Error('HTTP ' + r.status);
+          }
+          return r.json();
+        })
         .then(saveData => {
           if (saveData.success) {
             console.log('✅ Kategori showcase otomatik kaydedildi');
@@ -1667,7 +1686,8 @@ function yukleShowcaseImage(categoryId, input) {
           alert('⚠️ Görsel yüklendi ama kaydedilemedi: ' + err.message);
         });
       } else {
-        alert('❌ Kategori bulunamadı!');
+        console.error('❌ Kategori bulunamadı! categoryId:', categoryId, 'Mevcut kategoriler:', showcaseCategories.map(c => c.id));
+        alert('❌ Kategori bulunamadı! Lütfen sayfayı yenileyin.');
       }
     } else {
       alert('❌ Hata: ' + (data.message || 'Görsel yüklenemedi'));

@@ -1476,7 +1476,30 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
       return res.status(400).json({ success: false, message: "Category ID gerekli" });
     }
     
+    // Eski görseli sil (eğer varsa)
+    try {
+      if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
+        const data = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
+        const category = data.categories?.find(c => c.id === categoryId);
+        if (category && category.image) {
+          const oldImagePath = category.image.replace(/^\//, ''); // Başındaki / işaretini kaldır
+          const fullOldPath = path.join('public', oldImagePath);
+          if (fs.existsSync(fullOldPath) && oldImagePath.includes('/categories/')) {
+            // Yeni dosya ile aynı değilse sil
+            const newImagePath = `/uploads/categories/${req.file.filename}`;
+            if (oldImagePath !== newImagePath.replace(/^\//, '')) {
+              fs.unlinkSync(fullOldPath);
+              console.log('✅ Eski görsel silindi:', fullOldPath);
+            }
+          }
+        }
+      }
+    } catch (oldImageError) {
+      console.warn('Eski görsel silme hatası (önemli değil):', oldImageError.message);
+    }
+    
     const imagePath = `/uploads/categories/${req.file.filename}`;
+    console.log('✅ Görsel yüklendi:', imagePath, 'Category ID:', categoryId);
     res.json({ success: true, imagePath: imagePath, message: "Görsel yüklendi" });
   } catch (error) {
     console.error("Kategori görsel yükleme hatası:", error);
