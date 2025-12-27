@@ -1392,16 +1392,11 @@ const CATEGORIES_CONFIG_FILE = path.join(__dirname, "data", "categories.json");
 
 // Otomatik Git Commit Fonksiyonu
 function autoCommitCategoryImage(imagePath, categoryId) {
-  // Sadece AUTO_COMMIT=true ise çalışsın (production'da güvenlik için)
-  if (process.env.AUTO_COMMIT !== 'true') {
-    console.log('ℹ️ AUTO_COMMIT kapalı, görsel commit edilmeyecek');
-    return;
-  }
-
+  // Kategori görselleri her zaman commit edilmeli (deploy için kritik)
   const imageRelativePath = `public/uploads/categories/${path.basename(imagePath)}`;
   const commitMessage = `Kategori görseli güncellendi: ${categoryId}`;
 
-  console.log('🔄 Git commit başlatılıyor...');
+  console.log('🔄 Git commit başlatılıyor...', imageRelativePath);
   
   // Git add
   exec(`git add "${imageRelativePath}"`, { cwd: __dirname }, (error, stdout, stderr) => {
@@ -1410,12 +1405,14 @@ function autoCommitCategoryImage(imagePath, categoryId) {
       return;
     }
     
+    console.log('✅ Git add başarılı:', imageRelativePath);
+    
     // Git commit
     exec(`git commit -m "${commitMessage}"`, { cwd: __dirname }, (error, stdout, stderr) => {
       if (error) {
         // Commit hatası olabilir (değişiklik yoksa)
-        if (error.message.includes('nothing to commit')) {
-          console.log('ℹ️ Commit edilecek değişiklik yok');
+        if (error.message.includes('nothing to commit') || error.message.includes('no changes')) {
+          console.log('ℹ️ Commit edilecek değişiklik yok (dosya zaten commit edilmiş)');
         } else {
           console.error('❌ Git commit hatası:', error.message);
         }
