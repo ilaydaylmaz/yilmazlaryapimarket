@@ -198,14 +198,41 @@ html, body {
   
   @media (max-width: 640px) {
     .top-info-bar {
-      font-size: 12px !important;
+      font-size: 11px !important;
       padding: 8px 10px;
+    }
+    
+    .top-info-bar .container {
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
     }
     
     .top-info-items {
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       width: 100%;
+      align-items: center;
+    }
+
+    .top-info-item {
+      font-size: 11px !important;
+      gap: 5px;
+    }
+
+    .top-info-item span {
+      font-size: 11px !important;
+      display: block;
+      text-align: center;
+    }
+
+    .top-info-item i {
+      font-size: 12px !important;
+    }
+
+    .top-info-social {
+      gap: 15px;
+      justify-content: center;
     }
     
     .top-info-item {
@@ -3355,19 +3382,90 @@ input[type="search"]:focus {
     height: 80px;
   }
 
+  .product-info h1 {
+    font-size: 1.8rem;
+  }
+
   .product-info h2 {
-    font-size: 2rem;
+    font-size: 1.8rem;
+  }
+
+  .product-actions {
+    margin-top: 30px;
+  }
+
+  .product-actions > div {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .product-actions .btn-whatsapp,
+  .product-actions .btn-phone,
+  .product-actions .btn-secondary {
+    width: 100%;
+    min-width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .product-meta {
+    gap: 8px;
+  }
+
+  .product-description {
+    font-size: 0.95rem;
   }
   
   .footer-inner {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 30px;
     padding-bottom: 30px;
   }
 
   .footer-center {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 30px;
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .footer-column {
+    text-align: center;
+  }
+
+  .footer-column h3 {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+  }
+
+  .footer-column ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .footer-column ul li {
+    margin-bottom: 10px;
+  }
+
+  .footer-column ul li a {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  .footer-column ul li a:hover {
+    color: var(--primary-color);
+  }
+
+  .footer-left {
+    text-align: center;
+    align-items: center;
+  }
+
+  .footer-right {
+    text-align: center;
+  }
+
+  .social-icons {
+    justify-content: center;
   }
 
   .footer-bottom {
@@ -3464,12 +3562,119 @@ input[type="search"]:focus {
   }
 
   .nav-item {
-    font-size: 12px;
+    font-size: 11px;
     padding: 5px 0;
   }
 
   .navbar-logo img {
-    height: 40px;
+    height: 35px;
+  }
+
+  /* Container mobil */
+  .container {
+    padding: 20px 15px !important;
+    margin: 0 auto !important;
+    max-width: 100% !important;
+  }
+
+  /* Breadcrumb mobil */
+  .breadcrumb {
+    padding: 10px 15px;
+    font-size: 0.8rem;
+  }
+
+  .breadcrumb-list {
+    gap: 5px;
+  }
+
+  .breadcrumb-separator {
+    margin: 0 4px;
+  }
+
+  /* Ürün listesi mobil */
+  .urunler {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 0 10px;
+  }
+
+  .urun-image-wrapper {
+    height: 180px;
+  }
+
+  /* Kategori showcase mobil */
+  .product-groups-showcase {
+    padding: 30px 15px;
+  }
+
+  .showcase-title {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  .category-list {
+    gap: 10px;
+  }
+
+  .category-item {
+    padding: 12px 10px;
+    font-size: 0.9rem;
+  }
+
+  .showcase-image-wrapper {
+    border-radius: 10px;
+  }
+
+  .showcase-category-title h3 {
+    font-size: 1.2rem;
+  }
+
+  /* Hero section mobil */
+  .hero {
+    padding: 60px 15px 50px;
+    min-height: 70vh;
+  }
+
+  .hero-title {
+    font-size: 1.8rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .hero-description {
+    font-size: 0.85rem;
+  }
+
+  /* Butonlar mobil */
+  .btn {
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Formlar mobil */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="search"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+
+  /* Tablolar mobil */
+  table {
+    font-size: 0.85rem;
+  }
+
+  table th,
+  table td {
+    padding: 8px 6px;
   }
 
   .hero {
