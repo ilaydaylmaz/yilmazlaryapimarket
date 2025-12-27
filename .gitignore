@@ -23,6 +23,9 @@ Thumbs.db
 # Uploads (optional - uncomment if you don't want to track uploads)
 # public/uploads/
 
+# Kategori görselleri her zaman commit edilmeli (deploy için gerekli)
+!public/uploads/categories/
+
 # Data files (optional - uncomment if you want to keep data private)
 # data/
 
