@@ -1443,14 +1443,24 @@ const uploadCategoryImage = multer({
     },
     filename: (req, file, cb) => {
       let categoryId = req.body.categoryId || 'category';
+      console.log('📝 Dosya adı oluşturuluyor - categoryId:', categoryId);
+      
       // Dosya adını güvenli hale getir (özel karakterleri temizle)
       categoryId = categoryId.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
+      // Birden fazla tireyi tek tireye çevir
+      categoryId = categoryId.replace(/-+/g, '-');
+      // Başta ve sonda tire varsa kaldır
+      categoryId = categoryId.replace(/^-+|-+$/g, '');
+      
       const ext = path.extname(file.originalname).toLowerCase();
       // Eğer categoryId boşsa veya sadece tire ise, timestamp kullan
       if (!categoryId || categoryId === '-' || categoryId.length === 0) {
         categoryId = 'category-' + Date.now();
       }
-      cb(null, `${categoryId}${ext}`);
+      
+      const filename = `${categoryId}${ext}`;
+      console.log('✅ Dosya adı:', filename);
+      cb(null, filename);
     }
   }),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
@@ -1465,6 +1475,8 @@ const uploadCategoryImage = multer({
 
 app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image"), (req, res) => {
   try {
+    console.log('📤 Görsel yükleme isteği - categoryId:', req.body.categoryId, 'filename:', req.file?.filename);
+    
     if (!req.file) {
       return res.status(400).json({ success: false, message: "Görsel yüklenmedi" });
     }
@@ -1476,7 +1488,10 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
       return res.status(400).json({ success: false, message: "Category ID gerekli" });
     }
     
-    // Eski görseli sil (eğer varsa)
+    const newImagePath = `/uploads/categories/${req.file.filename}`;
+    console.log('📁 Yeni görsel yolu:', newImagePath);
+    
+    // Eski görseli sil (eğer varsa ve farklıysa)
     try {
       if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
         const data = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
@@ -1484,25 +1499,25 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
         if (category && category.image) {
           const oldImagePath = category.image.replace(/^\//, ''); // Başındaki / işaretini kaldır
           const fullOldPath = path.join('public', oldImagePath);
-          if (fs.existsSync(fullOldPath) && oldImagePath.includes('/categories/')) {
-            // Yeni dosya ile aynı değilse sil
-            const newImagePath = `/uploads/categories/${req.file.filename}`;
-            if (oldImagePath !== newImagePath.replace(/^\//, '')) {
-              fs.unlinkSync(fullOldPath);
-              console.log('✅ Eski görsel silindi:', fullOldPath);
-            }
+          const newImagePathClean = newImagePath.replace(/^\//, '');
+          
+          // Eski görsel farklı bir dosya ise sil
+          if (oldImagePath !== newImagePathClean && fs.existsSync(fullOldPath) && oldImagePath.includes('/categories/')) {
+            fs.unlinkSync(fullOldPath);
+            console.log('🗑️ Eski görsel silindi:', fullOldPath);
+          } else {
+            console.log('ℹ️ Eski görsel aynı veya bulunamadı, silinmedi');
           }
         }
       }
     } catch (oldImageError) {
-      console.warn('Eski görsel silme hatası (önemli değil):', oldImageError.message);
+      console.warn('⚠️ Eski görsel silme hatası (önemli değil):', oldImageError.message);
     }
     
-    const imagePath = `/uploads/categories/${req.file.filename}`;
-    console.log('✅ Görsel yüklendi:', imagePath, 'Category ID:', categoryId);
-    res.json({ success: true, imagePath: imagePath, message: "Görsel yüklendi" });
+    console.log('✅ Görsel başarıyla yüklendi:', newImagePath, 'Category ID:', categoryId);
+    res.json({ success: true, imagePath: newImagePath, message: "Görsel yüklendi" });
   } catch (error) {
-    console.error("Kategori görsel yükleme hatası:", error);
+    console.error("❌ Kategori görsel yükleme hatası:", error);
     res.status(500).json({ success: false, message: "Sunucu hatası: " + error.message });
   }
 });

@@ -1615,6 +1615,8 @@ function yukleShowcaseImage(categoryId, input) {
   const file = input.files[0];
   if (!file) return;
   
+  console.log('📤 Görsel yükleniyor - categoryId:', categoryId, 'dosya:', file.name);
+  
   const formData = new FormData();
   formData.append('image', file);
   formData.append('categoryId', categoryId);
