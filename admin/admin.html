@@ -14,6 +14,7 @@
     <div class="header-actions">
       <button class="btn-tab" id="productsTab" onclick="showTab('products')">📦 Ürünler</button>
       <button class="btn-tab" id="ceramicTab" onclick="showTab('ceramic')">🏺 Seramik Koleksiyonları</button>
+      <button class="btn-tab" id="showcaseTab" onclick="showTab('showcase')">🎨 Ana Sayfa Kategorileri</button>
       <button class="btn-tab active" id="messagesTab" onclick="showTab('messages')">💬 Mesajlar</button>
       <a href="/logout" class="btn-logout" onclick="localStorage.removeItem('adminSession');">🚪 Çıkış Yap</a>
     </div>
@@ -100,6 +101,16 @@
         <div id="ceramicCollectionsList" class="collections-list">
           <div class="empty-state">Yükleniyor...</div>
         </div>
+      </div>
+    </div>
+
+    <!-- Kategori Showcase Bölümü -->
+    <div id="showcaseSection" class="showcase-section" style="display: none;">
+      <h2>🎨 Ana Sayfa Kategorileri Yönetimi</h2>
+      <p style="margin-bottom: 20px; color: #666;">Ana sayfadaki kategori showcase bölümünü yönetin. Her kategori için görsel yükleyebilir ve isimlerini düzenleyebilirsiniz.</p>
+      
+      <div id="showcaseCategoriesList" class="showcase-categories-list">
+        <div class="empty-state">Yükleniyor...</div>
       </div>
     </div>
 
@@ -1057,25 +1068,41 @@ function showTab(tab) {
   if (tab === 'products') {
     document.getElementById('productsSection').style.display = 'block';
     document.getElementById('ceramicSection').style.display = 'none';
+    document.getElementById('showcaseSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'none';
     document.getElementById('productsTab').classList.add('active');
     document.getElementById('ceramicTab').classList.remove('active');
+    document.getElementById('showcaseTab').classList.remove('active');
     document.getElementById('messagesTab').classList.remove('active');
     yukle();
   } else if (tab === 'ceramic') {
     document.getElementById('productsSection').style.display = 'none';
     document.getElementById('ceramicSection').style.display = 'block';
+    document.getElementById('showcaseSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'none';
     document.getElementById('productsTab').classList.remove('active');
     document.getElementById('ceramicTab').classList.add('active');
+    document.getElementById('showcaseTab').classList.remove('active');
     document.getElementById('messagesTab').classList.remove('active');
     yukleCeramicCollections();
+  } else if (tab === 'showcase') {
+    document.getElementById('productsSection').style.display = 'none';
+    document.getElementById('ceramicSection').style.display = 'none';
+    document.getElementById('showcaseSection').style.display = 'block';
+    document.getElementById('messagesSection').style.display = 'none';
+    document.getElementById('productsTab').classList.remove('active');
+    document.getElementById('ceramicTab').classList.remove('active');
+    document.getElementById('showcaseTab').classList.add('active');
+    document.getElementById('messagesTab').classList.remove('active');
+    yukleShowcaseCategories();
   } else {
     document.getElementById('productsSection').style.display = 'none';
     document.getElementById('ceramicSection').style.display = 'none';
+    document.getElementById('showcaseSection').style.display = 'none';
     document.getElementById('messagesSection').style.display = 'block';
     document.getElementById('productsTab').classList.remove('active');
     document.getElementById('ceramicTab').classList.remove('active');
+    document.getElementById('showcaseTab').classList.remove('active');
     document.getElementById('messagesTab').classList.add('active');
     yukleMesajlar();
   }
@@ -1519,6 +1546,134 @@ document.getElementById("productForm").addEventListener("keypress", (e) => {
     }
   }
 });
+</script>
+
+<script>
+// Kategori Showcase Yönetimi
+let showcaseCategories = [];
+
+function yukleShowcaseCategories() {
+  fetch('/api/category-showcase')
+    .then(r => r.json())
+    .then(data => {
+      showcaseCategories = data.categories || [];
+      gosterShowcaseCategories();
+    })
+    .catch(err => {
+      console.error('Kategori showcase yükleme hatası:', err);
+      document.getElementById('showcaseCategoriesList').innerHTML = '<div class="empty-state">Hata: ' + err.message + '</div>';
+    });
+}
+
+function gosterShowcaseCategories() {
+  const listDiv = document.getElementById('showcaseCategoriesList');
+  
+  if (showcaseCategories.length === 0) {
+    listDiv.innerHTML = '<div class="empty-state">Henüz kategori eklenmemiş.</div>';
+    return;
+  }
+  
+  listDiv.innerHTML = showcaseCategories.map(cat => {
+    return `
+      <div class="showcase-category-card" data-category-id="${cat.id}">
+        <div class="showcase-category-header">
+          <h3>${cat.name}</h3>
+        </div>
+        <div class="showcase-category-content">
+          <div class="showcase-category-image">
+            <img src="${cat.image}" alt="${cat.name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'300\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'400\\' height=\\'300\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'18\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EGörsel Yok%3C/text%3E%3C/svg%3E'">
+          </div>
+          <div class="showcase-category-form">
+            <div class="form-group">
+              <label>Kategori İsmi</label>
+              <input type="text" class="showcase-category-name" value="${cat.name}" data-category-id="${cat.id}">
+            </div>
+            <div class="form-group">
+              <label>Görsel</label>
+              <input type="file" class="showcase-category-image-input" accept="image/*" data-category-id="${cat.id}" onchange="yukleShowcaseImage('${cat.id}', this)">
+              <div class="image-preview-info">
+                <small>Mevcut: ${cat.image}</small>
+              </div>
+            </div>
+            <div class="form-group">
+              <button type="button" class="btn btn-primary" onclick="kaydetShowcaseCategory('${cat.id}')">💾 Kaydet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function yukleShowcaseImage(categoryId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  const formData = new FormData();
+  formData.append('image', file);
+  formData.append('categoryId', categoryId);
+  
+  fetch('/api/category-showcase/image', {
+    method: 'POST',
+    body: formData
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      // Görseli güncelle
+      const category = showcaseCategories.find(c => c.id === categoryId);
+      if (category) {
+        category.image = data.imagePath;
+        // Görseli sayfada güncelle
+        const card = document.querySelector(`[data-category-id="${categoryId}"]`);
+        if (card) {
+          const img = card.querySelector('img');
+          if (img) {
+            img.src = data.imagePath;
+          }
+        }
+      }
+      alert('✅ Görsel başarıyla yüklendi!');
+    } else {
+      alert('❌ Hata: ' + (data.message || 'Görsel yüklenemedi'));
+    }
+  })
+  .catch(err => {
+    console.error('Görsel yükleme hatası:', err);
+    alert('❌ Hata: ' + err.message);
+  });
+}
+
+function kaydetShowcaseCategory(categoryId) {
+  const category = showcaseCategories.find(c => c.id === categoryId);
+  if (!category) return;
+  
+  const nameInput = document.querySelector(`.showcase-category-name[data-category-id="${categoryId}"]`);
+  if (nameInput) {
+    category.name = nameInput.value.trim();
+  }
+  
+  fetch('/api/category-showcase', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ categories: showcaseCategories })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      alert('✅ Kategori başarıyla kaydedildi!');
+      yukleShowcaseCategories();
+    } else {
+      alert('❌ Hata: ' + (data.message || 'Kaydedilemedi'));
+    }
+  })
+  .catch(err => {
+    console.error('Kaydetme hatası:', err);
+    alert('❌ Hata: ' + err.message);
+  });
+}
 </script>
 
 </body>

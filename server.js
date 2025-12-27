@@ -1371,4 +1371,137 @@ app.get("/api/instagram/oembed", async (req, res) => {
     res.status(500).json({ success: false, message: "Sunucu hatası: " + error.message });
   }
 });
+
+/* =======================
+   CATEGORY SHOWCASE API
+======================= */
+const CATEGORY_SHOWCASE_FILE = path.join(__dirname, "data", "category-showcase.json");
+
+// Data klasörünü oluştur
+if (!fs.existsSync(path.join(__dirname, "data"))) {
+  fs.mkdirSync(path.join(__dirname, "data"), { recursive: true });
+}
+
+// Kategori showcase ayarlarını getir
+app.get("/api/category-showcase", auth, (req, res) => {
+  try {
+    if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
+      const data = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
+      res.json(data);
+    } else {
+      // Varsayılan kategoriler
+      const defaultCategories = [
+        { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
+        { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/hirdavat.jpg", url: "/hirdavat-urunleri.html" },
+        { id: "elektrik", name: "Elektrik", image: "/uploads/categories/elektrik.jpg", url: "/elektrik-urunleri.html" },
+        { id: "tesisat", name: "Tesisat", image: "/uploads/categories/tesisat.jpg", url: "/tesisat-urunleri.html" },
+        { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", image: "/uploads/categories/yapi-malzemeleri.jpg", url: "/yapi-malzemeleri.html" },
+        { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
+        { id: "seramik", name: "Seramik ve Fayans", image: "/uploads/categories/seramik.jpg", url: "/seramik-urunleri.html" },
+        { id: "banyo", name: "Banyo Dolapları", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
+        { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
+      ];
+      res.json({ categories: defaultCategories });
+    }
+  } catch (error) {
+    console.error("Kategori showcase okuma hatası:", error);
+    res.status(500).json({ success: false, message: "Sunucu hatası" });
+  }
+});
+
+// Kategori showcase ayarlarını kaydet
+app.post("/api/category-showcase", auth, (req, res) => {
+  try {
+    const { categories } = req.body;
+    
+    if (!Array.isArray(categories)) {
+      return res.status(400).json({ success: false, message: "Categories bir array olmalı" });
+    }
+    
+    const data = {
+      categories: categories,
+      updatedAt: new Date().toISOString()
+    };
+    
+    fs.writeFileSync(CATEGORY_SHOWCASE_FILE, JSON.stringify(data, null, 2), 'utf8');
+    res.json({ success: true, message: "Kategori showcase ayarları kaydedildi" });
+  } catch (error) {
+    console.error("Kategori showcase kaydetme hatası:", error);
+    res.status(500).json({ success: false, message: "Sunucu hatası" });
+  }
+});
+
+// Kategori görseli yükle
+const uploadCategoryImage = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadDir = "public/uploads/categories";
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const categoryId = req.body.categoryId || 'category';
+      const ext = path.extname(file.originalname);
+      cb(null, `${categoryId}${ext}`);
+    }
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Sadece resim dosyaları kabul edilir!'), false);
+    }
+  }
+});
+
+app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image"), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Görsel yüklenmedi" });
+    }
+    
+    const categoryId = req.body.categoryId;
+    if (!categoryId) {
+      // Yüklenen dosyayı sil
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ success: false, message: "Category ID gerekli" });
+    }
+    
+    const imagePath = `/uploads/categories/${req.file.filename}`;
+    res.json({ success: true, imagePath: imagePath, message: "Görsel yüklendi" });
+  } catch (error) {
+    console.error("Kategori görsel yükleme hatası:", error);
+    res.status(500).json({ success: false, message: "Sunucu hatası: " + error.message });
+  }
+});
+
+// Public kategori showcase (ana sayfa için)
+app.get("/api/public/category-showcase", (req, res) => {
+  try {
+    if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
+      const data = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
+      res.json(data);
+    } else {
+      // Varsayılan kategoriler
+      const defaultCategories = [
+        { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
+        { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/hirdavat.jpg", url: "/hirdavat-urunleri.html" },
+        { id: "elektrik", name: "Elektrik", image: "/uploads/categories/elektrik.jpg", url: "/elektrik-urunleri.html" },
+        { id: "tesisat", name: "Tesisat", image: "/uploads/categories/tesisat.jpg", url: "/tesisat-urunleri.html" },
+        { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", image: "/uploads/categories/yapi-malzemeleri.jpg", url: "/yapi-malzemeleri.html" },
+        { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
+        { id: "seramik", name: "Seramik ve Fayans", image: "/uploads/categories/seramik.jpg", url: "/seramik-urunleri.html" },
+        { id: "banyo", name: "Banyo Dolapları", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
+        { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
+      ];
+      res.json({ categories: defaultCategories });
+    }
+  } catch (error) {
+    console.error("Kategori showcase okuma hatası:", error);
+    res.json({ categories: [] });
+  }
+});
   
