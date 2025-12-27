@@ -1648,54 +1648,72 @@ function yukleShowcaseImage(categoryId, input) {
           yeniGorsel: category.image
         });
         
-        // Görseli sayfada güncelle
+        // Görseli sayfada güncelle - SADECE BU KATEGORİNİN GÖRSELİNİ GÜNCELLE
         const card = document.querySelector(`[data-category-id="${categoryId}"]`);
         if (card) {
           const img = card.querySelector('img');
           if (img) {
             // Cache'i önlemek için timestamp ekle
             img.src = data.imagePath + '?t=' + Date.now();
-            console.log('✅ Görsel src güncellendi:', img.src);
           }
           // Mevcut görsel bilgisini güncelle
           const infoDiv = card.querySelector('.image-preview-info');
           if (infoDiv) {
             infoDiv.innerHTML = `<small>Mevcut: ${data.imagePath}</small>`;
           }
-        } else {
-          console.warn('⚠️ Card bulunamadı:', categoryId);
         }
         
-        // Otomatik olarak JSON dosyasına kaydet
-        console.log('💾 JSON dosyasına kaydediliyor...', showcaseCategories.length, 'kategori');
-        console.log('📦 Kaydedilecek kategoriler:', showcaseCategories.map(c => ({ id: c.id, name: c.name, image: c.image })));
-        
-        fetch('/api/category-showcase', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ categories: showcaseCategories })
-        })
-        .then(r => {
-          if (!r.ok) {
-            throw new Error('HTTP ' + r.status);
-          }
-          return r.json();
-        })
-        .then(saveData => {
-          if (saveData.success) {
-            console.log('✅ Kategori showcase otomatik kaydedildi');
-            alert('✅ Görsel başarıyla yüklendi ve kaydedildi!');
-          } else {
-            console.error('❌ Kaydetme hatası:', saveData);
-            alert('⚠️ Görsel yüklendi ama kaydedilemedi: ' + (saveData.message || 'Bilinmeyen hata'));
-          }
-        })
-        .catch(err => {
-          console.error('❌ Otomatik kaydetme hatası:', err);
-          alert('⚠️ Görsel yüklendi ama kaydedilemedi: ' + err.message);
-        });
+        // JSON dosyasından mevcut kategorileri al, sadece bu kategoriyi güncelle
+        fetch('/api/category-showcase')
+          .then(r => r.json())
+          .then(existingData => {
+            let categoriesToSave = existingData.categories || [];
+            
+            // Eğer kategori zaten varsa güncelle, yoksa ekle
+            const existingIndex = categoriesToSave.findIndex(c => c.id === categoryId);
+            if (existingIndex >= 0) {
+              // Mevcut kategoriyi güncelle
+              categoriesToSave[existingIndex].image = data.imagePath;
+              categoriesToSave[existingIndex].name = category.name; // İsim de güncellenmiş olabilir
+            } else {
+              // Yeni kategori ekle
+              categoriesToSave.push({
+                id: category.id,
+                name: category.name,
+                image: data.imagePath,
+                url: category.url || `/urunler.html?kategori=${category.id}`
+              });
+            }
+            
+            // Güncellenmiş kategorileri kaydet
+            return fetch('/api/category-showcase', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ categories: categoriesToSave })
+            });
+          })
+          .then(r => {
+            if (!r.ok) {
+              throw new Error('HTTP ' + r.status);
+            }
+            return r.json();
+          })
+          .then(saveData => {
+            if (saveData.success) {
+              // Local state'i de güncelle
+              showcaseCategories = showcaseCategories.map(c => 
+                c.id === categoryId ? { ...c, image: data.imagePath } : c
+              );
+              alert('✅ Görsel başarıyla yüklendi ve kaydedildi!');
+            } else {
+              alert('⚠️ Görsel yüklendi ama kaydedilemedi: ' + (saveData.message || 'Bilinmeyen hata'));
+            }
+          })
+          .catch(err => {
+            alert('⚠️ Görsel yüklendi ama kaydedilemedi: ' + err.message);
+          });
       } else {
         console.error('❌ Kategori bulunamadı! categoryId:', categoryId);
         console.error('📋 Mevcut kategoriler:', showcaseCategories.map(c => ({ id: c.id, name: c.name })));
