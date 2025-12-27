@@ -2375,8 +2375,9 @@ input[type="search"]:focus {
 .product-detail {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 40px;
+  gap: 60px;
   margin-top: 30px;
+  align-items: start;
 }
 
 .product-detail img {
@@ -2384,6 +2385,101 @@ input[type="search"]:focus {
   border-radius: 16px;
   box-shadow: var(--shadow-lg);
   object-fit: cover;
+}
+
+/* Ürün Detay Sayfası - İyileştirmeler */
+.product-info {
+  padding: 0;
+}
+
+.product-info h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.product-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.product-description {
+  line-height: 1.8;
+}
+
+.technical-specs {
+  margin-top: 30px;
+}
+
+.technical-specs table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.technical-specs tr {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.technical-specs tr:last-child {
+  border-bottom: none;
+}
+
+.technical-specs td {
+  padding: 12px 0;
+}
+
+.technical-specs td:first-child {
+  font-weight: 600;
+  color: var(--text-dark);
+  width: 40%;
+}
+
+.technical-specs td:last-child {
+  color: var(--text-dark);
+}
+
+/* WhatsApp ve İletişim Butonları */
+.product-actions {
+  margin-top: 40px;
+}
+
+.btn-whatsapp {
+  background: #25D366 !important;
+  color: white !important;
+  border: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-whatsapp:hover {
+  background: #20BA5A !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+
+.btn-phone {
+  background: var(--primary-color) !important;
+  color: white !important;
+  border: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-phone:hover {
+  background: #a30000 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(196, 0, 0, 0.3);
+}
+
+.btn-secondary {
+  transition: all 0.3s ease !important;
+}
+
+.btn-secondary:hover {
+  background: #e8e8e8 !important;
+  transform: translateY(-2px);
+  border-color: var(--primary-color) !important;
 }
 
 /* Ürün Resim Galerisi */

@@ -464,6 +464,70 @@ function initProductGallery() {
   });
 }
 
+// Teknik bilgileri oluştur
+function generateTechnicalSpecs(product) {
+  const specs = [];
+  
+  // Temel bilgiler
+  if (product.marka) {
+    specs.push({ label: 'Marka', value: product.marka });
+  }
+  if (product.kategori) {
+    specs.push({ label: 'Kategori', value: product.kategori + (product.altKategori ? ` > ${product.altKategori}` : '') });
+  }
+  if (product.urunKodu) {
+    specs.push({ label: 'Ürün Kodu', value: product.urunKodu });
+  }
+  
+  // Seramik ürünleri için özel teknik bilgiler
+  if (product.kategori === 'Seramik Ürünleri' || product.kategori === 'Seramik ve Fayans') {
+    if (product.doku) specs.push({ label: 'Doku', value: product.doku });
+    if (product.kalinlik) specs.push({ label: 'Kalınlık', value: product.kalinlik + ' mm' });
+    if (product.icMekan) specs.push({ label: 'İç Mekan Kullanımı', value: product.icMekan });
+    if (product.disMekan) specs.push({ label: 'Dış Mekan Kullanımı', value: product.disMekan });
+    if (product.kullanimAlani) specs.push({ label: 'Kullanım Alanı', value: product.kullanimAlani });
+    if (product.yuzeyGorunumu) specs.push({ label: 'Yüzey Görünümü', value: product.yuzeyGorunumu });
+    if (product.kalip) specs.push({ label: 'Kalıp', value: product.kalip });
+    if (product.bunye) specs.push({ label: 'Bünye', value: product.bunye });
+    if (product.urunGrubu) specs.push({ label: 'Ürün Grubu', value: product.urunGrubu });
+    if (product.vSkalasi) specs.push({ label: 'V Skalası', value: product.vSkalasi });
+    if (product.m2Kutu) specs.push({ label: 'M²/Kutu', value: product.m2Kutu });
+    if (product.m2Palet) specs.push({ label: 'M²/Palet', value: product.m2Palet });
+    if (product.kutuPalet) specs.push({ label: 'Kutu/Palet', value: product.kutuPalet });
+    if (product.paletAgirligi) specs.push({ label: 'Palet Ağırlığı', value: product.paletAgirligi + ' kg' });
+  }
+  
+  // Eğer teknik bilgi yoksa
+  if (specs.length === 0) {
+    return '';
+  }
+  
+  // HTML oluştur
+  let specsHTML = `
+    <div class="technical-specs" style="margin-top: 30px; padding: 25px; background: var(--light-bg); border-radius: 12px;">
+      <h3 style="font-size: 1.3rem; margin-bottom: 20px; color: var(--text-dark);">⚙️ Teknik Özellikler</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tbody>
+  `;
+  
+  specs.forEach(spec => {
+    specsHTML += `
+      <tr style="border-bottom: 1px solid #e0e0e0;">
+        <td style="padding: 12px 0; font-weight: 600; color: var(--text-dark); width: 40%;">${spec.label}:</td>
+        <td style="padding: 12px 0; color: var(--text-dark);">${spec.value}</td>
+      </tr>
+    `;
+  });
+  
+  specsHTML += `
+        </tbody>
+      </table>
+    </div>
+  `;
+  
+  return specsHTML;
+}
+
 const id = new URLSearchParams(location.search).get("id");
 
 if (!id) {
@@ -687,13 +751,43 @@ fetch("/api/public/products?details=true")
             ${resimGalerisiHTML}
           </div>
           <div class="product-info">
-            <h2>${p.ad || 'İsimsiz Ürün'}</h2>
-            ${p.marka ? `<p><strong>Marka:</strong> ${p.marka}</p>` : ''}
-            ${p.kategori ? `<p><strong>Kategori:</strong> ${p.kategori}</p>` : ''}
-            ${p.aciklama ? `<p>${p.aciklama.replace(/\n/g, '<br>')}</p>` : '<p>Bu ürün hakkında detaylı bilgi için lütfen bizimle iletişime geçin.</p>'}
+            <h1 style="font-size: 2rem; margin-bottom: 15px; color: var(--text-dark);">${p.ad || 'İsimsiz Ürün'}</h1>
+            
+            <div class="product-meta" style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e0e0e0;">
+              ${p.marka ? `<div style="margin-bottom: 8px;"><strong style="color: var(--primary-color);">🏷️ Marka:</strong> <span style="font-size: 1.1rem;">${p.marka}</span></div>` : ''}
+              ${p.kategori ? `<div style="margin-bottom: 8px;"><strong style="color: var(--text-dark);">📁 Kategori:</strong> ${p.kategori}${p.altKategori ? ` > ${p.altKategori}` : ''}</div>` : ''}
+            </div>
+            
+            <div class="product-description" style="margin-bottom: 30px;">
+              <h3 style="font-size: 1.3rem; margin-bottom: 15px; color: var(--text-dark);">📝 Ürün Açıklaması</h3>
+              ${p.aciklama ? `<div style="line-height: 1.8; color: var(--text-dark);">${p.aciklama.replace(/\n/g, '<br>')}</div>` : '<p style="color: var(--text-light);">Bu ürün hakkında detaylı bilgi için lütfen bizimle iletişime geçin.</p>'}
+            </div>
+            
+            <!-- Teknik Bilgiler -->
+            ${generateTechnicalSpecs(p)}
+            
+            <!-- WhatsApp ve İletişim Butonları -->
+            <div class="product-actions" style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
+              <h3 style="font-size: 1.3rem; margin-bottom: 20px; color: var(--text-dark);">💬 Bu Ürün Hakkında Soru Sorun</h3>
+              <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <a href="https://wa.me/905367191308?text=Merhaba, ${encodeURIComponent(p.ad || 'bu ürün')} hakkında bilgi almak istiyorum." target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp" style="flex: 1; min-width: 200px; background: #25D366; color: white; padding: 15px 25px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; font-size: 1.1rem; transition: all 0.3s ease;">
+                  <i class="fab fa-whatsapp" style="font-size: 1.5rem;"></i>
+                  <span>WhatsApp ile Sor</span>
+                </a>
+                <a href="tel:+905367191308" class="btn btn-phone" style="flex: 1; min-width: 200px; background: var(--primary-color); color: white; padding: 15px 25px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; font-size: 1.1rem; transition: all 0.3s ease;">
+                  <i class="fas fa-phone" style="font-size: 1.3rem;"></i>
+                  <span>Hemen Ara</span>
+                </a>
+                <a href="/iletisim.html" class="btn btn-secondary" style="flex: 1; min-width: 200px; background: var(--light-bg); color: var(--text-dark); padding: 15px 25px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; font-size: 1.1rem; border: 2px solid #e0e0e0; transition: all 0.3s ease;">
+                  <i class="fas fa-envelope" style="font-size: 1.3rem;"></i>
+                  <span>E-posta Gönder</span>
+                </a>
+              </div>
+            </div>
+            
             ${akcaliGallery}
             <div style="margin-top: 30px;">
-              <a href="/urunler.html" class="btn" style="display: inline-block;">← Tüm Ürünlere Dön</a>
+              <a href="/urunler.html" class="btn" style="display: inline-block; background: var(--light-bg); color: var(--text-dark); border: 2px solid #e0e0e0;">← Tüm Ürünlere Dön</a>
             </div>
           </div>
         </div>
