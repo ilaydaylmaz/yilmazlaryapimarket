@@ -84,17 +84,19 @@
   
   .top-info-item i {
     font-size: 1rem;
-    color: var(--white) !important;
+    color: #ffffff !important;
     visibility: visible !important;
+    display: inline-block !important;
   }
   
   .top-info-item span {
     font-size: 0.95rem;
-    color: var(--white) !important;
+    color: #ffffff !important;
     font-weight: 400;
     visibility: visible !important;
     opacity: 1 !important;
-    display: inline-block;
+    display: inline-block !important;
+    white-space: nowrap;
   }
   
   .top-info-social {
