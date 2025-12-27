@@ -1442,8 +1442,14 @@ const uploadCategoryImage = multer({
       cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-      const categoryId = req.body.categoryId || 'category';
-      const ext = path.extname(file.originalname);
+      let categoryId = req.body.categoryId || 'category';
+      // Dosya adını güvenli hale getir (özel karakterleri temizle)
+      categoryId = categoryId.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
+      const ext = path.extname(file.originalname).toLowerCase();
+      // Eğer categoryId boşsa veya sadece tire ise, timestamp kullan
+      if (!categoryId || categoryId === '-' || categoryId.length === 0) {
+        categoryId = 'category-' + Date.now();
+      }
       cb(null, `${categoryId}${ext}`);
     }
   }),

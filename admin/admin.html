@@ -1554,14 +1554,20 @@ let showcaseCategories = [];
 
 function yukleShowcaseCategories() {
   fetch('/api/category-showcase')
-    .then(r => r.json())
+    .then(r => {
+      if (!r.ok) {
+        throw new Error('HTTP ' + r.status + ': ' + r.statusText);
+      }
+      return r.json();
+    })
     .then(data => {
       showcaseCategories = data.categories || [];
       gosterShowcaseCategories();
     })
     .catch(err => {
       console.error('Kategori showcase yükleme hatası:', err);
-      document.getElementById('showcaseCategoriesList').innerHTML = '<div class="empty-state">Hata: ' + err.message + '</div>';
+      const errorMsg = err.message || 'Bilinmeyen hata';
+      document.getElementById('showcaseCategoriesList').innerHTML = '<div class="empty-state" style="color: #dc3545;">Hata: ' + errorMsg + '</div>';
     });
 }
 
