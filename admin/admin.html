@@ -1562,7 +1562,41 @@ function yukleShowcaseCategories() {
     })
     .then(data => {
       showcaseCategories = data.categories || [];
-      gosterShowcaseCategories();
+      
+      // Eğer kategori yoksa, varsayılan kategorileri oluştur ve kaydet
+      if (showcaseCategories.length === 0) {
+        const defaultCategories = [
+          { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
+          { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/hirdavat.jpg", url: "/hirdavat-urunleri.html" },
+          { id: "elektrik", name: "Elektrik", image: "/uploads/categories/elektrik.jpg", url: "/elektrik-urunleri.html" },
+          { id: "tesisat", name: "Tesisat", image: "/uploads/categories/tesisat.jpg", url: "/tesisat-urunleri.html" },
+          { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", image: "/uploads/categories/yapi-malzemeleri.jpg", url: "/yapi-malzemeleri.html" },
+          { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
+          { id: "seramik", name: "Seramik ve Fayans", image: "/uploads/categories/seramik.jpg", url: "/seramik-urunleri.html" },
+          { id: "banyo", name: "Banyo Dolapları", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
+          { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
+        ];
+        
+        // Varsayılan kategorileri kaydet
+        fetch('/api/category-showcase', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ categories: defaultCategories })
+        })
+        .then(() => {
+          showcaseCategories = defaultCategories;
+          gosterShowcaseCategories();
+        })
+        .catch(err => {
+          console.error('Varsayılan kategoriler kaydedilemedi:', err);
+          showcaseCategories = defaultCategories;
+          gosterShowcaseCategories();
+        });
+      } else {
+        gosterShowcaseCategories();
+      }
     })
     .catch(err => {
       console.error('Kategori showcase yükleme hatası:', err);
