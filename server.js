@@ -1442,8 +1442,18 @@ const uploadCategoryImage = multer({
       cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-      let categoryId = req.body.categoryId || 'category';
-      console.log('📝 Dosya adı oluşturuluyor - categoryId:', categoryId);
+      // Multer'da req.body henüz hazır olmayabilir, bu yüzden req.body'yi kontrol et
+      let categoryId = (req.body && req.body.categoryId) ? req.body.categoryId : null;
+      
+      // Eğer categoryId yoksa, dosya adından veya başka bir yerden almaya çalış
+      if (!categoryId || categoryId === 'category' || categoryId === 'undefined') {
+        // Dosya adından kategori adını çıkarmaya çalış (son çare)
+        const baseName = path.basename(file.originalname, path.extname(file.originalname));
+        categoryId = baseName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        console.log('⚠️ categoryId bulunamadı, dosya adından çıkarıldı:', categoryId);
+      }
+      
+      console.log('📝 Dosya adı oluşturuluyor - categoryId:', categoryId, 'req.body:', req.body);
       
       // Dosya adını güvenli hale getir (özel karakterleri temizle)
       categoryId = categoryId.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
@@ -1453,9 +1463,10 @@ const uploadCategoryImage = multer({
       categoryId = categoryId.replace(/^-+|-+$/g, '');
       
       const ext = path.extname(file.originalname).toLowerCase();
-      // Eğer categoryId boşsa veya sadece tire ise, timestamp kullan
-      if (!categoryId || categoryId === '-' || categoryId.length === 0) {
+      // Eğer categoryId hala boşsa veya sadece tire ise, timestamp kullan
+      if (!categoryId || categoryId === '-' || categoryId.length === 0 || categoryId === 'category') {
         categoryId = 'category-' + Date.now();
+        console.log('⚠️ categoryId geçersiz, timestamp kullanılıyor:', categoryId);
       }
       
       const filename = `${categoryId}${ext}`;
@@ -1475,14 +1486,29 @@ const uploadCategoryImage = multer({
 
 app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image"), (req, res) => {
   try {
-    console.log('📤 Görsel yükleme isteği - categoryId:', req.body.categoryId, 'filename:', req.file?.filename);
+    console.log('📤 Görsel yükleme isteği - req.body:', req.body, 'filename:', req.file?.filename);
     
     if (!req.file) {
       return res.status(400).json({ success: false, message: "Görsel yüklenmedi" });
     }
     
-    const categoryId = req.body.categoryId;
-    if (!categoryId) {
+    // categoryId'yi kontrol et - dosya adından da alabiliriz
+    let categoryId = req.body.categoryId;
+    
+    // Eğer categoryId yoksa veya geçersizse, dosya adından çıkar
+    if (!categoryId || categoryId === 'category' || categoryId === 'undefined') {
+      const filename = req.file.filename;
+      // Dosya adından uzantıyı kaldır ve categoryId'yi çıkar
+      categoryId = path.basename(filename, path.extname(filename));
+      // Eğer dosya adı "category-timestamp" formatındaysa, hata ver
+      if (categoryId.startsWith('category-')) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ success: false, message: "Category ID gerekli. Lütfen sayfayı yenileyin ve tekrar deneyin." });
+      }
+      console.log('⚠️ categoryId req.body\'den alınamadı, dosya adından çıkarıldı:', categoryId);
+    }
+    
+    if (!categoryId || categoryId === 'category') {
       // Yüklenen dosyayı sil
       fs.unlinkSync(req.file.path);
       return res.status(400).json({ success: false, message: "Category ID gerekli" });

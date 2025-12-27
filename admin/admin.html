@@ -1615,11 +1615,17 @@ function yukleShowcaseImage(categoryId, input) {
   const file = input.files[0];
   if (!file) return;
   
+  // categoryId'yi kontrol et
+  if (!categoryId || categoryId === 'undefined' || categoryId === 'null') {
+    alert('❌ Hata: Kategori ID bulunamadı! Lütfen sayfayı yenileyin.');
+    return;
+  }
+  
   console.log('📤 Görsel yükleniyor - categoryId:', categoryId, 'dosya:', file.name);
   
   const formData = new FormData();
   formData.append('image', file);
-  formData.append('categoryId', categoryId);
+  formData.append('categoryId', String(categoryId)); // String'e çevir
   
   fetch('/api/category-showcase/image', {
     method: 'POST',
