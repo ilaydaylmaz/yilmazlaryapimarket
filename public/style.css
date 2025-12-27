@@ -88,6 +88,9 @@ html, body {
     gap: 20px !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
   }
   
   .top-info-items {
