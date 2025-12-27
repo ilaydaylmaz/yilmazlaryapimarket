@@ -1423,6 +1423,14 @@ html, body {
   padding: 100px 20px;
 }
 
+.product-groups-showcase .container {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  margin: 0 auto !important;
+  max-width: 1400px !important;
+}
+
 .showcase-title {
   font-size: 2.5rem;
   font-weight: 700;
