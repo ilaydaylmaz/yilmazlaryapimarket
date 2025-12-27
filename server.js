@@ -1659,6 +1659,19 @@ app.get("/api/public/category-showcase", (req, res) => {
     
     if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
       const data = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
+      
+      // Base64 görselleri varsa onları kullan, yoksa dosya yolunu kullan
+      if (data.categories) {
+        data.categories = data.categories.map(cat => {
+          // Base64 görsel varsa onu kullan (öncelikli)
+          if (cat.imageBase64) {
+            return { ...cat, image: cat.imageBase64 };
+          }
+          // Base64 yoksa dosya yolunu kullan
+          return cat;
+        });
+      }
+      
       res.json(data);
     } else {
       // Varsayılan kategoriler
