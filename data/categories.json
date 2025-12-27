@@ -1,0 +1,208 @@
+{
+  "categories": [
+    {
+      "id": "boya",
+      "name": "Boya",
+      "slug": "boya-urunleri",
+      "subCategories": [
+        {
+          "id": "ic-boya",
+          "name": "İç Cephe Boyası",
+          "slug": "ic-cephe-boyasi"
+        },
+        {
+          "id": "dis-boya",
+          "name": "Dış Cephe Boyası",
+          "slug": "dis-cephe-boyasi"
+        },
+        {
+          "id": "sprey-boya",
+          "name": "Sprey Boya",
+          "slug": "sprey-boya"
+        },
+        {
+          "id": "zemin-boyasi",
+          "name": "Zemin Boyası",
+          "slug": "zemin-boyasi"
+        }
+      ]
+    },
+    {
+      "id": "hirdavat",
+      "name": "Hırdavat",
+      "slug": "hirdavat-urunleri",
+      "subCategories": [
+        {
+          "id": "civata-somun",
+          "name": "Cıvata ve Somun",
+          "slug": "civata-somun"
+        },
+        {
+          "id": "vida",
+          "name": "Vida",
+          "slug": "vida"
+        },
+        {
+          "id": "percin",
+          "name": "Percin",
+          "slug": "percin"
+        }
+      ]
+    },
+    {
+      "id": "elektrik",
+      "name": "Elektrik",
+      "slug": "elektrik-urunleri",
+      "subCategories": [
+        {
+          "id": "kablo",
+          "name": "Kablo",
+          "slug": "kablo"
+        },
+        {
+          "id": "priz-anahtar",
+          "name": "Priz ve Anahtar",
+          "slug": "priz-anahtar"
+        },
+        {
+          "id": "armatur",
+          "name": "Armatür",
+          "slug": "armatur"
+        }
+      ]
+    },
+    {
+      "id": "tesisat",
+      "name": "Tesisat",
+      "slug": "tesisat-urunleri",
+      "subCategories": [
+        {
+          "id": "boru-fittings",
+          "name": "Boru ve Fittings",
+          "slug": "boru-fittings"
+        },
+        {
+          "id": "vanalar",
+          "name": "Vanalar",
+          "slug": "vanalar"
+        },
+        {
+          "id": "tesisat-malzemeleri",
+          "name": "Tesisat Malzemeleri",
+          "slug": "tesisat-malzemeleri"
+        }
+      ]
+    },
+    {
+      "id": "yapi-malzemeleri",
+      "name": "Yapı Malzemeleri",
+      "slug": "yapi-malzemeleri",
+      "subCategories": [
+        {
+          "id": "cimento",
+          "name": "Çimento",
+          "slug": "cimento"
+        },
+        {
+          "id": "alci",
+          "name": "Alçı",
+          "slug": "alci"
+        },
+        {
+          "id": "harclar",
+          "name": "Harçlar",
+          "slug": "harclar"
+        }
+      ]
+    },
+    {
+      "id": "elektrikli-el-aletleri",
+      "name": "Elektrikli El Aletleri",
+      "slug": "elektrikli-el-aletleri-urunleri",
+      "subCategories": [
+        {
+          "id": "matkap",
+          "name": "Matkap",
+          "slug": "matkap"
+        },
+        {
+          "id": "tornavida",
+          "name": "Tornavida",
+          "slug": "tornavida"
+        },
+        {
+          "id": "kesici-aletler",
+          "name": "Kesici Aletler",
+          "slug": "kesici-aletler"
+        }
+      ]
+    },
+    {
+      "id": "seramik",
+      "name": "Seramik ve Fayans",
+      "slug": "seramik-urunleri",
+      "subCategories": [
+        {
+          "id": "seramik-karo",
+          "name": "Seramik Karo",
+          "slug": "seramik-karo"
+        },
+        {
+          "id": "fayans",
+          "name": "Fayans",
+          "slug": "fayans"
+        },
+        {
+          "id": "porselen",
+          "name": "Porselen",
+          "slug": "porselen"
+        }
+      ]
+    },
+    {
+      "id": "banyo",
+      "name": "Banyo Dolapları",
+      "slug": "banyo-urunleri",
+      "subCategories": [
+        {
+          "id": "lavabo",
+          "name": "Lavabo",
+          "slug": "lavabo"
+        },
+        {
+          "id": "klozet",
+          "name": "Klozet",
+          "slug": "klozet"
+        },
+        {
+          "id": "banyo-dolabi",
+          "name": "Banyo Dolabı",
+          "slug": "banyo-dolabi"
+        }
+      ]
+    },
+    {
+      "id": "parke",
+      "name": "Parke",
+      "slug": "parke-urunleri",
+      "subCategories": [
+        {
+          "id": "laminat-parke",
+          "name": "Laminat Parke",
+          "slug": "laminat-parke"
+        },
+        {
+          "id": "vinil-parke",
+          "name": "Vinil Parke",
+          "slug": "vinil-parke"
+        },
+        {
+          "id": "masif-parke",
+          "name": "Masif Parke",
+          "slug": "masif-parke"
+        }
+      ]
+    }
+  ]
+}
+

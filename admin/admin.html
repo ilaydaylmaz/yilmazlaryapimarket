@@ -137,30 +137,19 @@
         </div>
 
         <div class="form-group">
-          <label for="kategori">Kategori</label>
-          <select id="kategori">
+          <label for="kategori">Kategori *</label>
+          <select id="kategori" required onchange="loadSubCategories()">
             <option value="">Kategori Seçin</option>
-            <option value="Boya Ürünleri">Boya Ürünleri</option>
-            <option value="Hırdavat Ürünleri">Hırdavat Ürünleri</option>
-            <option value="Elektrik Ürünleri">Elektrik Ürünleri</option>
-            <option value="Elektrikli El Aletleri">Elektrikli El Aletleri</option>
-            <option value="Tesisat Ürünleri">Tesisat Ürünleri</option>
-            <option value="Yapı Malzemeleri">Yapı Malzemeleri</option>
-            <option value="El Aletleri Ürünleri">El Aletleri Ürünleri</option>
-            <option value="Seramik Ürünleri">Seramik Ürünleri</option>
-            <option value="Banyo Dolapları">Banyo Dolapları</option>
-            <option value="Parke Ürünleri">Parke Ürünleri</option>
-            <option value="Mutfak Ürünleri">Mutfak Ürünleri</option>
-            <option value="Kaba Grubu">Kaba Grubu</option>
-            <option value="Diğer">Diğer</option>
+            <!-- Kategoriler API'den dinamik yüklenecek -->
           </select>
-          <div class="quick-categories">
-            <button type="button" class="category-chip" onclick="setKategori('Boya Ürünleri')">Boya Ürünleri</button>
-            <button type="button" class="category-chip" onclick="setKategori('Hırdavat Ürünleri')">Hırdavat Ürünleri</button>
-            <button type="button" class="category-chip" onclick="setKategori('Elektrik Ürünleri')">Elektrik Ürünleri</button>
-            <button type="button" class="category-chip" onclick="setKategori('Elektrikli El Aletleri')">Elektrikli El Aletleri</button>
-            <button type="button" class="category-chip" onclick="setKategori('Tesisat Ürünleri')">Tesisat Ürünleri</button>
-          </div>
+        </div>
+
+        <div class="form-group" id="altKategoriGroup" style="display: none;">
+          <label for="altKategori">Alt Kategori (Opsiyonel)</label>
+          <select id="altKategori">
+            <option value="">Alt Kategori Seçin</option>
+            <!-- Alt kategoriler seçilen kategoriye göre yüklenecek -->
+          </select>
         </div>
 
         <div class="form-group">
@@ -438,11 +427,101 @@ function toggleCeramicSpecs() {
   }
 }
 
+// Kategorileri yükle (config'den)
+let categoriesData = [];
+
+function loadCategories() {
+  fetch('/api/categories', {
+    credentials: 'include'
+  })
+    .then(r => r.json())
+    .then(data => {
+      categoriesData = data.categories || [];
+      populateCategorySelects();
+    })
+    .catch(err => {
+      console.error('Kategoriler yüklenemedi:', err);
+    });
+}
+
+function populateCategorySelects() {
+  const kategoriSelect = document.getElementById('kategori');
+  const filterKategoriSelect = document.getElementById('productFilterKategori');
+  
+  if (kategoriSelect) {
+    // Mevcut seçili değeri sakla
+    const currentValue = kategoriSelect.value;
+    
+    // Kategorileri ekle
+    kategoriSelect.innerHTML = '<option value="">Kategori Seçin</option>';
+    categoriesData.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat.name;
+      option.textContent = cat.name;
+      option.dataset.categoryId = cat.id;
+      kategoriSelect.appendChild(option);
+    });
+    
+    // Eski değeri geri yükle
+    if (currentValue) {
+      kategoriSelect.value = currentValue;
+    }
+  }
+  
+  if (filterKategoriSelect) {
+    const currentFilterValue = filterKategoriSelect.value;
+    filterKategoriSelect.innerHTML = '<option value="">Tüm Kategoriler</option>';
+    categoriesData.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat.name;
+      option.textContent = cat.name;
+      filterKategoriSelect.appendChild(option);
+    });
+    if (currentFilterValue) {
+      filterKategoriSelect.value = currentFilterValue;
+    }
+  }
+}
+
+function loadSubCategories() {
+  const kategoriSelect = document.getElementById('kategori');
+  const altKategoriSelect = document.getElementById('altKategori');
+  const altKategoriGroup = document.getElementById('altKategoriGroup');
+  
+  if (!kategoriSelect || !altKategoriSelect || !altKategoriGroup) return;
+  
+  const selectedCategoryName = kategoriSelect.value;
+  const selectedCategory = categoriesData.find(cat => cat.name === selectedCategoryName);
+  
+  // Alt kategori seçimini temizle
+  altKategoriSelect.innerHTML = '<option value="">Alt Kategori Seçin</option>';
+  
+  if (selectedCategory && selectedCategory.subCategories && selectedCategory.subCategories.length > 0) {
+    // Alt kategorileri ekle
+    selectedCategory.subCategories.forEach(subCat => {
+      const option = document.createElement('option');
+      option.value = subCat.name;
+      option.textContent = subCat.name;
+      option.dataset.subCategoryId = subCat.id;
+      altKategoriSelect.appendChild(option);
+    });
+    altKategoriGroup.style.display = 'block';
+  } else {
+    altKategoriGroup.style.display = 'none';
+  }
+  
+  // Seramik özelliklerini kontrol et
+  toggleCeramicSpecs();
+}
+
 // Kategori değiştiğinde seramik özelliklerini göster/gizle
 document.addEventListener("DOMContentLoaded", function() {
+  // Kategorileri yükle
+  loadCategories();
+  
   const kategoriSelect = document.getElementById("kategori");
   if (kategoriSelect) {
-    kategoriSelect.addEventListener("change", toggleCeramicSpecs);
+    kategoriSelect.addEventListener("change", loadSubCategories);
   }
 
   const searchInput = document.getElementById("productSearch");
@@ -669,6 +748,18 @@ function duzenle(id) {
   
   document.getElementById("ad").value = p.ad || "";
   document.getElementById("kategori").value = p.kategori || "";
+  
+  // Alt kategoriyi yükle
+  loadSubCategories(); // Kategorileri yükle
+  if (p.altKategori) {
+    setTimeout(() => {
+      const altKategoriSelect = document.getElementById("altKategori");
+      if (altKategoriSelect) {
+        altKategoriSelect.value = p.altKategori || "";
+      }
+    }, 100);
+  }
+  
   document.getElementById("marka").value = p.marka || "";
   document.getElementById("aciklama").value = p.aciklama || "";
   document.getElementById("resim").value = "";
@@ -810,6 +901,7 @@ function ekle() {
   const formData = new FormData();
   formData.append("ad", ad);
   formData.append("kategori", document.getElementById("kategori").value || "");
+  formData.append("altKategori", document.getElementById("altKategori")?.value || "");
   formData.append("marka", document.getElementById("marka").value || "");
   formData.append("aciklama", document.getElementById("aciklama").value || "");
   
@@ -897,6 +989,7 @@ function guncelle() {
   const formData = new FormData();
   formData.append("ad", document.getElementById("ad").value || "");
   formData.append("kategori", document.getElementById("kategori").value || "");
+  formData.append("altKategori", document.getElementById("altKategori")?.value || "");
   formData.append("marka", document.getElementById("marka").value || "");
   formData.append("aciklama", document.getElementById("aciklama").value || "");
 

@@ -228,6 +228,7 @@ app.get("/api/products", auth, async (req, res) => {
         id: p._id.toString(),
         ad: p.ad,
         kategori: p.kategori,
+        altKategori: p.altKategori || "",
         marka: p.marka,
         aciklama: p.aciklama,
         resim: getImageUrl(p),
@@ -324,6 +325,7 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
       id: Date.now().toString(),
       ad: req.body.ad || "",
       kategori: req.body.kategori || "",
+      altKategori: req.body.altKategori || "",
       marka: req.body.marka || "",
       aciklama: req.body.aciklama || "",
       resim: resimData,
@@ -480,6 +482,7 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
       const updateData = {
         ad: req.body.ad || "",
         kategori: req.body.kategori || "",
+        altKategori: req.body.altKategori || "",
         marka: req.body.marka || "",
         aciklama: req.body.aciklama || "",
         resim: resimData,
@@ -697,6 +700,7 @@ app.get("/api/public/products", async (req, res) => {
           id: p._id.toString(),
           ad: p.ad,
           kategori: p.kategori,
+          altKategori: p.altKategori || "",
           marka: p.marka,
           resim: getImageUrl(p),
           // Liste sayfası için base64 gönderme (çok büyük)
@@ -809,6 +813,7 @@ app.get("/api/public/products/:id", async (req, res) => {
         id: urun._id.toString(),
         ad: urun.ad,
         kategori: urun.kategori,
+        altKategori: urun.altKategori || "",
         marka: urun.marka,
         aciklama: urun.aciklama,
         resim: getImageUrl(urun),
@@ -1382,6 +1387,7 @@ app.get("/api/instagram/oembed", async (req, res) => {
    CATEGORY SHOWCASE API
 ======================= */
 const CATEGORY_SHOWCASE_FILE = path.join(__dirname, "data", "category-showcase.json");
+const CATEGORIES_CONFIG_FILE = path.join(__dirname, "data", "categories.json");
 
 // Otomatik Git Commit Fonksiyonu
 function autoCommitCategoryImage(imagePath, categoryId) {
