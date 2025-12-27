@@ -1705,9 +1705,21 @@ function yukleShowcaseImage(categoryId, input) {
         
         // JSON dosyasından mevcut kategorileri al, sadece bu kategoriyi güncelle
         fetch('/api/category-showcase')
-          .then(r => r.json())
+          .then(r => {
+            if (!r.ok) {
+              // Eğer JSON dosyası yoksa, varsayılan kategorileri kullan
+              console.log('⚠️ JSON dosyası yok, varsayılan kategoriler kullanılıyor');
+              return { categories: showcaseCategories };
+            }
+            return r.json();
+          })
           .then(existingData => {
             let categoriesToSave = existingData.categories || [];
+            
+            // Eğer kategori listesi boşsa, showcaseCategories'i kullan
+            if (categoriesToSave.length === 0 && showcaseCategories.length > 0) {
+              categoriesToSave = [...showcaseCategories];
+            }
             
             // Eğer kategori zaten varsa güncelle, yoksa ekle
             const existingIndex = categoriesToSave.findIndex(c => c.id === categoryId);
