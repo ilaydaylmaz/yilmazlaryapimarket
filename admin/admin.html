@@ -434,13 +434,20 @@ function loadCategories() {
   fetch('/api/categories', {
     credentials: 'include'
   })
-    .then(r => r.json())
+    .then(r => {
+      if (!r.ok) {
+        throw new Error('HTTP ' + r.status + ': ' + r.statusText);
+      }
+      return r.json();
+    })
     .then(data => {
       categoriesData = data.categories || [];
+      console.log('✅ Kategoriler yüklendi:', categoriesData.length, 'kategori');
       populateCategorySelects();
     })
     .catch(err => {
-      console.error('Kategoriler yüklenemedi:', err);
+      console.error('❌ Kategoriler yüklenemedi:', err);
+      alert('Kategoriler yüklenemedi. Lütfen sayfayı yenileyin. Hata: ' + err.message);
     });
 }
 
