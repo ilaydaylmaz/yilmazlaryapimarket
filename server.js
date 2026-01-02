@@ -1443,6 +1443,37 @@ if (!fs.existsSync(path.join(__dirname, "data"))) {
   fs.mkdirSync(path.join(__dirname, "data"), { recursive: true });
 }
 
+// Kategorileri getir (config dosyasından)
+const CATEGORIES_FILE = path.join(__dirname, "data", "categories.json");
+
+app.get("/api/categories", auth, (req, res) => {
+  try {
+    if (fs.existsSync(CATEGORIES_FILE)) {
+      const data = JSON.parse(fs.readFileSync(CATEGORIES_FILE, 'utf8'));
+      res.json(data);
+    } else {
+      // Varsayılan kategoriler
+      const defaultCategories = {
+        categories: [
+          { id: "boya", name: "Boya", slug: "boya-urunleri", subCategories: [] },
+          { id: "hirdavat", name: "Hırdavat", slug: "hirdavat-urunleri", subCategories: [] },
+          { id: "elektrik", name: "Elektrik", slug: "elektrik-urunleri", subCategories: [] },
+          { id: "tesisat", name: "Tesisat", slug: "tesisat-urunleri", subCategories: [] },
+          { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", slug: "yapi-malzemeleri", subCategories: [] },
+          { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", slug: "elektrikli-el-aletleri-urunleri", subCategories: [] },
+          { id: "seramik", name: "Seramik ve Fayans", slug: "seramik-urunleri", subCategories: [] },
+          { id: "banyo", name: "Banyo Dolapları", slug: "banyo-urunleri", subCategories: [] },
+          { id: "parke", name: "Parke", slug: "parke-urunleri", subCategories: [] }
+        ]
+      };
+      res.json(defaultCategories);
+    }
+  } catch (error) {
+    console.error("Kategoriler okuma hatası:", error);
+    res.status(500).json({ success: false, message: "Sunucu hatası", categories: [] });
+  }
+});
+
 // Kategori showcase ayarlarını getir
 app.get("/api/category-showcase", auth, (req, res) => {
   try {
