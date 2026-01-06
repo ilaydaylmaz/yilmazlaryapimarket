@@ -284,11 +284,11 @@ fetch("/api/public/products")
     // Seramik ürünlerini filtrele
     let allProducts = data.filter(p => p.kategori && p.kategori.trim() === TARGET_CATEGORY);
     
-    // Yurtbay Seramik ürünleri için sadece genel koleksiyon ürünlerini göster
+    // Yurtbay Seramik ve Qua ürünleri için sadece genel koleksiyon ürünlerini göster
     // (Ebat bilgisi olan detaylı ürünleri filtrele)
     products = allProducts.filter(p => {
-      // Yurtbay Seramik ürünü mü kontrol et
-      if (p.marka && p.marka.includes('Yurtbay Seramik')) {
+      // Yurtbay Seramik veya Qua ürünü mü kontrol et
+      if (p.marka && (p.marka.includes('Yurtbay Seramik') || p.marka.includes('Qua'))) {
         // Eğer ürün adında ebat bilgisi varsa (60X60, 60X120 gibi) gösterme
         const hasEbat = p.ad && /\d+X\d+/.test(p.ad);
         // Sadece genel koleksiyon ürünlerini göster (ebat bilgisi olmayanlar)
