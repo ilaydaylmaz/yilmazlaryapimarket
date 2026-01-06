@@ -1937,35 +1937,88 @@ function yukleShowcaseImage(categoryId, input) {
 }
 
 function kaydetShowcaseCategory(categoryId) {
-  const category = showcaseCategories.find(c => c.id === categoryId);
-  if (!category) return;
+  console.log('💾 Kategori kaydediliyor:', categoryId);
   
-  const nameInput = document.querySelector(`.showcase-category-name[data-category-id="${categoryId}"]`);
-  if (nameInput) {
-    category.name = nameInput.value.trim();
-  }
-  
+  // Önce mevcut JSON dosyasını oku
   fetch('/api/category-showcase', {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ categories: showcaseCategories })
+    credentials: 'include'
   })
-  .then(r => r.json())
-  .then(data => {
-    if (data.success) {
-      alert('✅ Kategori başarıyla kaydedildi!');
-      yukleShowcaseCategories();
-    } else {
-      alert('❌ Hata: ' + (data.message || 'Kaydedilemedi'));
-    }
-  })
-  .catch(err => {
-    console.error('Kaydetme hatası:', err);
-    alert('❌ Hata: ' + err.message);
-  });
+    .then(r => {
+      if (!r.ok) {
+        throw new Error('HTTP ' + r.status);
+      }
+      return r.json();
+    })
+    .then(existingData => {
+      let categoriesToSave = existingData.categories || [];
+      
+      // Local state'ten kategoriyi bul
+      const category = showcaseCategories.find(c => c.id === categoryId);
+      if (!category) {
+        alert('❌ Kategori bulunamadı! Lütfen sayfayı yenileyin.');
+        return;
+      }
+      
+      // Kategori ismini input'tan al
+      const nameInput = document.querySelector(`.showcase-category-name[data-category-id="${categoryId}"]`);
+      if (nameInput) {
+        category.name = nameInput.value.trim();
+      }
+      
+      // Kategoriyi bul veya oluştur
+      const existingIndex = categoriesToSave.findIndex(c => c.id === categoryId);
+      if (existingIndex >= 0) {
+        // Mevcut kategoriyi güncelle
+        categoriesToSave[existingIndex] = {
+          ...categoriesToSave[existingIndex],
+          name: category.name,
+          image: category.image, // Base64 görseli koru
+          imageBase64: category.imageBase64 || category.image, // Base64'ü de kaydet
+          url: category.url || `/urunler.html?kategori=${categoryId}`
+        };
+        console.log('✅ Mevcut kategori güncellendi:', categoriesToSave[existingIndex]);
+      } else {
+        // Yeni kategori ekle
+        categoriesToSave.push({
+          id: category.id,
+          name: category.name,
+          image: category.image, // Base64 görseli koru
+          imageBase64: category.imageBase64 || category.image, // Base64'ü de kaydet
+          url: category.url || `/urunler.html?kategori=${categoryId}`
+        });
+        console.log('✅ Yeni kategori eklendi');
+      }
+      
+      // Güncellenmiş kategorileri kaydet
+      return fetch('/api/category-showcase', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ categories: categoriesToSave })
+      });
+    })
+    .then(r => {
+      if (!r.ok) {
+        throw new Error('HTTP ' + r.status);
+      }
+      return r.json();
+    })
+    .then(data => {
+      if (data.success) {
+        console.log('✅ Kategori başarıyla kaydedildi');
+        // Local state'i de güncelle
+        yukleShowcaseCategories();
+        alert('✅ Kategori başarıyla kaydedildi!');
+      } else {
+        alert('❌ Hata: ' + (data.message || 'Kaydedilemedi'));
+      }
+    })
+    .catch(err => {
+      console.error('❌ Kaydetme hatası:', err);
+      alert('❌ Hata: ' + err.message);
+    });
 }
 </script>
 
