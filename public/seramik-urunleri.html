@@ -281,40 +281,34 @@ const TARGET_CATEGORY = "Seramik Ürünleri";
 fetch("/api/public/products")
   .then(r => r.json())
   .then(data => {
-    console.log('📦 Tüm ürünler:', data.length);
-    
-    // Seramik ürünlerini filtrele
-    let allProducts = data.filter(p => p.kategori && p.kategori.trim() === TARGET_CATEGORY);
-    console.log('🏺 Seramik kategorisindeki ürünler:', allProducts.length);
-    
-    // Qua marka ürünlerini kontrol et
-    const quaProducts = allProducts.filter(p => p.marka && p.marka.includes('Qua'));
-    console.log('🔍 Qua marka ürünler:', quaProducts.length);
-    if (quaProducts.length > 0) {
-      console.log('📋 Qua ürünleri:', quaProducts.map(p => ({ ad: p.ad, marka: p.marka, kategori: p.kategori })));
-    }
+    // Seramik ürünlerini filtrele - daha esnek kategori kontrolü
+    let allProducts = data.filter(p => {
+      const kategori = p.kategori ? p.kategori.trim() : '';
+      // "Seramik Ürünleri" veya "Seramik" içeren kategoriler
+      return kategori === TARGET_CATEGORY || 
+             kategori === 'Seramik' || 
+             kategori.toLowerCase().includes('seramik');
+    });
     
     // Yurtbay Seramik ve Qua ürünleri için sadece genel koleksiyon ürünlerini göster
     // (Ebat bilgisi olan detaylı ürünleri filtrele)
     products = allProducts.filter(p => {
-      // Yurtbay Seramik veya Qua ürünü mü kontrol et
-      if (p.marka && (p.marka.includes('Yurtbay Seramik') || p.marka.includes('Qua'))) {
+      // Marka kontrolü - Qua veya Yurtbay Seramik
+      const isQua = p.marka && (p.marka.trim() === 'Qua' || p.marka.includes('Qua'));
+      const isYurtbay = p.marka && p.marka.includes('Yurtbay Seramik');
+      
+      // Ürün adından da Qua kontrolü yap (marka alanı boş olabilir)
+      const adQua = p.ad && p.ad.trim().toUpperCase().startsWith('QUA ');
+      
+      if (isQua || isYurtbay || adQua) {
         // Eğer ürün adında ebat bilgisi varsa (60X60, 60X120 gibi) gösterme
         const hasEbat = p.ad && /\d+X\d+/.test(p.ad);
         // Sadece genel koleksiyon ürünlerini göster (ebat bilgisi olmayanlar)
-        const shouldShow = !hasEbat;
-        if (p.marka.includes('Qua')) {
-          console.log(`🔍 Qua ürün kontrolü: "${p.ad}" - hasEbat: ${hasEbat}, shouldShow: ${shouldShow}`);
-        }
-        return shouldShow;
+        return !hasEbat;
       }
       // Diğer markalar için normal göster
       return true;
     });
-    
-    console.log('✅ Gösterilecek ürünler:', products.length);
-    const quaShown = products.filter(p => p.marka && p.marka.includes('Qua'));
-    console.log('✅ Gösterilecek Qua ürünleri:', quaShown.length);
     
     filteredProducts = [...products];
     populateFilters();
