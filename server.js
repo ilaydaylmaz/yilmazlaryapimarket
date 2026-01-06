@@ -1457,7 +1457,6 @@ app.get("/api/categories", auth, (req, res) => {
         categories: [
           { id: "boya", name: "Boya", slug: "boya-urunleri", subCategories: [] },
           { id: "hirdavat", name: "Hırdavat", slug: "hirdavat-urunleri", subCategories: [] },
-          { id: "elektrik", name: "Elektrik", slug: "elektrik-urunleri", subCategories: [] },
           { id: "tesisat", name: "Tesisat", slug: "tesisat-urunleri", subCategories: [] },
           { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", slug: "yapi-malzemeleri", subCategories: [] },
           { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", slug: "elektrikli-el-aletleri-urunleri", subCategories: [] },
@@ -1485,7 +1484,6 @@ app.get("/api/category-showcase", auth, (req, res) => {
       const defaultCategories = [
         { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
         { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/hirdavat.jpg", url: "/hirdavat-urunleri.html" },
-        { id: "elektrik", name: "Elektrik", image: "/uploads/categories/elektrik.jpg", url: "/elektrik-urunleri.html" },
         { id: "tesisat", name: "Tesisat", image: "/uploads/categories/tesisat.jpg", url: "/tesisat-urunleri.html" },
         { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", image: "/uploads/categories/yapi-malzemeleri.jpg", url: "/yapi-malzemeleri.html" },
         { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
@@ -1798,7 +1796,6 @@ app.get("/api/public/category-showcase", (req, res) => {
       const defaultCategories = [
         { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
         { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/hirdavat.jpg", url: "/hirdavat-urunleri.html" },
-        { id: "elektrik", name: "Elektrik", image: "/uploads/categories/elektrik.jpg", url: "/elektrik-urunleri.html" },
         { id: "tesisat", name: "Tesisat", image: "/uploads/categories/tesisat.jpg", url: "/tesisat-urunleri.html" },
         { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", image: "/uploads/categories/yapi-malzemeleri.jpg", url: "/yapi-malzemeleri.html" },
         { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },

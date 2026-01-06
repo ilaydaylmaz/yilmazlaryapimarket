@@ -50,28 +50,6 @@
       ]
     },
     {
-      "id": "elektrik",
-      "name": "Elektrik",
-      "slug": "elektrik-urunleri",
-      "subCategories": [
-        {
-          "id": "kablo",
-          "name": "Kablo",
-          "slug": "kablo"
-        },
-        {
-          "id": "priz-anahtar",
-          "name": "Priz ve Anahtar",
-          "slug": "priz-anahtar"
-        },
-        {
-          "id": "armatur",
-          "name": "Armatür",
-          "slug": "armatur"
-        }
-      ]
-    },
-    {
       "id": "tesisat",
       "name": "Tesisat",
       "slug": "tesisat-urunleri",
