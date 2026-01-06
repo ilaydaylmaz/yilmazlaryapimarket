@@ -1555,7 +1555,11 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
     console.log('📤 Görsel yükleme isteği - req.body:', req.body, 'filename:', req.file?.filename);
     
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "Görsel yüklenmedi" });
+      // Multer hatası olabilir - kontrol et
+      if (req.fileValidationError) {
+        return res.status(400).json({ success: false, message: req.fileValidationError });
+      }
+      return res.status(400).json({ success: false, message: "Görsel yüklenmedi. Lütfen bir resim dosyası seçin (JPG, PNG, GIF - max 10MB)" });
     }
     
     // categoryId ve categoryName'i kontrol et
@@ -1564,7 +1568,13 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
     
     if (!categoryId || categoryId === 'category' || categoryId === 'undefined' || categoryId === 'null') {
       // Yüklenen dosyayı sil
-      fs.unlinkSync(req.file.path);
+      if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (unlinkError) {
+          console.warn('⚠️ Geçici dosya silme hatası:', unlinkError.message);
+        }
+      }
       return res.status(400).json({ success: false, message: "Category ID gerekli. Lütfen sayfayı yenileyin ve tekrar deneyin." });
     }
     
@@ -1574,7 +1584,13 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
     cleanCategoryId = cleanCategoryId.replace(/^-+|-+$/g, '');
     
     if (!cleanCategoryId || cleanCategoryId === '-' || cleanCategoryId.length === 0) {
-      fs.unlinkSync(req.file.path);
+      if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (unlinkError) {
+          console.warn('⚠️ Geçici dosya silme hatası:', unlinkError.message);
+        }
+      }
       return res.status(400).json({ success: false, message: "Geçersiz Category ID" });
     }
     
@@ -1589,16 +1605,39 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
     }
     
     // Dosyayı yeniden adlandır
-    fs.renameSync(req.file.path, newPath);
-    console.log('✅ Dosya yeniden adlandırıldı:', req.file.filename, '->', newFilename);
+    try {
+      fs.renameSync(req.file.path, newPath);
+      console.log('✅ Dosya yeniden adlandırıldı:', req.file.filename, '->', newFilename);
+    } catch (renameError) {
+      console.error('❌ Dosya yeniden adlandırma hatası:', renameError);
+      // Geçici dosyayı sil
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(500).json({ success: false, message: "Dosya işleme hatası: " + renameError.message });
+    }
     
     categoryId = cleanCategoryId; // Temizlenmiş categoryId'yi kullan
     
     // Görseli base64'e çevir (Git'te kalması için)
-    const imageBuffer = fs.readFileSync(newPath);
-    const imageBase64 = imageBuffer.toString('base64');
-    const mimeType = req.file.mimetype || 'image/jpeg';
-    const imageDataUri = `data:${mimeType};base64,${imageBase64}`;
+    let imageBuffer, imageBase64, imageDataUri;
+    try {
+      if (!fs.existsSync(newPath)) {
+        throw new Error('Dosya bulunamadı: ' + newPath);
+      }
+      imageBuffer = fs.readFileSync(newPath);
+      imageBase64 = imageBuffer.toString('base64');
+      const mimeType = req.file.mimetype || 'image/jpeg';
+      imageDataUri = `data:${mimeType};base64,${imageBase64}`;
+      console.log('✅ Görsel base64\'e çevrildi, boyut:', Math.round(imageBase64.length / 1024), 'KB');
+    } catch (base64Error) {
+      console.error('❌ Base64 çevirme hatası:', base64Error);
+      // Dosyayı sil
+      if (fs.existsSync(newPath)) {
+        fs.unlinkSync(newPath);
+      }
+      return res.status(500).json({ success: false, message: "Görsel işleme hatası: " + base64Error.message });
+    }
     
     // Yeni dosya adını kullan (yeniden adlandırılmış dosya)
     const newImagePath = `/uploads/categories/${newFilename}`;
@@ -1689,8 +1728,45 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
     });
   } catch (error) {
     console.error("❌ Kategori görsel yükleme hatası:", error);
-    res.status(500).json({ success: false, message: "Sunucu hatası: " + error.message });
+    console.error("❌ Hata detayları:", {
+      message: error.message,
+      stack: error.stack,
+      body: req.body,
+      file: req.file ? { filename: req.file.filename, path: req.file.path } : null
+    });
+    
+    // Yüklenen dosyayı temizle
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+        console.log('🗑️ Hata nedeniyle geçici dosya silindi');
+      } catch (unlinkError) {
+        console.warn('⚠️ Geçici dosya silme hatası:', unlinkError.message);
+      }
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: "Sunucu hatası: " + error.message,
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
+});
+
+// Multer hata yakalama middleware
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    console.error('❌ Multer hatası:', error);
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ success: false, message: "Dosya boyutu çok büyük! Maksimum 10MB olmalı." });
+    }
+    return res.status(400).json({ success: false, message: "Dosya yükleme hatası: " + error.message });
+  }
+  if (error) {
+    console.error('❌ Dosya yükleme hatası:', error);
+    return res.status(400).json({ success: false, message: error.message || "Dosya yükleme hatası" });
+  }
+  next();
 });
 
 // Public kategori showcase (ana sayfa için)
