@@ -1497,17 +1497,19 @@ function yukleCeramicCollections() {
         
         // Koleksiyon adını belirle
         let koleksiyonAdi;
-        // Yurtbay Seramik formatı: "Yurtbay Seramik AFYON" veya "Yurtbay Seramik AFYON 60X120"
+        // Yurtbay Seramik formatı: "Yurtbay Seramik AFYON" veya "Yurtbay Seramik AFYON 60X120 BEYAZ"
         if (adParts.length >= 3 && adParts[0] === 'Yurtbay' && adParts[1] === 'Seramik') {
           // Ebat bilgisini çıkar (örn: "60X120", "60X60")
           const koleksiyonParts = adParts.slice(2).filter(part => !/\d+X\d+/.test(part));
-          koleksiyonAdi = koleksiyonParts.join(' ').toUpperCase();
+          // Sadece ilk kelimeyi al (koleksiyon adı), ek bilgileri (renk, yüzey, özellik) çıkar
+          koleksiyonAdi = koleksiyonParts[0] ? koleksiyonParts[0].toUpperCase() : '';
         } 
-        // Qua formatı: "Qua VENECIA" veya "Qua VENECIA 60X120"
+        // Qua formatı: "Qua VENECIA" veya "Qua VENECIA 60X120 FULL LAPPATO"
         else if (adParts.length >= 2 && adParts[0] === 'Qua') {
           // Ebat bilgisini çıkar (örn: "60X120", "60X60")
           const koleksiyonParts = adParts.slice(1).filter(part => !/\d+X\d+/.test(part));
-          koleksiyonAdi = koleksiyonParts.join(' ').toUpperCase();
+          // Sadece ilk kelimeyi al (koleksiyon adı), ek bilgileri (renk, yüzey, özellik) çıkar
+          koleksiyonAdi = koleksiyonParts[0] ? koleksiyonParts[0].toUpperCase() : '';
         } else {
           return; // Desteklenmeyen format
         }
