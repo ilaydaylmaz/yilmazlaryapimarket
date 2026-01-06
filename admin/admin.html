@@ -1789,12 +1789,14 @@ function yukleShowcaseImage(categoryId, input) {
       const category = showcaseCategories.find(c => c.id === categoryId);
       if (category) {
         const oldImage = category.image;
-        category.image = data.imagePath;
+        // Base64 görsel varsa onu kullan, yoksa dosya yolunu kullan
+        category.image = data.imageBase64 || data.imagePath;
         console.log('✅ Kategori bulundu ve görsel güncellendi:', {
           id: category.id,
           name: category.name,
           eskiGorsel: oldImage,
-          yeniGorsel: category.image
+          yeniGorsel: category.image,
+          base64Var: !!data.imageBase64
         });
         
         // Görseli sayfada güncelle - SADECE BU KATEGORİNİN GÖRSELİNİ GÜNCELLE
@@ -1802,13 +1804,14 @@ function yukleShowcaseImage(categoryId, input) {
         if (card) {
           const img = card.querySelector('img');
           if (img) {
-            // Cache'i önlemek için timestamp ekle
-            img.src = data.imagePath + '?t=' + Date.now();
+            // Base64 görsel varsa direkt kullan, yoksa dosya yolunu kullan
+            const imageSrc = data.imageBase64 || (data.imagePath + '?t=' + Date.now());
+            img.src = imageSrc;
           }
           // Mevcut görsel bilgisini güncelle
           const infoDiv = card.querySelector('.image-preview-info');
           if (infoDiv) {
-            infoDiv.innerHTML = `<small>Mevcut: ${data.imagePath}</small>`;
+            infoDiv.innerHTML = `<small>Mevcut: ${data.imageBase64 ? 'Base64 görsel' : data.imagePath}</small>`;
           }
         }
         
@@ -1835,15 +1838,17 @@ function yukleShowcaseImage(categoryId, input) {
             // Eğer kategori zaten varsa güncelle, yoksa ekle
             const existingIndex = categoriesToSave.findIndex(c => c.id === categoryId);
             if (existingIndex >= 0) {
-              // Mevcut kategoriyi güncelle
-              categoriesToSave[existingIndex].image = data.imagePath;
+              // Mevcut kategoriyi güncelle - base64 görseli kullan
+              categoriesToSave[existingIndex].image = data.imageBase64 || data.imagePath;
+              categoriesToSave[existingIndex].imageBase64 = data.imageBase64; // Base64'ü de kaydet
               categoriesToSave[existingIndex].name = category.name; // İsim de güncellenmiş olabilir
             } else {
-              // Yeni kategori ekle
+              // Yeni kategori ekle - base64 görseli kullan
               categoriesToSave.push({
                 id: category.id,
                 name: category.name,
-                image: data.imagePath,
+                image: data.imageBase64 || data.imagePath, // Base64 görseli öncelikli
+                imageBase64: data.imageBase64, // Base64'ü de kaydet
                 url: category.url || `/urunler.html?kategori=${category.id}`
               });
             }
