@@ -1781,13 +1781,19 @@ function yukleShowcaseImage(categoryId, input) {
     return r.json();
   })
   .then(data => {
-    if (data.success) {
-      console.log('✅ Görsel yüklendi, categoryId:', categoryId, 'imagePath:', data.imagePath);
-      console.log('📋 Mevcut kategoriler:', showcaseCategories.map(c => ({ id: c.id, name: c.name })));
-      
-      // Görseli güncelle
-      const category = showcaseCategories.find(c => c.id === categoryId);
-      if (category) {
+    console.log('📥 Server yanıtı:', data);
+    
+    if (!data.success) {
+      alert('❌ Hata: ' + (data.message || 'Görsel yüklenemedi'));
+      return;
+    }
+    
+    console.log('✅ Görsel yüklendi, categoryId:', categoryId, 'imagePath:', data.imagePath, 'base64Var:', !!data.imageBase64);
+    console.log('📋 Mevcut kategoriler:', showcaseCategories.map(c => ({ id: c.id, name: c.name })));
+    
+    // Görseli güncelle
+    const category = showcaseCategories.find(c => c.id === categoryId);
+    if (category) {
         const oldImage = category.image;
         // Base64 görsel varsa onu kullan, yoksa dosya yolunu kullan
         category.image = data.imageBase64 || data.imagePath;
@@ -1806,13 +1812,26 @@ function yukleShowcaseImage(categoryId, input) {
           if (img) {
             // Base64 görsel varsa direkt kullan, yoksa dosya yolunu kullan
             const imageSrc = data.imageBase64 || (data.imagePath + '?t=' + Date.now());
+            console.log('🖼️ Görsel güncelleniyor:', imageSrc.substring(0, 50) + '...');
+            
+            // Görsel yükleme başarılı/başarısız kontrolü
+            img.onload = function() {
+              console.log('✅ Görsel başarıyla yüklendi ve gösterildi');
+            };
+            img.onerror = function() {
+              console.error('❌ Görsel yüklenemedi:', imageSrc);
+              alert('⚠️ Görsel yüklendi ama gösterilemedi. Lütfen sayfayı yenileyin.');
+            };
+            
             img.src = imageSrc;
           }
           // Mevcut görsel bilgisini güncelle
           const infoDiv = card.querySelector('.image-preview-info');
           if (infoDiv) {
-            infoDiv.innerHTML = `<small>Mevcut: ${data.imageBase64 ? 'Base64 görsel' : data.imagePath}</small>`;
+            infoDiv.innerHTML = `<small>Mevcut: ${data.imageBase64 ? 'Base64 görsel (yüklendi)' : data.imagePath}</small>`;
           }
+        } else {
+          console.warn('⚠️ Kategori kartı bulunamadı:', categoryId);
         }
         
         // JSON dosyasından mevcut kategorileri al, sadece bu kategoriyi güncelle
@@ -1871,11 +1890,12 @@ function yukleShowcaseImage(categoryId, input) {
           })
           .then(saveData => {
             if (saveData.success) {
-              // Local state'i de güncelle
+              // Local state'i de güncelle - base64 görseli kullan
               showcaseCategories = showcaseCategories.map(c => 
-                c.id === categoryId ? { ...c, image: data.imagePath } : c
+                c.id === categoryId ? { ...c, image: data.imageBase64 || data.imagePath } : c
               );
-              alert('✅ Görsel başarıyla yüklendi ve kaydedildi!');
+              console.log('✅ Görsel başarıyla kaydedildi');
+              // Alert'i kaldırdık çünkü görsel zaten gösterildi
             } else {
               alert('⚠️ Görsel yüklendi ama kaydedilemedi: ' + (saveData.message || 'Bilinmeyen hata'));
             }
@@ -1883,18 +1903,21 @@ function yukleShowcaseImage(categoryId, input) {
           .catch(err => {
             alert('⚠️ Görsel yüklendi ama kaydedilemedi: ' + err.message);
           });
-      } else {
-        console.error('❌ Kategori bulunamadı! categoryId:', categoryId);
-        console.error('📋 Mevcut kategoriler:', showcaseCategories.map(c => ({ id: c.id, name: c.name })));
-        alert('❌ Kategori bulunamadı! Lütfen sayfayı yenileyin ve tekrar deneyin.');
-      }
     } else {
-      alert('❌ Hata: ' + (data.message || 'Görsel yüklenemedi'));
+      console.error('❌ Kategori bulunamadı! categoryId:', categoryId);
+      console.error('📋 Mevcut kategoriler:', showcaseCategories.map(c => ({ id: c.id, name: c.name })));
+      alert('❌ Kategori bulunamadı! Lütfen sayfayı yenileyin ve tekrar deneyin.');
     }
   })
   .catch(err => {
-    console.error('Görsel yükleme hatası:', err);
-    alert('❌ Hata: ' + err.message);
+    console.error('❌ Görsel yükleme hatası:', err);
+    console.error('❌ Hata detayları:', {
+      message: err.message,
+      stack: err.stack,
+      categoryId: categoryId,
+      fileName: file?.name
+    });
+    alert('❌ Görsel yüklenemedi!\n\nHata: ' + err.message + '\n\nLütfen:\n1. Dosya boyutunun 10MB\'dan küçük olduğundan emin olun\n2. Dosya formatının JPG, PNG veya GIF olduğundan emin olun\n3. İnternet bağlantınızı kontrol edin\n4. Sayfayı yenileyip tekrar deneyin');
   });
 }
 
