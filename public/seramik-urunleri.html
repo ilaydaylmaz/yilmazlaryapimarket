@@ -281,8 +281,18 @@ const TARGET_CATEGORY = "Seramik Ürünleri";
 fetch("/api/public/products")
   .then(r => r.json())
   .then(data => {
+    console.log('📦 Tüm ürünler:', data.length);
+    
     // Seramik ürünlerini filtrele
     let allProducts = data.filter(p => p.kategori && p.kategori.trim() === TARGET_CATEGORY);
+    console.log('🏺 Seramik kategorisindeki ürünler:', allProducts.length);
+    
+    // Qua marka ürünlerini kontrol et
+    const quaProducts = allProducts.filter(p => p.marka && p.marka.includes('Qua'));
+    console.log('🔍 Qua marka ürünler:', quaProducts.length);
+    if (quaProducts.length > 0) {
+      console.log('📋 Qua ürünleri:', quaProducts.map(p => ({ ad: p.ad, marka: p.marka, kategori: p.kategori })));
+    }
     
     // Yurtbay Seramik ve Qua ürünleri için sadece genel koleksiyon ürünlerini göster
     // (Ebat bilgisi olan detaylı ürünleri filtrele)
@@ -292,11 +302,19 @@ fetch("/api/public/products")
         // Eğer ürün adında ebat bilgisi varsa (60X60, 60X120 gibi) gösterme
         const hasEbat = p.ad && /\d+X\d+/.test(p.ad);
         // Sadece genel koleksiyon ürünlerini göster (ebat bilgisi olmayanlar)
-        return !hasEbat;
+        const shouldShow = !hasEbat;
+        if (p.marka.includes('Qua')) {
+          console.log(`🔍 Qua ürün kontrolü: "${p.ad}" - hasEbat: ${hasEbat}, shouldShow: ${shouldShow}`);
+        }
+        return shouldShow;
       }
       // Diğer markalar için normal göster
       return true;
     });
+    
+    console.log('✅ Gösterilecek ürünler:', products.length);
+    const quaShown = products.filter(p => p.marka && p.marka.includes('Qua'));
+    console.log('✅ Gösterilecek Qua ürünleri:', quaShown.length);
     
     filteredProducts = [...products];
     populateFilters();
