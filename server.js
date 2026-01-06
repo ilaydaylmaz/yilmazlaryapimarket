@@ -1508,16 +1508,39 @@ app.post("/api/category-showcase", auth, (req, res) => {
       return res.status(400).json({ success: false, message: "Categories bir array olmalı" });
     }
     
+    console.log('💾 Kategori showcase kaydediliyor:', categories.length, 'kategori');
+    
+    // Base64 görselleri kontrol et ve logla
+    categories.forEach(cat => {
+      if (cat.imageBase64) {
+        console.log(`  - ${cat.name}: Base64 görsel var (${Math.round(cat.imageBase64.length / 1024)} KB)`);
+      } else if (cat.image && cat.image.startsWith('data:')) {
+        console.log(`  - ${cat.name}: Base64 görsel image field'ında (${Math.round(cat.image.length / 1024)} KB)`);
+        // imageBase64 field'ı yoksa image'den kopyala
+        if (!cat.imageBase64) {
+          cat.imageBase64 = cat.image;
+        }
+      } else {
+        console.log(`  - ${cat.name}: Dosya yolu kullanılıyor: ${cat.image}`);
+      }
+    });
+    
     const data = {
       categories: categories,
       updatedAt: new Date().toISOString()
     };
     
     fs.writeFileSync(CATEGORY_SHOWCASE_FILE, JSON.stringify(data, null, 2), 'utf8');
+    console.log('✅ Kategori showcase başarıyla kaydedildi:', CATEGORY_SHOWCASE_FILE);
     res.json({ success: true, message: "Kategori showcase ayarları kaydedildi" });
   } catch (error) {
-    console.error("Kategori showcase kaydetme hatası:", error);
-    res.status(500).json({ success: false, message: "Sunucu hatası" });
+    console.error("❌ Kategori showcase kaydetme hatası:", error);
+    console.error("❌ Hata detayları:", {
+      message: error.message,
+      stack: error.stack,
+      file: CATEGORY_SHOWCASE_FILE
+    });
+    res.status(500).json({ success: false, message: "Sunucu hatası: " + error.message });
   }
 });
 

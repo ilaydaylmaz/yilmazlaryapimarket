@@ -1810,12 +1810,15 @@ function yukleShowcaseImage(categoryId, input) {
         const oldImage = category.image;
         // Base64 görsel varsa onu kullan, yoksa dosya yolunu kullan
         category.image = data.imageBase64 || data.imagePath;
+        // imageBase64 field'ını da kaydet (kaydet butonu için)
+        category.imageBase64 = data.imageBase64 || category.image;
         console.log('✅ Kategori bulundu ve görsel güncellendi:', {
           id: category.id,
           name: category.name,
           eskiGorsel: oldImage,
           yeniGorsel: category.image,
-          base64Var: !!data.imageBase64
+          base64Var: !!data.imageBase64,
+          imageBase64Field: !!category.imageBase64
         });
         
         // Görseli sayfada güncelle - SADECE BU KATEGORİNİN GÖRSELİNİ GÜNCELLE
@@ -1905,10 +1908,14 @@ function yukleShowcaseImage(categoryId, input) {
             if (saveData.success) {
               // Local state'i de güncelle - base64 görseli kullan
               showcaseCategories = showcaseCategories.map(c => 
-                c.id === categoryId ? { ...c, image: data.imageBase64 || data.imagePath } : c
+                c.id === categoryId ? { 
+                  ...c, 
+                  image: data.imageBase64 || data.imagePath,
+                  imageBase64: data.imageBase64 || c.image
+                } : c
               );
-              console.log('✅ Görsel başarıyla kaydedildi');
-              // Alert'i kaldırdık çünkü görsel zaten gösterildi
+              console.log('✅ Görsel başarıyla kaydedildi ve local state güncellendi');
+              alert('✅ Görsel başarıyla yüklendi ve kaydedildi!');
             } else {
               alert('⚠️ Görsel yüklendi ama kaydedilemedi: ' + (saveData.message || 'Bilinmeyen hata'));
             }
