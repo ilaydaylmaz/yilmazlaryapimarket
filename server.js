@@ -1502,10 +1502,27 @@ app.get("/api/category-showcase", auth, (req, res) => {
 // Kategori showcase ayarlarını kaydet
 app.post("/api/category-showcase", auth, (req, res) => {
   try {
+    console.log('📥 Kategori showcase kaydetme isteği alındı');
+    console.log('📥 Request body:', JSON.stringify(req.body).substring(0, 200) + '...');
+    
     const { categories } = req.body;
     
+    if (!categories) {
+      console.error('❌ Categories field eksik');
+      return res.status(400).json({ success: false, message: "Categories field gerekli" });
+    }
+    
     if (!Array.isArray(categories)) {
-      return res.status(400).json({ success: false, message: "Categories bir array olmalı" });
+      console.error('❌ Categories bir array değil:', typeof categories, categories);
+      return res.status(400).json({ 
+        success: false, 
+        message: "Categories bir array olmalı. Alınan tip: " + typeof categories 
+      });
+    }
+    
+    if (categories.length === 0) {
+      console.warn('⚠️ Boş kategori listesi gönderildi');
+      return res.status(400).json({ success: false, message: "En az bir kategori gerekli" });
     }
     
     console.log('💾 Kategori showcase kaydediliyor:', categories.length, 'kategori');

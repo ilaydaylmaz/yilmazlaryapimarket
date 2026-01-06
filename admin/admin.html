@@ -1995,13 +1995,19 @@ function kaydetShowcaseCategory(categoryId) {
       }
       
       // Güncellenmiş kategorileri kaydet
+      console.log('💾 Kaydedilecek kategoriler:', categoriesToSave.length, 'kategori');
+      console.log('💾 Kategoriler:', categoriesToSave.map(c => ({ id: c.id, name: c.name, hasImage: !!c.image, hasBase64: !!c.imageBase64 })));
+      
+      const requestBody = { categories: categoriesToSave };
+      console.log('💾 Request body boyutu:', JSON.stringify(requestBody).length, 'karakter');
+      
       return fetch('/api/category-showcase', {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ categories: categoriesToSave })
+        body: JSON.stringify(requestBody)
       });
     })
     .then(r => {
