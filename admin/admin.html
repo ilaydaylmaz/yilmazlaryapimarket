@@ -1758,11 +1758,16 @@ function yukleShowcaseImage(categoryId, input) {
     return;
   }
   
-  console.log('📤 Görsel yükleniyor - categoryId:', categoryId, 'dosya:', file.name);
+  // Kategori ismini bul
+  const category = showcaseCategories.find(c => c.id === categoryId);
+  const categoryName = category ? category.name : categoryId;
+  
+  console.log('📤 Görsel yükleniyor - categoryId:', categoryId, 'categoryName:', categoryName, 'dosya:', file.name);
   
   const formData = new FormData();
   formData.append('image', file);
   formData.append('categoryId', String(categoryId)); // String'e çevir
+  formData.append('categoryName', String(categoryName)); // Kategori ismini de gönder
   
   fetch('/api/category-showcase/image', {
     method: 'POST',

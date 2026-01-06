@@ -1558,8 +1558,9 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
       return res.status(400).json({ success: false, message: "Görsel yüklenmedi" });
     }
     
-    // categoryId'yi kontrol et
+    // categoryId ve categoryName'i kontrol et
     let categoryId = req.body.categoryId;
+    let categoryName = req.body.categoryName || categoryId;
     
     if (!categoryId || categoryId === 'category' || categoryId === 'undefined' || categoryId === 'null') {
       // Yüklenen dosyayı sil
@@ -1614,15 +1615,27 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
       // Kategoriyi bul veya oluştur
       let category = showcaseData.categories?.find(c => c.id === categoryId);
       if (!category) {
-        category = { id: categoryId, name: categoryId, image: newImagePath, imageBase64: imageDataUri };
+        // Yeni kategori oluştur - base64 görseli image field'ına kopyala
+        category = { 
+          id: categoryId, 
+          name: categoryName, 
+          image: imageDataUri, // Base64 görseli direkt image field'ına kopyala
+          imageBase64: imageDataUri,
+          url: `/urunler.html?kategori=${categoryId}`
+        };
         if (!showcaseData.categories) {
           showcaseData.categories = [];
         }
         showcaseData.categories.push(category);
       } else {
-        // Mevcut kategoriyi güncelle
-        category.image = newImagePath;
+        // Mevcut kategoriyi güncelle - base64 görseli image field'ına kopyala
+        category.name = categoryName; // İsimi de güncelle
+        category.image = imageDataUri; // Base64 görseli direkt image field'ına kopyala
         category.imageBase64 = imageDataUri;
+        // URL yoksa ekle
+        if (!category.url) {
+          category.url = `/urunler.html?kategori=${categoryId}`;
+        }
       }
       
       showcaseData.updatedAt = new Date().toISOString();
