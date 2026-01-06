@@ -1774,9 +1774,24 @@ function yukleShowcaseImage(categoryId, input) {
     credentials: 'include',
     body: formData
   })
-  .then(r => {
+  .then(async r => {
+    const contentType = r.headers.get('content-type');
+    let errorData;
+    
     if (!r.ok) {
-      throw new Error('HTTP ' + r.status);
+      // JSON hatası varsa onu al
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          errorData = await r.json();
+        } catch (e) {
+          errorData = { message: 'Bilinmeyen hata' };
+        }
+      } else {
+        errorData = { message: `HTTP ${r.status} hatası` };
+      }
+      
+      const errorMessage = errorData.message || `HTTP ${r.status} hatası`;
+      throw new Error(errorMessage);
     }
     return r.json();
   })
