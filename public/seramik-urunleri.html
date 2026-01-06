@@ -385,14 +385,20 @@ function listele(data) {
       }
     }
 
-    // Yurtbay Seramik ürünleri için koleksiyon adını çıkar
+    // Yurtbay Seramik ve Qua ürünleri için koleksiyon adını çıkar
     let onClickAction = `detay('${p.id}')`;
     let linkText = 'Detayları Gör →';
-    if (p.marka && p.marka.includes('Yurtbay Seramik') && p.ad) {
-      // Ürün adından koleksiyon adını çıkar (örn: "Yurtbay Seramik AFYON" -> "AFYON")
+    if (p.marka && (p.marka.includes('Yurtbay Seramik') || p.marka.includes('Qua')) && p.ad) {
       const adParts = p.ad.split(' ');
+      // Yurtbay Seramik formatı: "Yurtbay Seramik AFYON" -> "AFYON"
       if (adParts.length >= 3 && adParts[0] === 'Yurtbay' && adParts[1] === 'Seramik') {
         const koleksiyonAdi = adParts.slice(2).join(' ');
+        onClickAction = `koleksiyonDetay('${koleksiyonAdi.replace(/'/g, "\\'")}')`;
+        linkText = 'Koleksiyonu Gör →';
+      }
+      // Qua formatı: "Qua KOLEKSIYON_ADI" -> "KOLEKSIYON_ADI"
+      else if (adParts.length >= 2 && adParts[0] === 'Qua') {
+        const koleksiyonAdi = adParts.slice(1).join(' ');
         onClickAction = `koleksiyonDetay('${koleksiyonAdi.replace(/'/g, "\\'")}')`;
         linkText = 'Koleksiyonu Gör →';
       }

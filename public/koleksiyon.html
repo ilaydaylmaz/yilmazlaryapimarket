@@ -910,13 +910,13 @@ if (!koleksiyonAdi) {
   })
     .then(r => r.json())
     .then(data => {
-      // Yurtbay Seramik ürünlerini filtrele
-      const yurtbayProducts = data.filter(p => 
-        p.marka && p.marka.includes('Yurtbay Seramik')
+      // Yurtbay Seramik ve Qua ürünlerini filtrele
+      const seramikProducts = data.filter(p => 
+        p.marka && (p.marka.includes('Yurtbay Seramik') || p.marka.includes('Qua'))
       );
       
       // Koleksiyon adına göre filtrele
-      products = yurtbayProducts.filter(p => {
+      products = seramikProducts.filter(p => {
         if (!p.ad) return false;
         const productName = p.ad.toUpperCase();
         const koleksiyonUpper = koleksiyonAdi.toUpperCase();
@@ -936,10 +936,14 @@ if (!koleksiyonAdi) {
       
       // Genel koleksiyon ürününü filtrele (sadece detaylı ürünler)
       products = products.filter(p => {
-        // "Yurtbay Seramik AFYON" gibi genel ürünleri filtrele
         const adParts = p.ad.split(' ');
+        // "Yurtbay Seramik AFYON" gibi genel ürünleri filtrele
         if (adParts.length === 3 && adParts[0] === 'Yurtbay' && adParts[1] === 'Seramik') {
           // Sadece koleksiyon adı varsa (detaylı ürün değilse) filtrele
+          return false;
+        }
+        // "Qua KOLEKSIYON" gibi genel ürünleri filtrele (ebat yoksa)
+        if (adParts.length === 2 && adParts[0] === 'Qua' && !/\d+X\d+/.test(p.ad)) {
           return false;
         }
         return true;
@@ -1408,11 +1412,11 @@ function refreshCollectionProducts() {
   })
     .then(r => r.json())
     .then(data => {
-      const yurtbayProducts = data.filter(p => 
-        p.marka && p.marka.includes('Yurtbay Seramik')
+      const seramikProducts = data.filter(p => 
+        p.marka && (p.marka.includes('Yurtbay Seramik') || p.marka.includes('Qua'))
       );
       
-      const newProducts = yurtbayProducts.filter(p => {
+      const newProducts = seramikProducts.filter(p => {
         if (!p.ad) return false;
         const productName = p.ad.toUpperCase();
         const koleksiyonUpper = koleksiyonAdi.toUpperCase();
@@ -1421,7 +1425,12 @@ function refreshCollectionProducts() {
       
       const filteredNewProducts = newProducts.filter(p => {
         const adParts = p.ad.split(' ');
+        // "Yurtbay Seramik AFYON" gibi genel ürünleri filtrele
         if (adParts.length === 3 && adParts[0] === 'Yurtbay' && adParts[1] === 'Seramik') {
+          return false;
+        }
+        // "Qua KOLEKSIYON" gibi genel ürünleri filtrele (ebat yoksa)
+        if (adParts.length === 2 && adParts[0] === 'Qua' && !/\d+X\d+/.test(p.ad)) {
           return false;
         }
         return true;
