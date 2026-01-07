@@ -6,6 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "migrate": "node migrate-to-mongodb.js",
+    "migrate-showcase": "node migrate-category-showcase.js",
     "convert-images": "node convert-images-to-base64.js",
     "commit-images": "node auto-commit-category-images.js"
   },
