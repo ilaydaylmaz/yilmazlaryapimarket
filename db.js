@@ -91,6 +91,14 @@ async function getBlogCollection() {
   return database.collection("blog");
 }
 
+async function getCategoryShowcaseCollection() {
+  const database = await connectDB();
+  if (!database) {
+    throw new Error("MongoDB bağlantısı yok");
+  }
+  return database.collection("category_showcase");
+}
+
 module.exports = {
   connectDB,
   closeDB,
@@ -98,6 +106,7 @@ module.exports = {
   getContactsCollection,
   getReviewsCollection,
   getBlogCollection,
+  getCategoryShowcaseCollection,
   isMongoDBEnabled
 };
 

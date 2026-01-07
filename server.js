@@ -7,7 +7,7 @@ const multer = require("multer");
 const path = require("path");
 const { ObjectId } = require("mongodb");
 const nodemailer = require("nodemailer");
-const { getProductsCollection, getContactsCollection, getReviewsCollection, getBlogCollection, connectDB, isMongoDBEnabled } = require("./db");
+const { getProductsCollection, getContactsCollection, getReviewsCollection, getBlogCollection, getCategoryShowcaseCollection, connectDB, isMongoDBEnabled } = require("./db");
 const https = require("https");
 const { exec } = require("child_process");
 
@@ -1474,24 +1474,36 @@ app.get("/api/categories", auth, (req, res) => {
 });
 
 // Kategori showcase ayarlarını getir
-app.get("/api/category-showcase", auth, (req, res) => {
+app.get("/api/category-showcase", auth, async (req, res) => {
   try {
-    if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
-      const data = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
-      res.json(data);
+    // Varsayılan kategoriler
+    const defaultCategories = [
+      { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
+      { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/hirdavat.jpg", url: "/hirdavat-urunleri.html" },
+      { id: "tesisat", name: "Tesisat", image: "/uploads/categories/tesisat.jpg", url: "/tesisat-urunleri.html" },
+      { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", image: "/uploads/categories/yapi-malzemeleri.jpg", url: "/yapi-malzemeleri.html" },
+      { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
+      { id: "seramik", name: "Seramik ve Fayans", image: "/uploads/categories/seramik.jpg", url: "/seramik-urunleri.html" },
+      { id: "banyo", name: "Banyo Dolapları", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
+      { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
+    ];
+
+    if (isMongoDBEnabled()) {
+      const showcaseCollection = await getCategoryShowcaseCollection();
+      const data = await showcaseCollection.findOne({ type: 'category_showcase' });
+      if (data && data.categories) {
+        res.json({ categories: data.categories });
+      } else {
+        res.json({ categories: defaultCategories });
+      }
     } else {
-      // Varsayılan kategoriler
-      const defaultCategories = [
-        { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
-        { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/hirdavat.jpg", url: "/hirdavat-urunleri.html" },
-        { id: "tesisat", name: "Tesisat", image: "/uploads/categories/tesisat.jpg", url: "/tesisat-urunleri.html" },
-        { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", image: "/uploads/categories/yapi-malzemeleri.jpg", url: "/yapi-malzemeleri.html" },
-        { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
-        { id: "seramik", name: "Seramik ve Fayans", image: "/uploads/categories/seramik.jpg", url: "/seramik-urunleri.html" },
-        { id: "banyo", name: "Banyo Dolapları", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
-        { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
-      ];
-      res.json({ categories: defaultCategories });
+      // JSON fallback
+      if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
+        const data = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
+        res.json(data);
+      } else {
+        res.json({ categories: defaultCategories });
+      }
     }
   } catch (error) {
     console.error("Kategori showcase okuma hatası:", error);
@@ -1500,7 +1512,7 @@ app.get("/api/category-showcase", auth, (req, res) => {
 });
 
 // Kategori showcase ayarlarını kaydet
-app.post("/api/category-showcase", auth, (req, res) => {
+app.post("/api/category-showcase", auth, async (req, res) => {
   try {
     console.log('📥 Kategori showcase kaydetme isteği alındı');
     console.log('📥 Request body:', JSON.stringify(req.body).substring(0, 200) + '...');
@@ -1544,18 +1556,30 @@ app.post("/api/category-showcase", auth, (req, res) => {
     
     const data = {
       categories: categories,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date()
     };
     
-    fs.writeFileSync(CATEGORY_SHOWCASE_FILE, JSON.stringify(data, null, 2), 'utf8');
-    console.log('✅ Kategori showcase başarıyla kaydedildi:', CATEGORY_SHOWCASE_FILE);
+    if (isMongoDBEnabled()) {
+      // MongoDB'ye kaydet
+      const showcaseCollection = await getCategoryShowcaseCollection();
+      await showcaseCollection.updateOne(
+        { type: 'category_showcase' },
+        { $set: data },
+        { upsert: true }
+      );
+      console.log('✅ Kategori showcase MongoDB\'ye kaydedildi');
+    } else {
+      // JSON fallback
+      fs.writeFileSync(CATEGORY_SHOWCASE_FILE, JSON.stringify({ ...data, updatedAt: data.updatedAt.toISOString() }, null, 2), 'utf8');
+      console.log('✅ Kategori showcase JSON dosyasına kaydedildi:', CATEGORY_SHOWCASE_FILE);
+    }
+    
     res.json({ success: true, message: "Kategori showcase ayarları kaydedildi" });
   } catch (error) {
     console.error("❌ Kategori showcase kaydetme hatası:", error);
     console.error("❌ Hata detayları:", {
       message: error.message,
-      stack: error.stack,
-      file: CATEGORY_SHOWCASE_FILE
+      stack: error.stack
     });
     res.status(500).json({ success: false, message: "Sunucu hatası: " + error.message });
   }
@@ -1588,7 +1612,7 @@ const uploadCategoryImage = multer({
   }
 });
 
-app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image"), (req, res) => {
+app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image"), async (req, res) => {
   try {
     console.log('📤 Görsel yükleme isteği - req.body:', req.body, 'filename:', req.file?.filename);
     
@@ -1682,47 +1706,72 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
     console.log('📁 Yeni görsel yolu:', newImagePath);
     console.log('📦 Base64 görsel boyutu:', Math.round(imageBase64.length / 1024), 'KB');
     
-    // JSON dosyasını güncelle - base64 görseli ekle
+    // Kategoriyi bul veya oluştur
+    const category = { 
+      id: categoryId, 
+      name: categoryName, 
+      image: imageDataUri, // Base64 görseli direkt image field'ına kopyala
+      imageBase64: imageDataUri,
+      url: `/urunler.html?kategori=${categoryId}`
+    };
+    
+    // MongoDB'ye veya JSON dosyasına kaydet
     try {
-      let showcaseData = { categories: [] };
-      if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
-        showcaseData = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
-      }
-      
-      // Kategoriyi bul veya oluştur
-      let category = showcaseData.categories?.find(c => c.id === categoryId);
-      if (!category) {
-        // Yeni kategori oluştur - base64 görseli image field'ına kopyala
-        category = { 
-          id: categoryId, 
-          name: categoryName, 
-          image: imageDataUri, // Base64 görseli direkt image field'ına kopyala
-          imageBase64: imageDataUri,
-          url: `/urunler.html?kategori=${categoryId}`
-        };
-        if (!showcaseData.categories) {
-          showcaseData.categories = [];
+      if (isMongoDBEnabled()) {
+        // MongoDB'ye kaydet
+        const showcaseCollection = await getCategoryShowcaseCollection();
+        const existingData = await showcaseCollection.findOne({ type: 'category_showcase' });
+        
+        let categories = [];
+        if (existingData && existingData.categories) {
+          categories = existingData.categories;
+          // Mevcut kategoriyi bul ve güncelle
+          const existingIndex = categories.findIndex(c => c.id === categoryId);
+          if (existingIndex >= 0) {
+            categories[existingIndex] = category;
+          } else {
+            categories.push(category);
+          }
+        } else {
+          categories = [category];
         }
-        showcaseData.categories.push(category);
+        
+        await showcaseCollection.updateOne(
+          { type: 'category_showcase' },
+          { 
+            $set: { 
+              categories: categories,
+              updatedAt: new Date()
+            } 
+          },
+          { upsert: true }
+        );
+        console.log('✅ Base64 görsel MongoDB\'ye kaydedildi');
       } else {
-        // Mevcut kategoriyi güncelle - base64 görseli image field'ına kopyala
-        category.name = categoryName; // İsimi de güncelle
-        category.image = imageDataUri; // Base64 görseli direkt image field'ına kopyala
-        category.imageBase64 = imageDataUri;
-        // URL yoksa ekle
-        if (!category.url) {
-          category.url = `/urunler.html?kategori=${categoryId}`;
+        // JSON fallback
+        let showcaseData = { categories: [] };
+        if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
+          showcaseData = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
         }
+        
+        // Kategoriyi bul veya oluştur
+        const existingIndex = showcaseData.categories?.findIndex(c => c.id === categoryId);
+        if (existingIndex >= 0) {
+          showcaseData.categories[existingIndex] = category;
+        } else {
+          if (!showcaseData.categories) {
+            showcaseData.categories = [];
+          }
+          showcaseData.categories.push(category);
+        }
+        
+        showcaseData.updatedAt = new Date().toISOString();
+        fs.writeFileSync(CATEGORY_SHOWCASE_FILE, JSON.stringify(showcaseData, null, 2), 'utf8');
+        console.log('✅ Base64 görsel JSON dosyasına kaydedildi');
       }
       
-      showcaseData.updatedAt = new Date().toISOString();
-      
-      // JSON dosyasını kaydet
-      fs.writeFileSync(CATEGORY_SHOWCASE_FILE, JSON.stringify(showcaseData, null, 2), 'utf8');
-      console.log('✅ Base64 görsel JSON dosyasına kaydedildi');
-      
-      // Eski görseli sil (eğer varsa ve farklıysa)
-      if (category.image && category.image !== newImagePath) {
+      // Eski görseli sil (eğer varsa ve farklıysa) - sadece JSON fallback için
+      if (!isMongoDBEnabled() && category.image && category.image !== newImagePath && !category.image.startsWith('data:')) {
         const oldImagePath = category.image.replace(/^\//, '');
         const fullOldPath = path.join('public', oldImagePath);
         if (fs.existsSync(fullOldPath) && oldImagePath.includes('/categories/')) {
@@ -1734,8 +1783,8 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
           }
         }
       }
-    } catch (jsonError) {
-      console.error('❌ JSON dosyası güncelleme hatası:', jsonError);
+    } catch (saveError) {
+      console.error('❌ Kategori kaydetme hatası:', saveError);
       // Hata olsa bile devam et
     }
     
@@ -1808,19 +1857,33 @@ app.use((error, req, res, next) => {
 });
 
 // Public kategori showcase (ana sayfa için)
-app.get("/api/public/category-showcase", (req, res) => {
+app.get("/api/public/category-showcase", async (req, res) => {
   try {
     // Cache'i önle
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     
-    if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
-      const data = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
+    // Varsayılan kategoriler
+    const defaultCategories = [
+      { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
+      { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/hirdavat.jpg", url: "/hirdavat-urunleri.html" },
+      { id: "tesisat", name: "Tesisat", image: "/uploads/categories/tesisat.jpg", url: "/tesisat-urunleri.html" },
+      { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", image: "/uploads/categories/yapi-malzemeleri.jpg", url: "/yapi-malzemeleri.html" },
+      { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
+      { id: "seramik", name: "Seramik ve Fayans", image: "/uploads/categories/seramik.jpg", url: "/seramik-urunleri.html" },
+      { id: "banyo", name: "Banyo Dolapları", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
+      { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
+    ];
+    
+    if (isMongoDBEnabled()) {
+      // MongoDB'den oku
+      const showcaseCollection = await getCategoryShowcaseCollection();
+      const data = await showcaseCollection.findOne({ type: 'category_showcase' });
       
-      // Base64 görselleri varsa onları kullan, yoksa dosya yolunu kullan
-      if (data.categories) {
-        data.categories = data.categories.map(cat => {
+      if (data && data.categories && data.categories.length > 0) {
+        // Base64 görselleri varsa onları kullan, yoksa dosya yolunu kullan
+        const categories = data.categories.map(cat => {
           // Base64 görsel varsa onu kullan (öncelikli)
           if (cat.imageBase64) {
             return { ...cat, image: cat.imageBase64 };
@@ -1828,22 +1891,31 @@ app.get("/api/public/category-showcase", (req, res) => {
           // Base64 yoksa dosya yolunu kullan
           return cat;
         });
+        res.json({ categories });
+      } else {
+        res.json({ categories: defaultCategories });
       }
-      
-      res.json(data);
     } else {
-      // Varsayılan kategoriler
-      const defaultCategories = [
-        { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
-        { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/hirdavat.jpg", url: "/hirdavat-urunleri.html" },
-        { id: "tesisat", name: "Tesisat", image: "/uploads/categories/tesisat.jpg", url: "/tesisat-urunleri.html" },
-        { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", image: "/uploads/categories/yapi-malzemeleri.jpg", url: "/yapi-malzemeleri.html" },
-        { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
-        { id: "seramik", name: "Seramik ve Fayans", image: "/uploads/categories/seramik.jpg", url: "/seramik-urunleri.html" },
-        { id: "banyo", name: "Banyo Dolapları", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
-        { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
-      ];
-      res.json({ categories: defaultCategories });
+      // JSON fallback
+      if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
+        const data = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
+        
+        // Base64 görselleri varsa onları kullan, yoksa dosya yolunu kullan
+        if (data.categories) {
+          data.categories = data.categories.map(cat => {
+            // Base64 görsel varsa onu kullan (öncelikli)
+            if (cat.imageBase64) {
+              return { ...cat, image: cat.imageBase64 };
+            }
+            // Base64 yoksa dosya yolunu kullan
+            return cat;
+          });
+        }
+        
+        res.json(data);
+      } else {
+        res.json({ categories: defaultCategories });
+      }
     }
   } catch (error) {
     console.error("Kategori showcase okuma hatası:", error);
