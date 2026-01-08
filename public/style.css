@@ -1590,30 +1590,32 @@ html, body {
 }
 
 /* Mobil Düzen */
-@media (max-width: 968px) {
+@media (max-width: 992px) {
   .showcase-wrapper {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 30px;
   }
   
   .showcase-categories {
     position: static;
     order: 2;
+    top: auto;
   }
   
   .category-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 10px;
   }
   
   .category-item {
     border-left: none;
     border-bottom: 3px solid transparent;
     text-align: center;
-    padding: 16px 12px;
+    padding: 14px 10px;
     background: var(--light-bg);
     border-radius: 8px;
+    font-size: 0.9rem;
   }
   
   .category-item.active {
@@ -1627,6 +1629,8 @@ html, body {
   }
   
   .showcase-image-wrapper {
+    min-height: 300px;
+    max-height: 500px;
     aspect-ratio: 16 / 9;
     border-radius: 12px;
   }
@@ -1646,25 +1650,109 @@ html, body {
   
   .showcase-title {
     font-size: 1.75rem;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
+  }
+}
+
+@media (max-width: 768px) {
+  .showcase-wrapper {
+    gap: 25px;
+  }
+  
+  .category-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .category-item {
+    padding: 12px 8px;
+    font-size: 0.85rem;
+  }
+  
+  .showcase-image-wrapper {
+    min-height: 250px;
+    max-height: 400px;
+  }
+  
+  .showcase-category-title h3 {
+    font-size: 1.35rem;
+  }
+  
+  .showcase-title {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+  
+  .product-groups-showcase {
+    padding: 30px 15px;
   }
 }
 
 @media (max-width: 640px) {
   .product-groups-showcase {
-    padding: 60px 20px;
+    padding: 30px 15px;
+  }
+  
+  .category-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .category-item {
+    padding: 10px 6px;
+    font-size: 0.8rem;
+  }
+  
+  .showcase-title {
+    font-size: 1.35rem;
+    margin-bottom: 20px;
+  }
+  
+  .showcase-category-title h3 {
+    font-size: 1.2rem;
+  }
+  
+  .showcase-image-wrapper {
+    min-height: 200px;
+    max-height: 350px;
+  }
+  
+  .showcase-wrapper {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-groups-showcase {
+    padding: 25px 10px;
   }
   
   .category-list {
     grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  
+  .category-item {
+    padding: 12px 10px;
+    font-size: 0.85rem;
   }
   
   .showcase-title {
-    font-size: 1.75rem;
+    font-size: 1.25rem;
+    margin-bottom: 15px;
   }
   
   .showcase-category-title h3 {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
+  }
+  
+  .showcase-image-wrapper {
+    min-height: 180px;
+    max-height: 300px;
+  }
+  
+  .showcase-wrapper {
+    gap: 15px;
   }
 }
 
