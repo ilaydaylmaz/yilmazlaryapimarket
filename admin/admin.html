@@ -658,7 +658,19 @@ function yukle() {
       allProducts = data;
       const sayac = document.getElementById("urun-sayisi");
       
+      console.log('📦 Toplam ürün sayısı:', data.length);
+      console.log('📦 Ürünler:', data.map(p => ({ id: p.id, ad: p.ad, kategori: p.kategori })));
+      
       sayac.textContent = data.length;
+      
+      // Filtreleri sıfırla
+      const searchInput = document.getElementById("productSearch");
+      const kategoriSelect = document.getElementById("productFilterKategori");
+      const sortSelect = document.getElementById("productSort");
+      
+      if (searchInput) searchInput.value = "";
+      if (kategoriSelect) kategoriSelect.value = "";
+      if (sortSelect) sortSelect.value = "default";
       
       applyProductFilters();
     })
