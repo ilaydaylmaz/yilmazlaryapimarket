@@ -1545,7 +1545,8 @@ app.get("/api/categories", auth, (req, res) => {
           { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", slug: "elektrikli-el-aletleri-urunleri", subCategories: [] },
           { id: "seramik", name: "Seramik ve Fayans", slug: "seramik-urunleri", subCategories: [] },
           { id: "banyo", name: "Banyo", slug: "banyo-urunleri", subCategories: [] },
-          { id: "parke", name: "Parke", slug: "parke-urunleri", subCategories: [] }
+          { id: "parke", name: "Parke", slug: "parke-urunleri", subCategories: [] },
+          { id: "armatur", name: "Armatür", slug: "armatur-urunleri", subCategories: [] }
         ]
       };
       res.json(defaultCategories);
