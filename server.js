@@ -681,29 +681,34 @@ app.delete("/api/products/:id", auth, async (req, res) => {
 });
 
 /* =======================
+   HEALTH CHECK
+======================= */
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+/* =======================
    SERVER
 ======================= */
 const PORT = process.env.PORT || 3000;
 
-// MongoDB bağlantısını dene (başarısız olursa JSON kullanılacak)
-connectDB()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`✅ Server çalışıyor → http://localhost:${PORT}`);
+// Server'ı hemen başlat (MongoDB bağlantısı arka planda yapılacak)
+app.listen(PORT, () => {
+  console.log(`✅ Server çalışıyor → http://localhost:${PORT}`);
+  
+  // MongoDB bağlantısını arka planda dene
+  connectDB()
+    .then(() => {
       if (isMongoDBEnabled()) {
         console.log("✅ MongoDB bağlantısı aktif");
       } else {
         console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
       }
-    });
-  })
-  .catch((error) => {
-    // MongoDB bağlantısı yoksa da server'ı başlat
-    app.listen(PORT, () => {
-      console.log(`✅ Server çalışıyor → http://localhost:${PORT}`);
+    })
+    .catch((error) => {
       console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
     });
-  });
+});
 
 /* PUBLIC PRODUCTS */
 // API Cache (5 dakika)
@@ -1539,7 +1544,7 @@ app.get("/api/categories", auth, (req, res) => {
           { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", slug: "yapi-malzemeleri", subCategories: [] },
           { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", slug: "elektrikli-el-aletleri-urunleri", subCategories: [] },
           { id: "seramik", name: "Seramik ve Fayans", slug: "seramik-urunleri", subCategories: [] },
-          { id: "banyo", name: "Banyo Dolapları", slug: "banyo-urunleri", subCategories: [] },
+          { id: "banyo", name: "Banyo", slug: "banyo-urunleri", subCategories: [] },
           { id: "parke", name: "Parke", slug: "parke-urunleri", subCategories: [] }
         ]
       };
@@ -1562,7 +1567,7 @@ app.get("/api/category-showcase", auth, async (req, res) => {
       { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", image: "/uploads/categories/yapi-malzemeleri.jpg", url: "/yapi-malzemeleri.html" },
       { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
       { id: "seramik", name: "Seramik ve Fayans", image: "/uploads/categories/seramik.jpg", url: "/seramik-urunleri.html" },
-      { id: "banyo", name: "Banyo Dolapları", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
+      { id: "banyo", name: "Banyo", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
       { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
     ];
 

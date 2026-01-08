@@ -139,9 +139,14 @@
     },
     {
       "id": "banyo",
-      "name": "Banyo Dolapları",
+      "name": "Banyo",
       "slug": "banyo-urunleri",
       "subCategories": [
+        {
+          "id": "banyo-dolaplari",
+          "name": "Banyo Dolapları",
+          "slug": "banyo-dolaplari"
+        },
         {
           "id": "lavabo",
           "name": "Lavabo",
@@ -151,11 +156,6 @@
           "id": "klozet",
           "name": "Klozet",
           "slug": "klozet"
-        },
-        {
-          "id": "banyo-dolabi",
-          "name": "Banyo Dolabı",
-          "slug": "banyo-dolabi"
         }
       ]
     },

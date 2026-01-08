@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Yılmazlar Yapı Market Banyo Dolapları - Geniş banyo ürünleri yelpazesi">
-  <title>Banyo Dolapları - Yılmazlar Yapı Market</title>
+  <meta name="description" content="Yılmazlar Yapı Market Banyo - Banyo dolapları ve banyo ürünleri">
+  <title>Banyo - Yılmazlar Yapı Market</title>
   <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
@@ -68,7 +68,7 @@
             <a href="/el-aletleri-urunleri.html">El Aletleri Ürünleri</a>
             <a href="/elektrikli-el-aletleri-urunleri.html">Elektrikli El Aletleri</a>
             <a href="/seramik-urunleri.html">Seramik Ürünleri</a>
-            <a href="/banyo-urunleri.html">Banyo Dolapları</a>
+            <a href="/banyo-urunleri.html">Banyo</a>
             <a href="/parke-urunleri.html">Parke Ürünleri</a>
             <a href="/kaba-grubu.html">Kaba Grubu</a>
           </div>
@@ -95,8 +95,8 @@
 <div class="container">
   <div class="page-header">
     <div class="page-header-content">
-      <h1>Banyo Dolapları</h1>
-      <p>Geniş banyo ürünleri yelpazemizden ihtiyacınıza uygun ürünü bulun</p>
+      <h1>Banyo</h1>
+      <p>Banyo dolapları ve diğer banyo ürünleri arasından ihtiyacınıza uygun ürünü bulun</p>
     </div>
     <div class="view-controls">
       <button id="gridView" class="view-btn active" title="Grid Görünüm">
@@ -277,16 +277,28 @@ if (typeof document !== "undefined") {
 let products = [];
 let filteredProducts = [];
 let currentView = 'grid';
-const TARGET_CATEGORY = "Banyo Dolapları";
-// Eski verilerde kalan ürünler için eski isim de kabul edilsin
-const CATEGORY_MATCHES = ["Banyo Dolapları", "Banyo Ürünleri"];
+const TARGET_CATEGORY = "Banyo";
+// Eski verilerde kalan ürünler için eski isimler de kabul edilsin
+const CATEGORY_MATCHES = ["Banyo Dolapları", "Banyo Ürünleri", "Banyo"];
 
 fetch("/api/public/products")
   .then(r => r.json())
   .then(data => {
     products = data.filter(p => {
       const kat = (p.kategori || "").trim();
-      return CATEGORY_MATCHES.includes(kat);
+      const alt = (p.altKategori || "").trim();
+      
+      // Yeni yapı: kategori = Banyo, alt kategori = Banyo Dolapları
+      if (kat === "Banyo" && (!alt || alt === "Banyo Dolapları")) {
+        return true;
+      }
+      
+      // Eski kayıtlar için geri uyumluluk
+      if (CATEGORY_MATCHES.includes(kat)) {
+        return true;
+      }
+      
+      return false;
     });
     filteredProducts = [...products];
     populateFilters();
