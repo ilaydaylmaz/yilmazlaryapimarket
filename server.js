@@ -1560,17 +1560,16 @@ app.get("/api/categories", auth, (req, res) => {
 // Kategori showcase ayarlarını getir
 app.get("/api/category-showcase", auth, async (req, res) => {
   try {
-    // Varsayılan kategoriler
+    // Varsayılan kategoriler (Ürün Grupları vitrininde gösterilecekler)
     const defaultCategories = [
       { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
       { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/hirdavat.jpg", url: "/hirdavat-urunleri.html" },
-      { id: "tesisat", name: "Tesisat", image: "/uploads/categories/tesisat.jpg", url: "/tesisat-urunleri.html" },
       { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", image: "/uploads/categories/yapi-malzemeleri.jpg", url: "/yapi-malzemeleri.html" },
       { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
       { id: "seramik", name: "Seramik ve Fayans", image: "/uploads/categories/seramik.jpg", url: "/seramik-urunleri.html" },
       { id: "banyo", name: "Banyo", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
-      { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" },
-      { id: "armatur", name: "Armatür", image: "/uploads/categories/armatur.jpg", url: "/armatur-urunleri.html" }
+      { id: "armatur", name: "Armatür", image: "/uploads/categories/armatur.jpg", url: "/armatur-urunleri.html" },
+      { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
     ];
 
     if (isMongoDBEnabled()) {
@@ -1949,17 +1948,16 @@ app.get("/api/public/category-showcase", async (req, res) => {
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     
-    // Varsayılan kategoriler
+    // Varsayılan kategoriler (Ürün Grupları vitrininde gösterilecekler)
     const defaultCategories = [
       { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
       { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/hirdavat.jpg", url: "/hirdavat-urunleri.html" },
-      { id: "tesisat", name: "Tesisat", image: "/uploads/categories/tesisat.jpg", url: "/tesisat-urunleri.html" },
       { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", image: "/uploads/categories/yapi-malzemeleri.jpg", url: "/yapi-malzemeleri.html" },
       { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
       { id: "seramik", name: "Seramik ve Fayans", image: "/uploads/categories/seramik.jpg", url: "/seramik-urunleri.html" },
       { id: "banyo", name: "Banyo", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
-      { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" },
-      { id: "armatur", name: "Armatür", image: "/uploads/categories/armatur.jpg", url: "/armatur-urunleri.html" }
+      { id: "armatur", name: "Armatür", image: "/uploads/categories/armatur.jpg", url: "/armatur-urunleri.html" },
+      { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
     ];
     
     if (isMongoDBEnabled()) {
