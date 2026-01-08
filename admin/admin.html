@@ -139,7 +139,7 @@
 
         <div class="form-group">
           <label for="kategori">Kategori *</label>
-          <select id="kategori" required onchange="loadSubCategories()">
+          <select id="kategori" required onchange="loadSubCategories(); toggleCeramicSpecs();">
             <option value="">Kategori Seçin</option>
             <!-- Kategoriler API'den dinamik yüklenecek -->
           </select>
@@ -404,7 +404,10 @@ function toggleCeramicSpecs() {
   const kategori = document.getElementById("kategori").value;
   const ceramicSpecs = document.getElementById("ceramicSpecs");
   
-  if (kategori === "Seramik Ürünleri") {
+  // Seramik kategorilerini kontrol et (farklı isimler olabilir)
+  const seramikKategorileri = ["Seramik Ürünleri", "Seramik ve Fayans", "Seramik"];
+  
+  if (seramikKategorileri.includes(kategori)) {
     ceramicSpecs.style.display = "block";
   } else {
     ceramicSpecs.style.display = "none";
@@ -781,7 +784,8 @@ function duzenle(id) {
   
   // Seramik ürünleri için özel alanlar
   toggleCeramicSpecs();
-  if (p.kategori === "Seramik Ürünleri") {
+  const seramikKategorileri = ["Seramik Ürünleri", "Seramik ve Fayans", "Seramik"];
+  if (seramikKategorileri.includes(p.kategori)) {
     document.getElementById("urunKodu").value = p.urunKodu || "";
     document.getElementById("doku").value = p.doku || "";
     document.getElementById("kalinlik").value = p.kalinlik || "";
