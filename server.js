@@ -360,12 +360,23 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
       delete mongoProduct.id;
       mongoProduct.createdAt = new Date();
       const result = await productsCollection.insertOne(mongoProduct);
+      
+      // Cache'i temizle
+      productsCache = null;
+      productsCacheTime = null;
+      console.log('🔄 Ürün eklendi, cache temizlendi');
+      
       res.json({ success: true, id: result.insertedId.toString() });
     } else {
       // JSON fallback
       const products = JSON.parse(fs.readFileSync(DATA_FILE));
       products.push(urun);
       fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
+      
+      // Cache'i temizle
+      productsCache = null;
+      productsCacheTime = null;
+      
       res.json({ success: true, id: urun.id });
     }
   } catch (error) {
@@ -532,6 +543,11 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
         kalinlik: updatedProduct.kalinlik
       });
       
+      // Cache'i temizle
+      productsCache = null;
+      productsCacheTime = null;
+      console.log('🔄 Ürün güncellendi, cache temizlendi');
+      
       res.json({ success: true, message: "Ürün başarıyla güncellendi", product: updatedProduct });
     } else {
       // JSON fallback
@@ -614,6 +630,12 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
       };
 
       fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
+      
+      // Cache'i temizle
+      productsCache = null;
+      productsCacheTime = null;
+      console.log('🔄 Ürün güncellendi (JSON), cache temizlendi');
+      
       res.json({ success: true, message: "Ürün başarıyla güncellendi" });
     }
   } catch (error) {
@@ -634,6 +656,12 @@ app.delete("/api/products/:id", auth, async (req, res) => {
       if (result.deletedCount === 0) {
         return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
       }
+      
+      // Cache'i temizle
+      productsCache = null;
+      productsCacheTime = null;
+      console.log('🔄 Ürün silindi, cache temizlendi');
+      
       res.json({ success: true, message: "Ürün başarıyla silindi" });
     } else {
       // JSON fallback
@@ -646,6 +674,11 @@ app.delete("/api/products/:id", auth, async (req, res) => {
       }
 
       fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
+      
+      // Cache'i temizle
+      productsCache = null;
+      productsCacheTime = null;
+      
       res.json({ success: true, message: "Ürün başarıyla silindi" });
     }
   } catch (error) {
