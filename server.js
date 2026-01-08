@@ -223,7 +223,36 @@ app.get("/api/products", auth, async (req, res) => {
     
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
-      const products = await productsCollection.find({}).toArray();
+
+      // Liste sayfaları için (details=false) ağır alanları MongoDB'den çekme
+      // Büyük base64 alanlar ve detaylı seramik özellikleri listelerde gereksiz
+      let mongoFindOptions = {};
+      if (!includeDetails) {
+        mongoFindOptions = {
+          projection: {
+            resimBase64: 0,
+            resimlerBase64: 0,
+            aciklama: 0,
+            urunKodu: 0,
+            doku: 0,
+            kalinlik: 0,
+            icMekan: 0,
+            disMekan: 0,
+            kullanimAlani: 0,
+            yuzeyGorunumu: 0,
+            kalip: 0,
+            bunye: 0,
+            urunGrubu: 0,
+            vSkalasi: 0,
+            m2Kutu: 0,
+            m2Palet: 0,
+            kutuPalet: 0,
+            paletAgirligi: 0,
+          },
+        };
+      }
+
+      const products = await productsCollection.find({}, mongoFindOptions).toArray();
       const formattedProducts = products.map(p => ({
         id: p._id.toString(),
         ad: p.ad,
