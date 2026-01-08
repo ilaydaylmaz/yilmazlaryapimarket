@@ -689,8 +689,10 @@ app.get("/api/public/products", async (req, res) => {
     
     // Cache kontrolü
     if (productsCache && productsCacheTime && (now - productsCacheTime) < CACHE_DURATION && !includeDetails) {
+      // Cache'den dönen veriyi de görüntülenme sayısına göre sırala
+      const sortedCache = [...productsCache].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
       res.setHeader('Cache-Control', 'public, max-age=300'); // 5 dakika browser cache
-      return res.json(productsCache);
+      return res.json(sortedCache);
     }
     
     if (isMongoDBEnabled()) {
@@ -710,6 +712,7 @@ app.get("/api/public/products", async (req, res) => {
           // Liste sayfası için base64 array gönderme
           resimlerBase64: includeDetails ? (p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : [])) : [],
           video: p.video ? `/uploads/${p.video}` : null,
+          viewCount: p.viewCount || 0, // Görüntülenme sayısı
         };
         
         // Detay sayfası için ek alanlar
@@ -735,16 +738,19 @@ app.get("/api/public/products", async (req, res) => {
         return baseProduct;
       });
       
+      // Popüler ürünler için görüntülenme sayısına göre sırala
+      const sortedProducts = formattedProducts.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+      
       // Cache'e kaydet (sadece liste için)
       if (!includeDetails) {
-        productsCache = formattedProducts;
+        productsCache = sortedProducts;
         productsCacheTime = now;
         res.setHeader('Cache-Control', 'public, max-age=300'); // 5 dakika browser cache
       } else {
         res.setHeader('Cache-Control', 'no-cache'); // Detay için cache yok
       }
       
-      res.json(formattedProducts);
+      res.json(sortedProducts);
     } else {
       // JSON fallback
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
@@ -756,6 +762,7 @@ app.get("/api/public/products", async (req, res) => {
           resimler: p.resimler || (p.resim ? [p.resim] : []),
           resimlerBase64: includeDetails ? (p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : [])) : [],
           video: p.video ? `/uploads/${p.video}` : null,
+          viewCount: p.viewCount || 0, // Görüntülenme sayısı
         };
         
         // Liste sayfası için gereksiz alanları kaldır
@@ -770,16 +777,19 @@ app.get("/api/public/products", async (req, res) => {
         return baseProduct;
       });
       
+      // Popüler ürünler için görüntülenme sayısına göre sırala
+      const sortedData = formattedData.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+      
       // Cache'e kaydet (sadece liste için)
       if (!includeDetails) {
-        productsCache = formattedData;
+        productsCache = sortedData;
         productsCacheTime = now;
         res.setHeader('Cache-Control', 'public, max-age=300');
       } else {
         res.setHeader('Cache-Control', 'no-cache');
       }
       
-      res.json(formattedData);
+      res.json(sortedData);
     }
   } catch (error) {
     console.error("Ürün listeleme hatası:", error);
@@ -818,6 +828,7 @@ app.get("/api/public/products/:id", async (req, res) => {
         marka: urun.marka,
         aciklama: urun.aciklama,
         resim: getImageUrl(urun),
+        viewCount: urun.viewCount || 0,
         // Seramik ürünleri için özel alanlar
         urunKodu: urun.urunKodu || "",
         doku: urun.doku || "",
@@ -846,11 +857,49 @@ app.get("/api/public/products/:id", async (req, res) => {
       
       res.json({
         ...urun,
-        resim: getImageUrl(urun)
+        resim: getImageUrl(urun),
+        viewCount: urun.viewCount || 0
       });
     }
   } catch (error) {
     console.error("Ürün detay hatası:", error);
+    res.status(500).json({ success: false, message: "Sunucu hatası" });
+  }
+});
+
+// Ürün görüntülenme sayısını artır
+app.post("/api/public/products/:id/view", async (req, res) => {
+  try {
+    const productId = req.params.id;
+    
+    if (isMongoDBEnabled() && ObjectId.isValid(productId)) {
+      const productsCollection = await getProductsCollection();
+      const result = await productsCollection.updateOne(
+        { _id: new ObjectId(productId) },
+        { $inc: { viewCount: 1 } }
+      );
+      
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
+      }
+      
+      res.json({ success: true });
+    } else {
+      // JSON fallback
+      const products = JSON.parse(fs.readFileSync(DATA_FILE));
+      const urunIndex = products.findIndex(p => String(p.id) === String(productId));
+      
+      if (urunIndex === -1) {
+        return res.status(404).json({ success: false, message: "Ürün bulunamadı" });
+      }
+      
+      products[urunIndex].viewCount = (products[urunIndex].viewCount || 0) + 1;
+      fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2), 'utf8');
+      
+      res.json({ success: true });
+    }
+  } catch (error) {
+    console.error("Görüntülenme sayısı artırma hatası:", error);
     res.status(500).json({ success: false, message: "Sunucu hatası" });
   }
 });

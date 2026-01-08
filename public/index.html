@@ -507,7 +507,8 @@ function loadPopularProducts() {
         return;
       }
       
-      // İlk 8 ürünü al (veya rastgele seç)
+      // Görüntülenme sayısına göre sıralanmış ürünlerden ilk 8'ini al
+      // (API zaten sıralanmış olarak gönderiyor)
       const popularProducts = data.slice(0, 8);
       
       // Loading state'i kaldır
@@ -567,7 +568,9 @@ function loadPopularProducts() {
 // Instagram postları
 const instagramPosts = [
   'https://www.instagram.com/reel/DSC3q5NDDSM/',
-  'https://www.instagram.com/p/DR5ARhhjDjo/'
+  'https://www.instagram.com/p/DR5ARhhjDjo/',
+  'https://www.instagram.com/reel/DS7Sg00DI7C/',
+  'https://www.instagram.com/p/DTP7lQjDHch/'
 ];
 
 // Instagram postlarını yükle - iframe embed kullan

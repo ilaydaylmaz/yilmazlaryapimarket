@@ -469,6 +469,10 @@ if (!id) {
     </div>
   `;
 } else {
+  // Önce görüntülenme sayısını artır
+  fetch(`/api/public/products/${id}/view`, { method: 'POST' })
+    .catch(err => console.log('Görüntülenme sayısı artırılamadı:', err));
+  
 fetch("/api/public/products?details=true")
   .then(r => r.json())
   .then(data => {
