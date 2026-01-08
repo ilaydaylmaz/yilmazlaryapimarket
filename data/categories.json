@@ -180,6 +180,28 @@
           "slug": "masif-parke"
         }
       ]
+    },
+    {
+      "id": "armatur",
+      "name": "Armatür",
+      "slug": "armatur-urunleri",
+      "subCategories": [
+        {
+          "id": "lavabo-armaturleri",
+          "name": "Lavabo Armatürleri",
+          "slug": "lavabo-armaturleri"
+        },
+        {
+          "id": "dus-armaturleri",
+          "name": "Duş Armatürleri",
+          "slug": "dus-armaturleri"
+        },
+        {
+          "id": "mutfak-armaturleri",
+          "name": "Mutfak Armatürleri",
+          "slug": "mutfak-armaturleri"
+        }
+      ]
     }
   ]
 }

@@ -1568,7 +1568,8 @@ app.get("/api/category-showcase", auth, async (req, res) => {
       { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
       { id: "seramik", name: "Seramik ve Fayans", image: "/uploads/categories/seramik.jpg", url: "/seramik-urunleri.html" },
       { id: "banyo", name: "Banyo", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
-      { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
+      { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" },
+      { id: "armatur", name: "Armatür", image: "/uploads/categories/armatur.jpg", url: "/armatur-urunleri.html" }
     ];
 
     if (isMongoDBEnabled()) {
@@ -1956,7 +1957,8 @@ app.get("/api/public/category-showcase", async (req, res) => {
       { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", image: "/uploads/categories/elektrikli-el-aletleri.jpg", url: "/elektrikli-el-aletleri-urunleri.html" },
       { id: "seramik", name: "Seramik ve Fayans", image: "/uploads/categories/seramik.jpg", url: "/seramik-urunleri.html" },
       { id: "banyo", name: "Banyo", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
-      { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
+      { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" },
+      { id: "armatur", name: "Armatür", image: "/uploads/categories/armatur.jpg", url: "/armatur-urunleri.html" }
     ];
     
     if (isMongoDBEnabled()) {
