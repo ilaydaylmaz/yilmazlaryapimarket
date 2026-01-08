@@ -342,8 +342,10 @@
           <a href="https://instagram.com/yilmazlarvize" target="_blank" rel="noopener noreferrer" class="instagram-follow-btn">TAKİP ET</a>
       </div>
       </div>
-      <div class="instagram-posts-grid" id="instagramPostsGrid">
-        <!-- Instagram postları buraya yüklenecek -->
+      <div class="instagram-posts-slider-wrapper">
+        <div class="instagram-posts-slider" id="instagramPostsGrid">
+          <!-- Instagram postları buraya yüklenecek -->
+        </div>
       </div>
     </div>
   </div>
@@ -581,7 +583,10 @@ function loadInstagramPosts() {
     return;
   }
 
-  instagramPosts.forEach((postUrl) => {
+  // Gönderileri ters sırala (en yeni en başta)
+  const reversedPosts = [...instagramPosts].reverse();
+
+  reversedPosts.forEach((postUrl) => {
     const postElement = document.createElement('div');
     postElement.className = 'instagram-post-wrapper';
     

@@ -1864,14 +1864,44 @@ html, body {
   box-shadow: 0 4px 15px rgba(196, 0, 0, 0.3);
 }
 
+.instagram-posts-slider-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) var(--light-bg);
+  padding-bottom: 10px;
+}
+
+.instagram-posts-slider-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.instagram-posts-slider-wrapper::-webkit-scrollbar-track {
+  background: var(--light-bg);
+  border-radius: 4px;
+}
+
+.instagram-posts-slider-wrapper::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+.instagram-posts-slider-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}
+
 .instagram-posts-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: nowrap;
+  min-width: max-content;
 }
 
 .instagram-post-wrapper {
-  width: 100%;
+  flex: 0 0 350px;
+  min-width: 350px;
+  max-width: 350px;
   overflow: hidden;
   border-radius: 8px;
   position: relative;
@@ -2983,7 +3013,13 @@ input[type="search"]:focus {
   }
 
   .instagram-posts-grid {
-    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+  }
+  
+  .instagram-post-wrapper {
+    flex: 0 0 300px;
+    min-width: 300px;
+    max-width: 300px;
   }
 }
 
@@ -3038,7 +3074,13 @@ input[type="search"]:focus {
   }
 
   .instagram-posts-grid {
-    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+  }
+  
+  .instagram-post-wrapper {
+    flex: 0 0 280px;
+    min-width: 280px;
+    max-width: 280px;
   }
 
   .footer-inner {
@@ -3359,8 +3401,13 @@ input[type="search"]:focus {
   }
 
   .instagram-posts-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 15px;
+  }
+  
+  .instagram-post-wrapper {
+    flex: 0 0 280px;
+    min-width: 280px;
+    max-width: 280px;
   }
 
   .urunler {
@@ -3900,8 +3947,13 @@ input[type="search"]:focus {
   }
 
   .instagram-posts-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 12px;
+  }
+  
+  .instagram-post-wrapper {
+    flex: 0 0 250px;
+    min-width: 250px;
+    max-width: 250px;
   }
 
   .urunler {
