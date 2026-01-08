@@ -1892,19 +1892,22 @@ html, body {
 }
 
 .instagram-posts-grid {
-  display: flex;
+  display: flex !important;
   gap: 20px;
-  flex-wrap: nowrap;
+  flex-wrap: nowrap !important;
   min-width: max-content;
+  width: 100%;
 }
 
 .instagram-post-wrapper {
-  flex: 0 0 350px;
-  min-width: 350px;
-  max-width: 350px;
+  flex: 0 0 350px !important;
+  min-width: 350px !important;
+  max-width: 350px !important;
+  width: 350px !important;
   overflow: hidden;
   border-radius: 8px;
   position: relative;
+  display: block;
 }
 
 .instagram-post-wrapper blockquote {
