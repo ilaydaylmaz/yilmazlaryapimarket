@@ -1576,7 +1576,24 @@ app.get("/api/category-showcase", auth, async (req, res) => {
       const showcaseCollection = await getCategoryShowcaseCollection();
       const data = await showcaseCollection.findOne({ type: 'category_showcase' });
       if (data && data.categories) {
-        res.json({ categories: data.categories });
+        // Eski kayıtlardaki Tesisat kategorisini gizle, Armatür yoksa ekle
+        let categories = data.categories.filter(
+          (cat) => !(cat.id === "tesisat" || cat.name === "Tesisat")
+        );
+
+        const hasArmatur = categories.some(
+          (cat) => cat.id === "armatur" || cat.name === "Armatür"
+        );
+        if (!hasArmatur) {
+          categories.push({
+            id: "armatur",
+            name: "Armatür",
+            image: "/uploads/categories/armatur.jpg",
+            url: "/armatur-urunleri.html",
+          });
+        }
+
+        res.json({ categories });
       } else {
         res.json({ categories: defaultCategories });
       }
@@ -1966,15 +1983,31 @@ app.get("/api/public/category-showcase", async (req, res) => {
       const data = await showcaseCollection.findOne({ type: 'category_showcase' });
       
       if (data && data.categories && data.categories.length > 0) {
+        // Önce Tesisat'ı gizle, Armatür yoksa ekle
+        let categoriesRaw = data.categories.filter(
+          (cat) => !(cat.id === "tesisat" || cat.name === "Tesisat")
+        );
+
+        const hasArmatur = categoriesRaw.some(
+          (cat) => cat.id === "armatur" || cat.name === "Armatür"
+        );
+        if (!hasArmatur) {
+          categoriesRaw.push({
+            id: "armatur",
+            name: "Armatür",
+            image: "/uploads/categories/armatur.jpg",
+            url: "/armatur-urunleri.html",
+          });
+        }
+
         // Base64 görselleri varsa onları kullan, yoksa dosya yolunu kullan
-        const categories = data.categories.map(cat => {
-          // Base64 görsel varsa onu kullan (öncelikli)
+        const categories = categoriesRaw.map(cat => {
           if (cat.imageBase64) {
             return { ...cat, image: cat.imageBase64 };
           }
-          // Base64 yoksa dosya yolunu kullan
           return cat;
         });
+
         res.json({ categories });
       } else {
         res.json({ categories: defaultCategories });
