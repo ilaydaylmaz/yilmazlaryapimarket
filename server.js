@@ -677,14 +677,13 @@ app.get("/api/public/products", async (req, res) => {
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
       
-      // Liste sayfası için projection kullan (base64 görselleri çıkarma - memory ve performans için)
+      // Liste sayfası için projection kullan (sadece gereksiz alanları çıkar, base64 görselleri çek - görseller için gerekli)
       let mongoFindOptions = {};
       if (!includeDetails) {
         mongoFindOptions = {
           projection: {
-            // Base64 görselleri çıkar (çok büyük, memory problemi yaratıyor)
-            resimBase64: 0,
-            resimlerBase64: 0,
+            // Base64 görselleri tut (görseller için gerekli, ama cache'de tutmayacağız)
+            // resimBase64 ve resimlerBase64 projection'dan çıkarılmadı - görseller için gerekli
             // Gereksiz alanları çıkar
             aciklama: 0,
             urunKodu: 0,
@@ -741,27 +740,7 @@ app.get("/api/public/products", async (req, res) => {
       const formattedProducts = products.map(p => {
         try {
           // Görsel URL'ini oluştur - getImageUrl fonksiyonunu kullan
-          // Liste sayfası için base64 görselleri projection'dan çıkarıldı, sadece dosya adı var
-          let imageUrl = "";
-          
-          // Önce base64 kontrolü (eğer varsa - detay sayfası için)
-          if (p.resimBase64 && includeDetails) {
-            imageUrl = p.resimBase64;
-          } else if (p.resim) {
-            // Dosya adı varsa dosya yolunu oluştur
-            if (typeof p.resim === 'string' && p.resim.startsWith('data:image')) {
-              // Zaten base64 string ise direkt kullan
-              imageUrl = p.resim;
-            } else {
-              // Dosya adı ise /uploads/ ekle
-              imageUrl = `/uploads/${p.resim}`;
-            }
-          }
-          
-          // Eğer hala boşsa, getImageUrl fonksiyonunu dene
-          if (!imageUrl) {
-            imageUrl = getImageUrl(p);
-          }
+          let imageUrl = getImageUrl(p);
           
           const baseProduct = {
             id: p._id.toString(),
@@ -816,13 +795,26 @@ app.get("/api/public/products", async (req, res) => {
       // Popüler ürünler için görüntülenme sayısına göre sırala
       const sortedProducts = formattedProducts.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
       
-      // Cache'e kaydet (sadece liste için - base64 görselleri de cache'de tut, ama kısa süre)
+      // Cache'e kaydet (sadece liste için - base64 görselleri cache'den çıkar, sadece URL'leri tut)
       if (!includeDetails) {
-        // Base64 görselleri cache'de tut (görseller için gerekli), ama cache süresi kısa (1 dakika)
-        productsCache = sortedProducts;
+        // Base64 görselleri cache'den çıkar (memory tasarrufu), sadece URL formatında tut
+        const cacheData = sortedProducts.map(p => {
+          const cached = { ...p };
+          // Base64 string'leri cache'den çıkar, sadece URL formatında tut
+          if (cached.resim && cached.resim.startsWith('data:image')) {
+            // Base64 string'i cache'den çıkar, response'da gönder ama cache'de tutma
+            // Cache'de sadece bir flag tut
+            cached._hasBase64Image = true;
+          }
+          // resimBase64 ve resimlerBase64'ü cache'den çıkar
+          delete cached.resimBase64;
+          delete cached.resimlerBase64;
+          return cached;
+        });
+        productsCache = cacheData;
         productsCacheTime = now;
         res.setHeader('Cache-Control', 'public, max-age=60'); // 1 dakika browser cache
-        console.log(`💾 Cache'e kaydedildi (${sortedProducts.length} ürün, base64 görselleri dahil)`);
+        console.log(`💾 Cache'e kaydedildi (${cacheData.length} ürün, base64 görselleri cache'den çıkarıldı)`);
       } else {
         res.setHeader('Cache-Control', 'no-cache'); // Detay için cache yok
       }
