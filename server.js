@@ -2042,6 +2042,7 @@ app.get("/api/public/category-showcase", async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
+    console.log('📸 category-showcase endpoint çağrıldı');
     
     // Varsayılan kategoriler (Ürün Grupları vitrininde gösterilecekler)
     // Gerçek dosya adlarına göre güncellendi
