@@ -748,37 +748,57 @@ function loadInstagramPosts() {
 let showcaseCategoriesData = [];
 
 function loadShowcaseCategories() {
+  console.log('🔄 Kategori showcase yükleniyor...');
   fetch('/api/public/category-showcase?t=' + Date.now())
     .then(r => {
+      console.log('📡 API yanıtı:', r.status, r.statusText);
       if (!r.ok) {
         throw new Error(`HTTP ${r.status}: ${r.statusText}`);
       }
       return r.json();
     })
     .then(data => {
+      console.log('📦 API verisi:', data);
       showcaseCategoriesData = data.categories || [];
       console.log('✅ Kategori showcase yüklendi:', showcaseCategoriesData.length, 'kategori');
+      if (showcaseCategoriesData.length === 0) {
+        console.warn('⚠️ Hiç kategori bulunamadı!');
+      }
       renderShowcaseCategories();
       initCategoryShowcase();
     })
     .catch(err => {
       console.error('❌ Kategori showcase yükleme hatası:', err);
-      document.getElementById('categoryList').innerHTML = '<div class="empty-state">Kategoriler yüklenemedi. Lütfen sayfayı yenileyin.</div>';
-      document.getElementById('showcaseImage').src = '';
-      document.getElementById('showcaseCategoryTitle').textContent = 'Yüklenemedi';
+      const categoryList = document.getElementById('categoryList');
+      const showcaseImage = document.getElementById('showcaseImage');
+      const showcaseCategoryTitle = document.getElementById('showcaseCategoryTitle');
+      if (categoryList) {
+        categoryList.innerHTML = '<div class="empty-state">Kategoriler yüklenemedi. Lütfen sayfayı yenileyin.</div>';
+      }
+      if (showcaseImage) showcaseImage.src = '';
+      if (showcaseCategoryTitle) showcaseCategoryTitle.textContent = 'Yüklenemedi';
     });
 }
 
 function renderShowcaseCategories() {
+  console.log('🎨 Kategori showcase render ediliyor...');
   const categoryList = document.getElementById('categoryList');
   const showcaseImage = document.getElementById('showcaseImage');
   const showcaseCategoryTitle = document.getElementById('showcaseCategoryTitle');
   const showcaseLink = document.getElementById('showcaseLink');
   
+  if (!categoryList || !showcaseImage || !showcaseCategoryTitle || !showcaseLink) {
+    console.error('❌ DOM elementleri bulunamadı:', { categoryList, showcaseImage, showcaseCategoryTitle, showcaseLink });
+    return;
+  }
+  
   if (!showcaseCategoriesData.length) {
+    console.warn('⚠️ Gösterilecek kategori yok');
     categoryList.innerHTML = '<div class="empty-state">Henüz kategori eklenmemiş.</div>';
     return;
   }
+  
+  console.log('📋 Kategoriler render ediliyor:', showcaseCategoriesData.map(c => c.name));
   
   // Kategori listesini oluştur
   categoryList.innerHTML = showcaseCategoriesData.map((cat, index) => {
@@ -793,10 +813,12 @@ function renderShowcaseCategories() {
   // İlk kategoriyi göster
   if (showcaseCategoriesData.length > 0) {
     const firstCategory = showcaseCategoriesData[0];
+    console.log('🖼️ İlk kategori görseli yükleniyor:', firstCategory.name, firstCategory.image);
     
     // Görsel yükleme kontrolü
     const img = new Image();
     img.onload = function() {
+      console.log('✅ İlk kategori görseli yüklendi:', firstCategory.image);
       showcaseImage.src = firstCategory.image;
       showcaseImage.alt = firstCategory.name;
       showcaseImage.style.opacity = '1';
