@@ -284,24 +284,6 @@
           <small style="color: #666; display: block; margin-top: 5px;">💡 İpucu: Birden fazla resim seçmek için Ctrl (Windows) veya Cmd (Mac) tuşuna basılı tutarak tıklayın</small>
         </div>
         
-        <div class="form-group" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
-          <label for="video" style="font-size: 1.1rem; font-weight: 600; color: #333; display: block; margin-bottom: 10px;">🎥 Ürün Videosu (Opsiyonel)</label>
-          <input type="file" id="video" accept="video/*" onchange="previewVideo(this)" style="padding: 10px; border: 2px dashed #007bff; border-radius: 8px; width: 100%; cursor: pointer; background: #f8f9fa;">
-          <div class="video-preview" id="videoPreview" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-            <video id="previewVideo" controls style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-              Tarayıcınız video oynatmayı desteklemiyor.
-            </video>
-            <button type="button" onclick="removeVideo()" style="margin-top: 10px; padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">❌ Videoyu Kaldır</button>
-          </div>
-          <div id="existingVideo" style="display: none; margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; border: 2px solid #28a745;">
-            <p style="color: #28a745; font-weight: 600; margin-bottom: 10px;">✓ Mevcut video var</p>
-            <video id="existingVideoPlayer" controls style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-              Tarayıcınız video oynatmayı desteklemiyor.
-            </video>
-            <button type="button" onclick="markVideoForDeletion()" style="margin-top: 10px; padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">🗑️ Videoyu Sil</button>
-          </div>
-          <small style="color: #666; display: block; margin-top: 10px; font-size: 0.9rem;">💡 Maksimum dosya boyutu: 100MB. Desteklenen formatlar: MP4, WebM, OGG</small>
-        </div>
         
         <!-- Eski tek resim desteği (geriye dönük uyumluluk) -->
         <div class="form-group" style="display: none;">
@@ -590,50 +572,6 @@ function previewImages(input) {
   }
 }
 
-let videoToDelete = false;
-
-function previewVideo(input) {
-  const preview = document.getElementById("videoPreview");
-  const previewVideoEl = document.getElementById("previewVideo");
-  
-  if (input.files && input.files[0]) {
-    const file = input.files[0];
-    const url = URL.createObjectURL(file);
-    previewVideoEl.src = url;
-    preview.style.display = "block";
-    videoToDelete = false;
-  } else {
-    preview.style.display = "none";
-  }
-}
-
-function removeVideo() {
-  document.getElementById("video").value = "";
-  document.getElementById("videoPreview").style.display = "none";
-  document.getElementById("previewVideo").src = "";
-}
-
-function showExistingVideo(product) {
-  const existingDiv = document.getElementById("existingVideo");
-  const existingPlayer = document.getElementById("existingVideoPlayer");
-  
-  if (product.video) {
-    const videoUrl = product.video.startsWith('/') ? product.video : `/uploads/${product.video}`;
-    existingPlayer.src = videoUrl;
-    existingDiv.style.display = "block";
-    videoToDelete = false;
-  } else {
-    existingDiv.style.display = "none";
-  }
-}
-
-function markVideoForDeletion() {
-  if (confirm("Videoyu silmek istediğinize emin misiniz?")) {
-    videoToDelete = true;
-    document.getElementById("existingVideo").style.display = "none";
-    document.getElementById("video").value = "";
-  }
-}
 
 function showSuccess(message) {
   const msg = document.getElementById("successMessage");
@@ -785,13 +723,9 @@ function duzenle(id) {
   document.getElementById("aciklama").value = p.aciklama || "";
   document.getElementById("resim").value = "";
   document.getElementById("resimler").value = "";
-  document.getElementById("video").value = "";
   
   // Mevcut resimleri göster
   showExistingImages(p);
-  
-  // Mevcut videoyu göster
-  showExistingVideo(p);
   
   // Seramik ürünleri için özel alanlar
   toggleCeramicSpecs();
@@ -840,11 +774,6 @@ function duzenle(id) {
   document.getElementById("imagesPreview").classList.remove("show");
   silinecekResimIndeksleri = [];
   
-  // Video önizlemesini temizle
-  document.getElementById("videoPreview").style.display = "none";
-  document.getElementById("existingVideo").style.display = "none";
-  document.getElementById("video").value = "";
-  videoToDelete = false;
   
   // Forma scroll
   document.querySelector(".form-section").scrollIntoView({ behavior: "smooth" });
@@ -960,12 +889,6 @@ function ekle() {
     formData.append("resim", resim);
   }
   
-  // Video
-  const video = document.getElementById("video").files[0];
-  if (video) {
-    formData.append("video", video);
-  }
-
   const submitBtn = document.getElementById("submitBtn");
   const originalText = submitBtn.innerHTML;
   submitBtn.disabled = true;
@@ -1062,17 +985,6 @@ function guncelle() {
     formData.append("resim", resim);
   }
   
-  // Video
-  const video = document.getElementById("video").files[0];
-  if (video) {
-    formData.append("video", video);
-  }
-  
-  // Video silme
-  if (videoToDelete) {
-    formData.append("silVideo", "true");
-  }
-  
   // Silinecek resimler
   const silinecekResimler = getSilinecekResimler();
   if (silinecekResimler.length > 0) {
@@ -1162,9 +1074,6 @@ function temizle() {
   seciliId = null;
   document.getElementById("productForm").reset();
   document.getElementById("imagePreview").classList.remove("show");
-  document.getElementById("videoPreview").style.display = "none";
-  document.getElementById("existingVideo").style.display = "none";
-  videoToDelete = false;
   toggleCeramicSpecs();
   
   document.querySelectorAll(".product-item").forEach(item => {

@@ -339,70 +339,6 @@ function changeMainImage(url, allUrls, index) {
   });
 }
 
-function changeMainVideo(videoUrl) {
-  const mainMedia = document.getElementById("productMainMedia");
-  const productId = new URLSearchParams(location.search).get("id");
-  
-  if (!mainMedia) {
-    console.error('productMainMedia element bulunamadı');
-    return;
-  }
-  
-  // Video seçimini localStorage'a kaydet
-  if (productId && videoUrl) {
-    localStorage.setItem(`product_${productId}_selectedMedia`, JSON.stringify({ type: 'video', url: videoUrl }));
-  }
-  
-  // Mevcut içeriği temizle
-  mainMedia.innerHTML = '';
-  
-  // Yeni videoyu ekle
-  const newVideo = document.createElement('video');
-  newVideo.id = 'mainProductVideo';
-  newVideo.controls = true;
-  newVideo.style.width = '100%';
-  newVideo.style.maxWidth = '100%';
-  newVideo.style.borderRadius = '8px';
-  newVideo.style.display = 'block';
-  newVideo.preload = 'metadata';
-  
-  const source1 = document.createElement('source');
-  source1.src = videoUrl;
-  source1.type = 'video/mp4';
-  const source2 = document.createElement('source');
-  source2.src = videoUrl;
-  source2.type = 'video/webm';
-  const source3 = document.createElement('source');
-  source3.src = videoUrl;
-  source3.type = 'video/ogg';
-  
-  newVideo.appendChild(source1);
-  newVideo.appendChild(source2);
-  newVideo.appendChild(source3);
-  newVideo.appendChild(document.createTextNode('Tarayıcınız video oynatmayı desteklemiyor.'));
-  
-  mainMedia.appendChild(newVideo);
-  
-  // Thumbnail'ları güncelle
-  document.querySelectorAll(".product-thumbnail").forEach((thumb) => {
-    const mediaType = thumb.getAttribute('data-media-type');
-    if (mediaType === 'video') {
-      let thumbVideoUrl = thumb.getAttribute('data-video-url');
-      // HTML entity'leri decode et
-      thumbVideoUrl = decodeHtmlEntities(thumbVideoUrl);
-      // URL'leri normalize et (trailing slash, encoding vb.)
-      const normalizedVideoUrl = videoUrl.replace(/\/$/, '');
-      const normalizedThumbUrl = thumbVideoUrl.replace(/\/$/, '');
-      if (normalizedThumbUrl === normalizedVideoUrl || thumbVideoUrl === videoUrl) {
-        thumb.classList.add("active");
-      } else {
-        thumb.classList.remove("active");
-      }
-    } else {
-      thumb.classList.remove("active");
-    }
-  });
-}
 
 // HTML entity decode fonksiyonu
 function decodeHtmlEntities(str) {
@@ -425,15 +361,7 @@ function initProductGallery() {
       
       const mediaType = this.getAttribute('data-media-type');
       
-      if (mediaType === 'video') {
-        // Video thumbnail'a tıklandı
-        let videoUrl = this.getAttribute('data-video-url');
-        if (videoUrl) {
-          // HTML entity'leri decode et
-          videoUrl = decodeHtmlEntities(videoUrl);
-          changeMainVideo(videoUrl);
-        }
-      } else if (mediaType === 'image') {
+      if (mediaType === 'image') {
         // Resim thumbnail'a tıklandı
         const index = parseInt(this.getAttribute('data-image-index'));
         // URL'yi direkt img src'den al (daha güvenli)
@@ -515,18 +443,6 @@ fetch("/api/public/products?details=true")
         }
       });
       
-      // Video URL'ini oluştur
-      let videoUrl = null;
-      if (p.video && p.video.trim() !== '') {
-        // API'den gelen video zaten /uploads/ ile başlıyorsa direkt kullan
-        if (p.video.startsWith('/')) {
-          videoUrl = p.video;
-        } else {
-          // Eğer videos/ ile başlıyorsa /uploads/ ekle
-          videoUrl = p.video.startsWith('videos/') ? `/uploads/${p.video}` : `/uploads/${p.video}`;
-        }
-      }
-      
       // Ana resim URL'i (ilk resim veya placeholder)
       let resimUrl = resimUrls.length > 0 ? resimUrls[0] : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EResim Yok%3C/text%3E%3C/svg%3E';
 
@@ -550,21 +466,17 @@ fetch("/api/public/products?details=true")
         `
         : "";
       
-      // Resim galerisi HTML'i (video dahil)
+      // Resim galerisi HTML'i
       let resimGalerisiHTML = "";
-      const hasVideo = videoUrl !== null && videoUrl.trim() !== '';
       
-      // localStorage'dan son seçilen medyayı kontrol et
+      // localStorage'dan son seçilen resmi kontrol et
       const savedMedia = localStorage.getItem(`product_${id}_selectedMedia`);
-      let showVideo = false;
       let initialImageIndex = 0;
       
       if (savedMedia) {
         try {
           const media = JSON.parse(savedMedia);
-          if (media.type === 'video' && hasVideo) {
-            showVideo = true;
-          } else if (media.type === 'image' && resimUrls.length > 0) {
+          if (media.type === 'image' && resimUrls.length > 0) {
             initialImageIndex = media.index !== undefined ? media.index : 0;
             if (initialImageIndex >= resimUrls.length) initialImageIndex = 0;
             resimUrl = resimUrls[initialImageIndex];
@@ -574,8 +486,8 @@ fetch("/api/public/products?details=true")
         }
       }
       
-      // Video varsa veya birden fazla resim varsa thumbnail göster
-      if (resimUrls.length > 1 || hasVideo || resimUrls.length === 0) {
+      // Birden fazla resim varsa thumbnail göster
+      if (resimUrls.length > 1 || resimUrls.length === 0) {
         resimGalerisiHTML = `
           <div class="product-images-gallery">
             <div class="product-main-image" id="productMainMedia">

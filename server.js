@@ -52,15 +52,8 @@ app.use("/admin", express.static("admin"));
 // Tüm dosyaları field name'e göre farklı klasörlere kaydet
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    let uploadDir;
-    
-    // Video field'ı için videos klasörüne kaydet
-    if (file.fieldname === 'video') {
-      uploadDir = "public/uploads/videos";
-    } else {
-      // Resimler için normal uploads klasörüne kaydet
-      uploadDir = "public/uploads";
-    }
+    // Resimler için uploads klasörüne kaydet
+    const uploadDir = "public/uploads";
     
     // Klasör yoksa oluştur
     if (!fs.existsSync(uploadDir)) {
@@ -74,19 +67,11 @@ const storage = multer.diskStorage({
   }
 });
 
-// Tüm dosyaları kabul eden upload middleware (resim ve video)
+// Resim dosyalarını kabul eden upload middleware
 const upload = multer({ 
   storage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit (video için)
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit (resim için)
   fileFilter: (req, file, cb) => {
-    // Video field'ı için video dosyalarını kabul et
-    if (file.fieldname === 'video') {
-      if (file.mimetype.startsWith('video/')) {
-        cb(null, true);
-      } else {
-        cb(new Error('Video dosyası geçersiz format!'), false);
-      }
-    } else {
       // Resim field'ları için resim dosyalarını kabul et
       if (file.mimetype.startsWith('image/')) {
         cb(null, true);
@@ -297,11 +282,10 @@ app.get("/api/products", auth, async (req, res) => {
   }
 });
 
-// Tüm dosyaları (resim ve video) tek middleware ile işle
+// Resim dosyalarını işle
 const uploadProductFiles = upload.fields([
   { name: "resim", maxCount: 1 }, 
-  { name: "resimler", maxCount: 10 },
-  { name: "video", maxCount: 1 }
+  { name: "resimler", maxCount: 10 }
 ]);
 
 /* Ekle */
@@ -336,12 +320,6 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
       }
     }
     
-    // Video dosyası
-    let videoData = "";
-    if (req.files && req.files.video && req.files.video[0]) {
-      videoData = `videos/${req.files.video[0].filename}`;
-    }
-    
     const urun = {
       id: Date.now().toString(),
       ad: req.body.ad || "",
@@ -353,7 +331,6 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
       resimBase64: resimBase64, // MongoDB'ye base64 olarak kaydet
       resimler: resimlerData.length > 0 ? resimlerData : (resimData ? [resimData] : []),
       resimlerBase64: resimlerBase64.length > 0 ? resimlerBase64 : (resimBase64 ? [resimBase64] : []),
-      video: videoData, // Video dosya yolu
       // Seramik ürünleri için özel alanlar
       urunKodu: req.body.urunKodu || "",
       doku: req.body.doku || "",
@@ -422,8 +399,6 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
       let resimBase64 = existingProduct.resimBase64 || null;
       let resimlerData = existingProduct.resimler || (existingProduct.resim ? [existingProduct.resim] : []);
       let resimlerBase64 = existingProduct.resimlerBase64 || (existingProduct.resimBase64 ? [existingProduct.resimBase64] : []);
-      let videoData = existingProduct.video || "";
-      
       // Tek resim güncelleme (eski format)
       if (req.files && req.files.resim && req.files.resim[0]) {
         resimData = req.files.resim[0].filename;
@@ -484,34 +459,6 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
         }
       }
       
-      // Video güncelleme
-      if (req.files && req.files.video && req.files.video[0]) {
-        // Eski video dosyasını sil
-        if (videoData) {
-          const oldVideoPath = path.join("public/uploads", videoData);
-          if (fs.existsSync(oldVideoPath)) {
-            try {
-              fs.unlinkSync(oldVideoPath);
-            } catch (e) {
-              console.error("Eski video silme hatası:", e);
-            }
-          }
-        }
-        videoData = `videos/${req.files.video[0].filename}`;
-      }
-      // Video silme (req.body'den gelir)
-      if (req.body.silVideo === 'true' && videoData) {
-        const oldVideoPath = path.join("public/uploads", videoData);
-        if (fs.existsSync(oldVideoPath)) {
-          try {
-            fs.unlinkSync(oldVideoPath);
-          } catch (e) {
-            console.error("Video silme hatası:", e);
-          }
-        }
-        videoData = "";
-      }
-      
       const updateData = {
         ad: req.body.ad || "",
         kategori: req.body.kategori || "",
@@ -522,7 +469,6 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
         resimBase64: resimBase64,
         resimler: resimlerData,
         resimlerBase64: resimlerBase64,
-        video: videoData,
         updatedAt: new Date(),
         // Seramik ürünleri için özel alanlar
         urunKodu: req.body.urunKodu || "",
@@ -606,34 +552,6 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
         resimlerBase64 = [...resimlerBase64, ...newResimlerBase64];
       }
       
-      // Video güncelleme
-      if (req.files && req.files.video && req.files.video[0]) {
-        // Eski video dosyasını sil
-        if (videoData) {
-          const oldVideoPath = path.join("public/uploads", videoData);
-          if (fs.existsSync(oldVideoPath)) {
-            try {
-              fs.unlinkSync(oldVideoPath);
-            } catch (e) {
-              console.error("Eski video silme hatası:", e);
-            }
-          }
-        }
-        videoData = `videos/${req.files.video[0].filename}`;
-      }
-      // Video silme
-      if (req.body.silVideo === 'true' && videoData) {
-        const oldVideoPath = path.join("public/uploads", videoData);
-        if (fs.existsSync(oldVideoPath)) {
-          try {
-            fs.unlinkSync(oldVideoPath);
-          } catch (e) {
-            console.error("Video silme hatası:", e);
-          }
-        }
-        videoData = "";
-      }
-      
       products[index] = {
         id: productId,
         ad: req.body.ad || "",
@@ -644,8 +562,7 @@ app.put("/api/products/:id", auth, uploadProductFiles, async (req, res) => {
         resim: resimData,
         resimBase64: resimBase64,
         resimler: resimlerData,
-        resimlerBase64: resimlerBase64,
-        video: videoData
+        resimlerBase64: resimlerBase64
       };
 
       fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
@@ -805,7 +722,6 @@ app.get("/api/public/products", async (req, res) => {
             marka: p.marka || "",
             resim: imageUrl, // Görsel URL'i (base64 veya dosya yolu)
             resimler: p.resimler || (p.resim ? [p.resim] : []),
-            video: p.video ? `/uploads/${p.video}` : null,
             viewCount: p.viewCount || 0, // Görüntülenme sayısı
           };
           
@@ -827,7 +743,6 @@ app.get("/api/public/products", async (req, res) => {
             marka: "",
             resim: "",
             resimler: [],
-            video: null,
             viewCount: 0
           };
         }
@@ -883,7 +798,6 @@ app.get("/api/public/products", async (req, res) => {
           ...p,
           resim: imageUrl, // Görsel URL'i (base64 veya dosya yolu)
           resimler: p.resimler || (p.resim ? [p.resim] : []),
-          video: p.video ? `/uploads/${p.video}` : null,
           viewCount: p.viewCount || 0, // Görüntülenme sayısı
         };
         
