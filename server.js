@@ -752,8 +752,10 @@ app.get("/api/public/products", async (req, res) => {
       let mongoFindOptions = {};
       if (!includeDetails) {
         // Liste sayfaları için projection - büyük alanları hariç tut
+        // ÖNEMLİ: resim field'ını dahil etmeliyiz çünkü getImageUrl() onu kullanıyor
         mongoFindOptions = {
           projection: {
+            resim: 1, // Resim field'ını dahil et
             resimBase64: 0,
             resimlerBase64: 0,
             aciklama: 0,
