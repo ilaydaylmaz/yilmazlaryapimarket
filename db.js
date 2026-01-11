@@ -3,7 +3,8 @@ const { MongoClient } = require("mongodb");
 
 // MongoDB connection string - environment variable'dan al veya local için varsayılan
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017";
-const DB_NAME = process.env.DB_NAME || "yapi_market";
+// Hem DB_NAME hem MONGODB_DB_NAME destekleniyor (Railway uyumluluğu için)
+const DB_NAME = process.env.MONGODB_DB_NAME || process.env.DB_NAME || "yapimarket";
 
 let client = null;
 let db = null;
@@ -13,23 +14,35 @@ let useMongoDB = false; // MongoDB kullanılıyor mu?
 async function connectDB() {
   try {
     if (!client) {
+      console.log(`🔌 MongoDB bağlantısı deneniyor...`);
+      console.log(`📍 MONGODB_URI: ${process.env.MONGODB_URI ? 'Var' : 'YOK'}`);
+      console.log(`📍 DB_NAME: ${DB_NAME}`);
+      
       // Eğer MONGODB_URI varsa MongoDB'ye bağlanmayı dene
       if (process.env.MONGODB_URI && process.env.MONGODB_URI !== "mongodb://localhost:27017") {
-        client = new MongoClient(MONGODB_URI);
+        console.log(`🔗 MongoDB Atlas'a bağlanılıyor...`);
+        client = new MongoClient(MONGODB_URI, {
+          serverSelectionTimeoutMS: 10000, // 10 saniye timeout (Railway için artırıldı)
+          connectTimeoutMS: 10000,
+        });
         await client.connect();
         db = client.db(DB_NAME);
         useMongoDB = true;
-        console.log("✅ MongoDB bağlantısı başarılı!");
+        console.log(`✅ MongoDB bağlantısı başarılı! (DB: ${DB_NAME})`);
       } else {
         // Local MongoDB'ye bağlanmayı dene
+        console.log(`🔗 Local MongoDB'ye bağlanılıyor...`);
         try {
-          client = new MongoClient(MONGODB_URI);
-          await client.connect({ serverSelectionTimeoutMS: 2000 }); // 2 saniye timeout
+          client = new MongoClient(MONGODB_URI, {
+            serverSelectionTimeoutMS: 2000 // 2 saniye timeout
+          });
+          await client.connect();
           db = client.db(DB_NAME);
           useMongoDB = true;
-          console.log("✅ MongoDB bağlantısı başarılı!");
+          console.log(`✅ MongoDB bağlantısı başarılı! (DB: ${DB_NAME})`);
         } catch (localError) {
           console.log("⚠️ MongoDB bağlantısı yok, JSON dosyaları kullanılacak");
+          console.log(`❌ Hata: ${localError.message}`);
           useMongoDB = false;
           return null;
         }
@@ -37,7 +50,9 @@ async function connectDB() {
     }
     return db;
   } catch (error) {
-    console.log("⚠️ MongoDB bağlantı hatası, JSON dosyaları kullanılacak:", error.message);
+    console.log("⚠️ MongoDB bağlantı hatası, JSON dosyaları kullanılacak");
+    console.error(`❌ Hata detayı: ${error.message}`);
+    console.error(`❌ Stack: ${error.stack}`);
     useMongoDB = false;
     return null;
   }
