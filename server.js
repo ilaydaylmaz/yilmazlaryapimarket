@@ -709,16 +709,24 @@ app.get("/api/public/products", async (req, res) => {
       console.log("⏳ MongoDB query başlatılıyor...");
       const startTime = Date.now();
       
-      // MongoDB query'sine timeout ekle (20 saniye)
-      const products = await Promise.race([
-        productsCollection.find({}, mongoFindOptions).toArray(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('MongoDB query timeout (20s)')), 20000)
-        )
-      ]);
-      
-      const queryTime = Date.now() - startTime;
-      console.log(`📦 MongoDB'den ${products.length} ürün çekildi (${includeDetails ? 'detaylı' : 'liste'}) - ${queryTime}ms`);
+      let products;
+      try {
+        // MongoDB query'sine timeout ekle (15 saniye)
+        const queryPromise = productsCollection.find({}, mongoFindOptions).toArray();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('MongoDB query timeout (15s)')), 15000)
+        );
+        
+        products = await Promise.race([queryPromise, timeoutPromise]);
+        
+        const queryTime = Date.now() - startTime;
+        console.log(`📦 MongoDB'den ${products.length} ürün çekildi (${includeDetails ? 'detaylı' : 'liste'}) - ${queryTime}ms`);
+      } catch (queryError) {
+        const queryTime = Date.now() - startTime;
+        console.error(`❌ MongoDB query hatası (${queryTime}ms):`, queryError.message);
+        // Timeout veya hata durumunda JSON fallback'e geç
+        throw new Error(`MongoDB query failed: ${queryError.message}`);
+      }
       
       if (products.length === 0) {
         console.warn("⚠️ MongoDB'den hiç ürün gelmedi!");
