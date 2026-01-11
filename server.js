@@ -787,27 +787,51 @@ app.get("/api/public/products", async (req, res) => {
       
       const products = await productsCollection.find({}, mongoFindOptions).toArray();
       console.log(`📦 MongoDB'den ${products.length} ürün çekildi (${includeDetails ? 'detaylı' : 'liste'})`);
+      
+      if (products.length === 0) {
+        console.warn("⚠️ MongoDB'den hiç ürün gelmedi!");
+      }
+      
       const formattedProducts = products.map(p => {
-        // Görsel URL'ini oluştur (base64 varsa onu, yoksa dosya yolunu kullan)
-        let imageUrl = getImageUrl(p);
-        
-        const baseProduct = {
-          id: p._id.toString(),
-          ad: p.ad,
-          kategori: p.kategori,
-          altKategori: p.altKategori || "",
-          marka: p.marka,
-          resim: imageUrl, // Görsel URL'i (base64 veya dosya yolu)
-          resimler: p.resimler || (p.resim ? [p.resim] : []),
-          video: p.video ? `/uploads/${p.video}` : null,
-          viewCount: p.viewCount || 0, // Görüntülenme sayısı
-        };
-        
-        // Detay sayfası için base64 görselleri ekle
-        if (includeDetails) {
-          baseProduct.resimBase64 = p.resimBase64 || null;
-          baseProduct.resimlerBase64 = p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : []);
+        try {
+          // Görsel URL'ini oluştur (base64 varsa onu, yoksa dosya yolunu kullan)
+          let imageUrl = getImageUrl(p);
+          
+          const baseProduct = {
+            id: p._id.toString(),
+            ad: p.ad || "İsimsiz Ürün",
+            kategori: p.kategori || "",
+            altKategori: p.altKategori || "",
+            marka: p.marka || "",
+            resim: imageUrl, // Görsel URL'i (base64 veya dosya yolu)
+            resimler: p.resimler || (p.resim ? [p.resim] : []),
+            video: p.video ? `/uploads/${p.video}` : null,
+            viewCount: p.viewCount || 0, // Görüntülenme sayısı
+          };
+          
+          // Detay sayfası için base64 görselleri ekle
+          if (includeDetails) {
+            baseProduct.resimBase64 = p.resimBase64 || null;
+            baseProduct.resimlerBase64 = p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : []);
+          }
+          
+          return baseProduct;
+        } catch (err) {
+          console.error(`❌ Ürün formatlama hatası (ID: ${p._id}):`, err);
+          // Hatalı ürünü atla veya minimal veri döndür
+          return {
+            id: p._id ? p._id.toString() : "unknown",
+            ad: p.ad || "Hatalı Ürün",
+            kategori: p.kategori || "",
+            altKategori: "",
+            marka: "",
+            resim: "",
+            resimler: [],
+            video: null,
+            viewCount: 0
+          };
         }
+      });
         
         // Detay sayfası için ek alanlar
         if (includeDetails) {
@@ -904,14 +928,28 @@ app.get("/api/public/products", async (req, res) => {
     try {
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
       console.log(`📄 Hata durumunda JSON'dan ${data.length} ürün çekildi`);
-      const formattedData = data.map(p => ({
-        ...p,
-        resim: getImageUrl(p)
-      }));
+      const formattedData = data.map(p => {
+        try {
+          return {
+            ...p,
+            resim: getImageUrl(p),
+            viewCount: p.viewCount || 0
+          };
+        } catch (err) {
+          console.error("❌ JSON ürün formatlama hatası:", err);
+          return { ...p, resim: "", viewCount: 0 };
+        }
+      });
       res.json(formattedData);
     } catch (jsonError) {
       console.error("❌ JSON okuma hatası:", jsonError);
-      res.status(500).json({ success: false, message: "Sunucu hatası", error: error.message });
+      // Boş array döndür, frontend hata mesajı gösterebilir
+      res.status(500).json({ 
+        success: false, 
+        message: "Sunucu hatası", 
+        error: error.message,
+        products: [] 
+      });
     }
   }
 });
