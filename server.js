@@ -740,19 +740,27 @@ app.get("/api/public/products", async (req, res) => {
       
       const formattedProducts = products.map(p => {
         try {
-          // Liste sayfası için base64 görselleri kullanma, sadece dosya yolunu kullan
+          // Görsel URL'ini oluştur - getImageUrl fonksiyonunu kullan
+          // Liste sayfası için base64 görselleri projection'dan çıkarıldı, sadece dosya adı var
           let imageUrl = "";
-          if (p.resim) {
-            // Eğer zaten base64 string ise (data:image ile başlıyorsa) direkt döndür
+          
+          // Önce base64 kontrolü (eğer varsa - detay sayfası için)
+          if (p.resimBase64 && includeDetails) {
+            imageUrl = p.resimBase64;
+          } else if (p.resim) {
+            // Dosya adı varsa dosya yolunu oluştur
             if (typeof p.resim === 'string' && p.resim.startsWith('data:image')) {
+              // Zaten base64 string ise direkt kullan
               imageUrl = p.resim;
             } else {
-              // Dosya yolunu kullan
+              // Dosya adı ise /uploads/ ekle
               imageUrl = `/uploads/${p.resim}`;
             }
-          } else if (p.resimBase64 && includeDetails) {
-            // Sadece detay sayfası için base64 kullan
-            imageUrl = p.resimBase64;
+          }
+          
+          // Eğer hala boşsa, getImageUrl fonksiyonunu dene
+          if (!imageUrl) {
+            imageUrl = getImageUrl(p);
           }
           
           const baseProduct = {
