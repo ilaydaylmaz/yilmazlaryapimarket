@@ -1547,7 +1547,6 @@ app.get("/api/categories", auth, (req, res) => {
         categories: [
           { id: "boya", name: "Boya", slug: "boya-urunleri", subCategories: [] },
           { id: "hirdavat", name: "Hırdavat", slug: "hirdavat-urunleri", subCategories: [] },
-          { id: "tesisat", name: "Tesisat", slug: "tesisat-urunleri", subCategories: [] },
           { id: "yapi-malzemeleri", name: "Yapı Malzemeleri", slug: "yapi-malzemeleri", subCategories: [] },
           { id: "elektrikli-el-aletleri", name: "Elektrikli El Aletleri", slug: "elektrikli-el-aletleri-urunleri", subCategories: [] },
           { id: "seramik", name: "Seramik ve Fayans", slug: "seramik-urunleri", subCategories: [] },

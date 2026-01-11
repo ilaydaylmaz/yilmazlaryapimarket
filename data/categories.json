@@ -50,28 +50,6 @@
       ]
     },
     {
-      "id": "tesisat",
-      "name": "Tesisat",
-      "slug": "tesisat-urunleri",
-      "subCategories": [
-        {
-          "id": "boru-fittings",
-          "name": "Boru ve Fittings",
-          "slug": "boru-fittings"
-        },
-        {
-          "id": "vanalar",
-          "name": "Vanalar",
-          "slug": "vanalar"
-        },
-        {
-          "id": "tesisat-malzemeleri",
-          "name": "Tesisat Malzemeleri",
-          "slug": "tesisat-malzemeleri"
-        }
-      ]
-    },
-    {
       "id": "yapi-malzemeleri",
       "name": "Yapı Malzemeleri",
       "slug": "yapi-malzemeleri",
