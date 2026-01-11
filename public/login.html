@@ -17,49 +17,23 @@
 
 <script>
 function login() {
-  const usernameInput = document.getElementById("username");
-  const passwordInput = document.getElementById("password");
-  const errorDiv = document.getElementById("error");
-  
-  if (!usernameInput.value || !passwordInput.value) {
-    errorDiv.innerText = "Lütfen kullanıcı adı ve şifre girin";
-    return;
-  }
-  
-  errorDiv.innerText = "";
-  
   fetch("/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: 'include', // Cookie'leri gönder
     body: JSON.stringify({
-      username: usernameInput.value,
-      password: passwordInput.value
+      username: username.value,
+      password: password.value
     })
   })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
+  .then(res => {
+    if (res.ok) {
       localStorage.setItem('adminSession', 'true');
-      window.location.href = "/admin.html";
+      location.href = "/admin.html";
     } else {
-      errorDiv.innerText = data.message || "Hatalı giriş. Kullanıcı adı: admin, Şifre: 1234";
+      document.getElementById("error").innerText = "Hatalı giriş";
     }
-  })
-  .catch(err => {
-    console.error("Login hatası:", err);
-    errorDiv.innerText = "Bir hata oluştu. Lütfen tekrar deneyin.";
   });
 }
-
-// Enter tuşu ile giriş
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById("password").addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-      login();
-    }
-  });
-});
 </script>
 
 </body>

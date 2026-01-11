@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Yılmazlar Yapı Market Boya Ürünleri - Geniş boya ürünleri yelpazesi">
-  <title>Boya Ürünleri - Yılmazlar Yapı Market</title>
+  <meta name="description" content="Yılmazlar Yapı Market Kaba Grubu - Geniş kaba grubu yelpazesi">
+  <title>Kaba Grubu - Yılmazlar Yapı Market</title>
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/logo.png">
   <link rel="shortcut icon" type="image/png" href="/logo.png">
@@ -69,10 +69,12 @@
             <a href="/hirdavat-urunleri.html">Hırdavat Ürünleri</a>
             <a href="/yapi-malzemeleri.html">Yapı Malzemeleri</a>
             <a href="/el-aletleri-urunleri.html">El Aletleri Ürünleri</a>
+            <a href="/elektrikli-el-aletleri-urunleri.html">Elektrikli El Aletleri</a>
             <a href="/seramik-urunleri.html">Seramik Ürünleri</a>
             <a href="/banyo-urunleri.html">Banyo</a>
             <a href="/armatur-urunleri.html">Armatür</a>
             <a href="/parke-urunleri.html">Parke Ürünleri</a>
+            <a href="/kaba-grubu.html">Kaba Grubu</a>
           </div>
         </div>
       </div>
@@ -97,8 +99,8 @@
 <div class="container">
   <div class="page-header">
     <div class="page-header-content">
-      <h1>Boya Ürünleri</h1>
-      <p>Geniş boya ürünleri yelpazemizden ihtiyacınıza uygun ürünü bulun</p>
+      <h1>Kaba Grubu</h1>
+      <p>Geniş kaba grubu yelpazemizden ihtiyacınıza uygun ürünü bulun</p>
     </div>
     <div class="view-controls">
       <button id="gridView" class="view-btn active" title="Grid Görünüm">
@@ -279,17 +281,14 @@ if (typeof document !== "undefined") {
 let products = [];
 let filteredProducts = [];
 let currentView = 'grid';
-const TARGET_CATEGORIES = ["Boya Ürünleri", "Boya"];
+const TARGET_CATEGORY = "Kaba Grubu";
 
 // Verileri yükle
 fetch("/api/public/products")
   .then(r => r.json())
   .then(data => {
-    // Hem "Boya Ürünleri" hem de "Boya" kategorisindeki ürünleri filtrele
-    products = data.filter(p => {
-      const kategori = (p.kategori || "").trim();
-      return TARGET_CATEGORIES.includes(kategori);
-    });
+    // Sadece bu kategorideki ürünleri filtrele
+    products = data.filter(p => p.kategori && p.kategori.trim() === TARGET_CATEGORY);
     filteredProducts = [...products];
     populateFilters();
     listele(filteredProducts);
@@ -386,6 +385,7 @@ function listele(data) {
       <div class="urun" onclick="detay('${p.id}')">
           <div class="urun-image-wrapper">
             <img src="${resimUrl}" alt="${p.ad}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'300\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'300\\' height=\\'300\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'16\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\'%3EResim Yok%3C/text%3E%3C/svg%3E'">
+
           </div>
           <div class="urun-content">
             <h3>${p.ad || 'İsimsiz Ürün'}</h3>
@@ -408,6 +408,7 @@ function listele(data) {
             <div>
               <h3>${p.ad || 'İsimsiz Ürün'}</h3>
               <div class="urun-list-meta">
+
                 ${p.marka ? `<span class="urun-meta-item"><strong>Marka:</strong> ${p.marka}</span>` : ''}
               </div>
             </div>
