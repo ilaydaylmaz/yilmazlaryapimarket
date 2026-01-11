@@ -9,7 +9,18 @@
 4. Repository'nizi seçin: `ilaydaylmaz/yilmazlaryapimarket`
 
 ### 2. Environment Variables (Ortam Değişkenleri)
-Railway dashboard'da projenizi seçin → "Variables" sekmesine gidin ve şunları ekleyin:
+
+**ÖNEMLİ:** Railway.app'te iki tür variable var:
+- **Service Variables** (Önerilen) - Sadece bu servis için
+- **Shared Variables** - Tüm servisler arasında paylaşılan
+
+**Tek servis için Service Variables kullanın:**
+
+1. Railway dashboard'da projenizi seçin
+2. Servisinizi seçin (web service)
+3. "Variables" sekmesine gidin
+4. "New Variable" butonuna tıklayın
+5. Şu değişkenleri ekleyin:
 
 ```
 MONGODB_URI=mongodb+srv://kullanici:sifre@cluster.mongodb.net/
@@ -19,9 +30,11 @@ NODE_ENV=production
 PORT=3000
 ```
 
-**Önemli:** 
+**Not:** 
 - `MONGODB_URI` değerini Render.com'dan kopyalayın (aynı MongoDB kullanılabilir)
 - `SESSION_SECRET` için güçlü bir rastgele string kullanın
+- `PORT` değişkeni genellikle otomatik ayarlanır, eklemek opsiyonel
+- Eğer "Shared Variables" kullandıysanız, serviste `${{MONGODB_URI}}` şeklinde referans edebilirsiniz
 
 ### 3. Build & Start Ayarları
 Railway otomatik olarak algılar (`railway.json` dosyası sayesinde):
