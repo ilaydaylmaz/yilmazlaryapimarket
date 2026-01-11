@@ -72,12 +72,11 @@ const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit (resim için)
   fileFilter: (req, file, cb) => {
-      // Resim field'ları için resim dosyalarını kabul et
-      if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
-      } else {
-        cb(new Error('Sadece resim dosyaları kabul edilir!'), false);
-      }
+    // Resim field'ları için resim dosyalarını kabul et
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Sadece resim dosyaları kabul edilir!'), false);
     }
   }
 });
