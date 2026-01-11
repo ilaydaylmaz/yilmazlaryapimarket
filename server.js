@@ -2072,14 +2072,38 @@ app.get("/api/public/category-showcase", async (req, res) => {
 
         // Base64 görselleri varsa onları kullan, yoksa dosya yolunu kullan
         const categories = categoriesRaw.map(cat => {
+          let imageUrl = cat.image || cat.imageBase64 || '';
+          
+          // Base64 görsel varsa onu kullan
           if (cat.imageBase64) {
-            return { ...cat, image: cat.imageBase64 };
+            imageUrl = cat.imageBase64;
+          } else if (cat.image) {
+            // Dosya yolu varsa kontrol et
+            const filePath = path.join(__dirname, 'public', cat.image);
+            if (fs.existsSync(filePath)) {
+              imageUrl = cat.image;
+            } else {
+              // Dosya yoksa default'tan al
+              const defaultCat = defaultCategories.find(dc => dc.id === cat.id || dc.name === cat.name);
+              imageUrl = defaultCat ? defaultCat.image : cat.image;
+            }
+          } else {
+            // Hiç görsel yoksa default'tan al
+            const defaultCat = defaultCategories.find(dc => dc.id === cat.id || dc.name === cat.name);
+            imageUrl = defaultCat ? defaultCat.image : '';
           }
-          return cat;
+          
+          return {
+            ...cat,
+            image: imageUrl,
+            url: cat.url || (defaultCategories.find(dc => dc.id === cat.id || dc.name === cat.name)?.url || '#')
+          };
         });
 
+        console.log(`📸 Kategori showcase: ${categories.length} kategori yüklendi`);
         res.json({ categories });
       } else {
+        console.log('📸 Kategori showcase: MongoDB\'de veri yok, default kategoriler kullanılıyor');
         res.json({ categories: defaultCategories });
       }
     } else {
@@ -2099,14 +2123,25 @@ app.get("/api/public/category-showcase", async (req, res) => {
           });
         }
         
+        console.log(`📸 Kategori showcase: JSON'dan ${data.categories?.length || 0} kategori yüklendi`);
         res.json(data);
       } else {
+        console.log('📸 Kategori showcase: JSON dosyası yok, default kategoriler kullanılıyor');
         res.json({ categories: defaultCategories });
       }
     }
   } catch (error) {
-    console.error("Kategori showcase okuma hatası:", error);
-    res.json({ categories: [] });
+    console.error("❌ Kategori showcase hatası:", error);
+    console.error("Hata detayı:", error.stack);
+    // Hata durumunda da default kategorileri döndür
+    const defaultCategories = [
+      { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
+      { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/Hırdavat.jpeg", url: "/hirdavat-urunleri.html" },
+      { id: "banyo", name: "Banyo", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
+      { id: "armatur", name: "Armatür", image: "/uploads/categories/armatur.jpg", url: "/armatur-urunleri.html" },
+      { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
+    ];
+    res.status(500).json({ categories: defaultCategories });
   }
 });
   
