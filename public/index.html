@@ -262,6 +262,31 @@
   </div>
 </section>
 
+<!-- Ürün Grupları Showcase -->
+<section class="product-groups-showcase">
+  <div class="container">
+    <h2 class="showcase-title">Ürün Grupları</h2>
+    <div class="showcase-wrapper">
+      <!-- Sol Taraf: Kategori Listesi -->
+      <div class="showcase-categories">
+        <div class="category-list" id="categoryList">
+          <div class="empty-state">Yükleniyor...</div>
+        </div>
+      </div>
+      
+      <!-- Sağ Taraf: Görsel Alanı -->
+      <div class="showcase-image-area">
+        <a href="#" id="showcaseLink" class="showcase-image-wrapper">
+          <img id="showcaseImage" src="" alt="" class="showcase-image" style="opacity: 1; display: block;">
+        </a>
+        <div class="showcase-category-title">
+          <h3 id="showcaseCategoryTitle">Yükleniyor...</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- Markalar Bölümü -->
 <section class="brands-section">
 <div class="container">
@@ -719,6 +744,123 @@ function loadInstagramPosts() {
   }
 }
 
+// Kategori Showcase
+let showcaseCategoriesData = [];
+
+function loadShowcaseCategories() {
+  fetch('/api/public/category-showcase?t=' + Date.now())
+    .then(r => {
+      if (!r.ok) {
+        throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+      }
+      return r.json();
+    })
+    .then(data => {
+      showcaseCategoriesData = data.categories || [];
+      console.log('✅ Kategori showcase yüklendi:', showcaseCategoriesData.length, 'kategori');
+      renderShowcaseCategories();
+      initCategoryShowcase();
+    })
+    .catch(err => {
+      console.error('❌ Kategori showcase yükleme hatası:', err);
+      document.getElementById('categoryList').innerHTML = '<div class="empty-state">Kategoriler yüklenemedi. Lütfen sayfayı yenileyin.</div>';
+      document.getElementById('showcaseImage').src = '';
+      document.getElementById('showcaseCategoryTitle').textContent = 'Yüklenemedi';
+    });
+}
+
+function renderShowcaseCategories() {
+  const categoryList = document.getElementById('categoryList');
+  const showcaseImage = document.getElementById('showcaseImage');
+  const showcaseCategoryTitle = document.getElementById('showcaseCategoryTitle');
+  const showcaseLink = document.getElementById('showcaseLink');
+  
+  if (!showcaseCategoriesData.length) {
+    categoryList.innerHTML = '<div class="empty-state">Henüz kategori eklenmemiş.</div>';
+    return;
+  }
+  
+  // Kategori listesini oluştur
+  categoryList.innerHTML = showcaseCategoriesData.map((cat, index) => {
+    const isActive = index === 0 ? 'active' : '';
+    return `
+      <a href="${cat.url}" class="category-item ${isActive}" data-category="${cat.name}" data-image="${cat.image}" data-url="${cat.url}">
+        <span>${cat.name}</span>
+      </a>
+    `;
+  }).join('');
+  
+  // İlk kategoriyi göster
+  if (showcaseCategoriesData.length > 0) {
+    const firstCategory = showcaseCategoriesData[0];
+    
+    // Görsel yükleme kontrolü
+    const img = new Image();
+    img.onload = function() {
+      showcaseImage.src = firstCategory.image;
+      showcaseImage.alt = firstCategory.name;
+      showcaseImage.style.opacity = '1';
+    };
+    img.onerror = function() {
+      console.error('❌ İlk kategori görseli yüklenemedi:', firstCategory.image);
+      showcaseImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="600"%3E%3Crect fill="%23f0f0f0" width="800" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="24" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EGörsel Bulunamadı%3C/text%3E%3C/svg%3E';
+      showcaseImage.style.opacity = '1';
+    };
+    img.src = firstCategory.image;
+    
+    showcaseCategoryTitle.textContent = firstCategory.name;
+    showcaseLink.href = firstCategory.url || '#';
+  }
+}
+
+function initCategoryShowcase() {
+  const categoryItems = document.querySelectorAll('.category-item');
+  const showcaseImage = document.getElementById('showcaseImage');
+  const showcaseCategoryTitle = document.getElementById('showcaseCategoryTitle');
+  const showcaseLink = document.getElementById('showcaseLink');
+  
+  if (!categoryItems.length || !showcaseImage || !showcaseCategoryTitle || !showcaseLink) return;
+  
+  // Tüm kategori görsellerini preload et
+  categoryItems.forEach(item => {
+    const imageUrl = item.getAttribute('data-image');
+    if (imageUrl) {
+      const img = new Image();
+      img.src = imageUrl;
+    }
+  });
+  
+  categoryItems.forEach(item => {
+    item.addEventListener('mouseenter', function(e) {
+      // Tüm aktif sınıfları kaldır
+      categoryItems.forEach(cat => cat.classList.remove('active'));
+      
+      // Hover edilen kategoriyi aktif yap
+      this.classList.add('active');
+      
+      // Görseli, başlığı ve linki güncelle
+      const imageUrl = this.getAttribute('data-image');
+      const categoryName = this.getAttribute('data-category');
+      const categoryUrl = this.getAttribute('data-url') || this.getAttribute('href');
+      
+      if (imageUrl && categoryName && categoryUrl) {
+        // Görseli direkt yükle
+        showcaseImage.src = imageUrl;
+        showcaseImage.alt = categoryName;
+        showcaseCategoryTitle.textContent = categoryName;
+        showcaseLink.href = categoryUrl;
+        showcaseImage.style.opacity = '1';
+        
+        // Görsel yüklenemediğinde hata göster
+        showcaseImage.onerror = function() {
+          console.error('❌ Görsel yüklenemedi:', imageUrl);
+          showcaseImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="600"%3E%3Crect fill="%23f0f0f0" width="800" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="24" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EGörsel Bulunamadı%3C/text%3E%3C/svg%3E';
+        };
+      }
+    });
+  });
+}
+
 // Hero Slider
 let currentSlide = 0;
 let slideInterval = null;
@@ -810,6 +952,7 @@ function initHeroSlider() {
 // Sayfa yüklendiğinde popüler ürünleri ve Instagram postlarını yükle
 document.addEventListener('DOMContentLoaded', () => {
   initHeroSlider();
+  loadShowcaseCategories();
   loadPopularProducts();
   loadInstagramPosts();
   initScrollAnimations();
