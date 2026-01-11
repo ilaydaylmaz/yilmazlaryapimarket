@@ -37,7 +37,7 @@ app.use(session({
     checkPeriod: 86400000 // 24 saatte bir eski session'ları temizle (ms cinsinden)
   }),
   cookie: {
-    secure: false, // HTTPS yoksa false olmalı
+    secure: process.env.VERCEL ? true : false, // Vercel'de HTTPS var, local'de yok
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 saat
     sameSite: 'lax' // CSRF koruması için
@@ -730,15 +730,17 @@ app.get("/health", (req, res) => {
 ======================= */
 const PORT = process.env.PORT || 3000;
 
-// Server'ı hemen başlat (MongoDB bağlantısı arka planda yapılacak)
-app.listen(PORT, () => {
-  console.log(`✅ Server çalışıyor → http://localhost:${PORT}`);
+// Vercel için serverless function export
+// Local development için normal server başlatma
+if (process.env.VERCEL) {
+  // Vercel'de serverless function olarak çalış
+  module.exports = app;
   
-  // MongoDB bağlantısını arka planda dene
+  // MongoDB bağlantısını başlat (Vercel'de cold start için)
   connectDB()
     .then(() => {
       if (isMongoDBEnabled()) {
-        console.log("✅ MongoDB bağlantısı aktif");
+        console.log("✅ MongoDB bağlantısı aktif (Vercel)");
       } else {
         console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
       }
@@ -746,7 +748,25 @@ app.listen(PORT, () => {
     .catch((error) => {
       console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
     });
-});
+} else {
+  // Local development veya diğer platformlar için normal server
+  app.listen(PORT, () => {
+    console.log(`✅ Server çalışıyor → http://localhost:${PORT}`);
+    
+    // MongoDB bağlantısını arka planda dene
+    connectDB()
+      .then(() => {
+        if (isMongoDBEnabled()) {
+          console.log("✅ MongoDB bağlantısı aktif");
+        } else {
+          console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
+        }
+      })
+      .catch((error) => {
+        console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
+      });
+  });
+}
 
 /* PUBLIC PRODUCTS */
 // API Cache (2 dakika - memory için optimize edildi)
