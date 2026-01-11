@@ -19,12 +19,20 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // Form data için
 
+// Session store yapılandırması
+// Production'da MemoryStore uyarısını önlemek için store'u açıkça belirtiyoruz
+// Basit admin paneli için MemoryStore yeterli (tek instance)
+const MemoryStore = require('memorystore')(session);
+
 app.use(session({
   secret: process.env.SESSION_SECRET || "yapi-market-secret",
   resave: false,
   saveUninitialized: false,
+  store: new MemoryStore({
+    checkPeriod: 86400000 // 24 saatte bir eski session'ları temizle (ms cinsinden)
+  }),
   cookie: {
-    secure: false, // HTTPS için true yapın
+    secure: process.env.NODE_ENV === 'production', // Production'da HTTPS için true
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 saat
   }

@@ -99,6 +99,16 @@ async function getCategoryShowcaseCollection() {
   return database.collection("category_showcase");
 }
 
+// DB instance'ını döndür
+function getDb() {
+  return db;
+}
+
+// Client instance'ını döndür
+function getClient() {
+  return client;
+}
+
 module.exports = {
   connectDB,
   closeDB,
@@ -107,6 +117,8 @@ module.exports = {
   getReviewsCollection,
   getBlogCollection,
   getCategoryShowcaseCollection,
-  isMongoDBEnabled
+  isMongoDBEnabled,
+  getDb,
+  getClient
 };
 
