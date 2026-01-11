@@ -737,21 +737,21 @@ app.listen(PORT, () => {
 });
 
 /* PUBLIC PRODUCTS */
-// API Cache (2 dakika - memory için optimize edildi)
+// API Cache (1 dakika - memory için optimize edildi, base64 görselleri de içeriyor)
 let productsCache = null;
 let productsCacheTime = null;
-const CACHE_DURATION = 2 * 60 * 1000; // 2 dakika (memory için azaltıldı)
+const CACHE_DURATION = 1 * 60 * 1000; // 1 dakika (memory için azaltıldı)
 
 app.get("/api/public/products", async (req, res) => {
   try {
     const now = Date.now();
     const includeDetails = req.query.details === 'true'; // Detay sayfası için
     
-    // Cache kontrolü (sadece liste sayfası için, base64 olmadan)
+    // Cache kontrolü (sadece liste sayfası için)
     if (productsCache && productsCacheTime && (now - productsCacheTime) < CACHE_DURATION && !includeDetails) {
       // Cache'den dönen veriyi de görüntülenme sayısına göre sırala
       const sortedCache = [...productsCache].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
-      res.setHeader('Cache-Control', 'public, max-age=120'); // 2 dakika browser cache
+      res.setHeader('Cache-Control', 'public, max-age=60'); // 1 dakika browser cache
       return res.json(sortedCache);
     }
     
@@ -834,24 +834,13 @@ app.get("/api/public/products", async (req, res) => {
       // Popüler ürünler için görüntülenme sayısına göre sırala
       const sortedProducts = formattedProducts.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
       
-      // Cache'e kaydet (sadece liste için - base64 görselleri cache'de tutma, sadece URL'leri tut)
+      // Cache'e kaydet (sadece liste için - base64 görselleri de cache'de tut, ama kısa süre)
       if (!includeDetails) {
-        // Base64 görselleri cache'den çıkar (memory tasarrufu), sadece URL'leri tut
-        const cacheData = sortedProducts.map(p => {
-          // resim alanı zaten getImageUrl ile oluşturulmuş (base64 veya URL)
-          // Cache'de sadece URL formatında tut (base64 string'leri çok yer kaplar)
-          const cached = { ...p };
-          // Eğer resim base64 ise, cache'de sadece bir flag tut
-          if (cached.resim && cached.resim.startsWith('data:image')) {
-            cached.hasBase64Image = true;
-            // Base64 string'i cache'den çıkar, response'da gönder ama cache'de tutma
-          }
-          return cached;
-        });
-        productsCache = cacheData;
+        // Base64 görselleri cache'de tut (görseller için gerekli), ama cache süresi kısa (1 dakika)
+        productsCache = sortedProducts;
         productsCacheTime = now;
-        res.setHeader('Cache-Control', 'public, max-age=120'); // 2 dakika browser cache
-        console.log(`💾 Cache'e kaydedildi (${cacheData.length} ürün)`);
+        res.setHeader('Cache-Control', 'public, max-age=60'); // 1 dakika browser cache
+        console.log(`💾 Cache'e kaydedildi (${sortedProducts.length} ürün, base64 görselleri dahil)`);
       } else {
         res.setHeader('Cache-Control', 'no-cache'); // Detay için cache yok
       }
@@ -894,24 +883,13 @@ app.get("/api/public/products", async (req, res) => {
       // Popüler ürünler için görüntülenme sayısına göre sırala
       const sortedData = formattedData.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
       
-      // Cache'e kaydet (sadece liste için - base64 görselleri cache'de tutma, sadece URL'leri tut)
+      // Cache'e kaydet (sadece liste için - base64 görselleri de cache'de tut, ama kısa süre)
       if (!includeDetails) {
-        // Base64 görselleri cache'den çıkar (memory tasarrufu), sadece URL'leri tut
-        const cacheData = sortedData.map(p => {
-          // resim alanı zaten getImageUrl ile oluşturulmuş (base64 veya URL)
-          // Cache'de sadece URL formatında tut (base64 string'leri çok yer kaplar)
-          const cached = { ...p };
-          // Eğer resim base64 ise, cache'de sadece bir flag tut
-          if (cached.resim && cached.resim.startsWith('data:image')) {
-            cached.hasBase64Image = true;
-            // Base64 string'i cache'den çıkar, response'da gönder ama cache'de tutma
-          }
-          return cached;
-        });
-        productsCache = cacheData;
+        // Base64 görselleri cache'de tut (görseller için gerekli), ama cache süresi kısa (1 dakika)
+        productsCache = sortedData;
         productsCacheTime = now;
-        res.setHeader('Cache-Control', 'public, max-age=120'); // 2 dakika browser cache
-        console.log(`💾 Cache'e kaydedildi (${cacheData.length} ürün)`);
+        res.setHeader('Cache-Control', 'public, max-age=60'); // 1 dakika browser cache
+        console.log(`💾 Cache'e kaydedildi (${sortedData.length} ürün, base64 görselleri dahil)`);
       } else {
         res.setHeader('Cache-Control', 'no-cache');
       }
