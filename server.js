@@ -758,12 +758,13 @@ app.get("/api/public/products", async (req, res) => {
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
       
-      // Liste sayfası için projection kullan (sadece gereksiz alanları çıkarma, base64 görselleri çek)
+      // Liste sayfası için projection kullan (sadece gereksiz alanları çıkarma, base64 görselleri çek - görseller için gerekli)
       let mongoFindOptions = {};
       if (!includeDetails) {
         mongoFindOptions = {
           projection: {
             // Sadece gereksiz alanları çıkar, base64 görselleri tut (görseller için gerekli)
+            // resimBase64 ve resimlerBase64 projection'dan çıkarılmadı - görseller için gerekli
             aciklama: 0,
             urunKodu: 0,
             doku: 0,
