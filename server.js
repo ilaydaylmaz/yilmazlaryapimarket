@@ -1,4 +1,8 @@
-require("dotenv").config();
+// dotenv sadece local development için (Railway'de environment variable'lar otomatik yüklenir)
+if (process.env.NODE_ENV !== 'production') {
+  require("dotenv").config();
+}
+
 const express = require("express");
 const fs = require("fs");
 const bodyParser = require("body-parser");

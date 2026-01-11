@@ -1,7 +1,12 @@
-require("dotenv").config();
+// dotenv sadece local development için (Railway'de environment variable'lar otomatik yüklenir)
+if (process.env.NODE_ENV !== 'production') {
+  require("dotenv").config();
+}
+
 const { MongoClient } = require("mongodb");
 
 // MongoDB connection string - environment variable'dan al veya local için varsayılan
+// Railway.app build sırasında bu değişken olmayabilir, bu normal (runtime'da olacak)
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017";
 // Hem DB_NAME hem MONGODB_DB_NAME destekleniyor (Railway uyumluluğu için)
 const DB_NAME = process.env.MONGODB_DB_NAME || process.env.DB_NAME || "yapimarket";
