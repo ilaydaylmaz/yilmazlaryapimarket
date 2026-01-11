@@ -15,7 +15,11 @@ async function connectDB() {
     if (!client) {
       // Eğer MONGODB_URI varsa MongoDB'ye bağlanmayı dene
       if (process.env.MONGODB_URI && process.env.MONGODB_URI !== "mongodb://localhost:27017") {
-        client = new MongoClient(MONGODB_URI);
+        client = new MongoClient(MONGODB_URI, {
+          serverSelectionTimeoutMS: 5000, // 5 saniye timeout
+          connectTimeoutMS: 5000,
+          socketTimeoutMS: 45000
+        });
         await client.connect();
         db = client.db(DB_NAME);
         useMongoDB = true;
