@@ -1,8 +1,4 @@
-// dotenv sadece local development için (Railway'de environment variable'lar otomatik yüklenir)
-if (process.env.NODE_ENV !== 'production') {
-  require("dotenv").config();
-}
-
+require("dotenv").config();
 const express = require("express");
 const fs = require("fs");
 const bodyParser = require("body-parser");
@@ -37,7 +33,7 @@ app.use(session({
     checkPeriod: 86400000 // 24 saatte bir eski session'ları temizle (ms cinsinden)
   }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production' && (process.env.VERCEL || process.env.RENDER), // Production'da HTTPS varsa true
+    secure: false, // HTTPS yoksa false olmalı
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 saat
     sameSite: 'lax' // CSRF koruması için
@@ -714,15 +710,7 @@ app.delete("/api/products/:id", auth, async (req, res) => {
    HEALTH CHECK
 ======================= */
 app.get("/health", (req, res) => {
-  res.status(200).json({ 
-    status: "ok", 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    memory: {
-      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
-      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
-    }
-  });
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 /* =======================
@@ -730,17 +718,15 @@ app.get("/health", (req, res) => {
 ======================= */
 const PORT = process.env.PORT || 3000;
 
-// Vercel için serverless function export (sadece Vercel'de çalışır)
-// Render.com ve diğer platformlar için normal server
-if (process.env.VERCEL || process.env.VERCEL_ENV) {
-  // Vercel'de serverless function olarak çalış
-  module.exports = app;
+// Server'ı hemen başlat (MongoDB bağlantısı arka planda yapılacak)
+app.listen(PORT, () => {
+  console.log(`✅ Server çalışıyor → http://localhost:${PORT}`);
   
-  // MongoDB bağlantısını başlat (Vercel'de cold start için)
+  // MongoDB bağlantısını arka planda dene
   connectDB()
     .then(() => {
       if (isMongoDBEnabled()) {
-        console.log("✅ MongoDB bağlantısı aktif (Vercel)");
+        console.log("✅ MongoDB bağlantısı aktif");
       } else {
         console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
       }
@@ -748,25 +734,7 @@ if (process.env.VERCEL || process.env.VERCEL_ENV) {
     .catch((error) => {
       console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
     });
-} else {
-  // Render.com, Railway ve local development için normal server
-  app.listen(PORT, () => {
-    console.log(`✅ Server çalışıyor → http://localhost:${PORT}`);
-    
-    // MongoDB bağlantısını arka planda dene
-    connectDB()
-      .then(() => {
-        if (isMongoDBEnabled()) {
-          console.log("✅ MongoDB bağlantısı aktif");
-        } else {
-          console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
-        }
-      })
-      .catch((error) => {
-        console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
-      });
-  });
-}
+});
 
 /* PUBLIC PRODUCTS */
 // API Cache (2 dakika - memory için optimize edildi)
