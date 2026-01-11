@@ -756,16 +756,24 @@ let showcaseCategoriesData = [];
 function loadShowcaseCategories() {
   // Cache'i önlemek için timestamp ekle
   fetch('/api/public/category-showcase?t=' + Date.now())
-    .then(r => r.json())
+    .then(r => {
+      if (!r.ok) {
+        throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+      }
+      return r.json();
+    })
     .then(data => {
       showcaseCategoriesData = data.categories || [];
-      console.log('Kategori showcase yüklendi:', showcaseCategoriesData.length, 'kategori');
+      console.log('✅ Kategori showcase yüklendi:', showcaseCategoriesData.length, 'kategori');
+      console.log('📸 Kategoriler:', showcaseCategoriesData.map(c => ({ name: c.name, image: c.image?.substring(0, 50) + '...' })));
       renderShowcaseCategories();
       initCategoryShowcase();
     })
     .catch(err => {
-      console.error('Kategori showcase yükleme hatası:', err);
-      document.getElementById('categoryList').innerHTML = '<div class="empty-state">Kategoriler yüklenemedi.</div>';
+      console.error('❌ Kategori showcase yükleme hatası:', err);
+      document.getElementById('categoryList').innerHTML = '<div class="empty-state">Kategoriler yüklenemedi. Lütfen sayfayı yenileyin.</div>';
+      document.getElementById('showcaseImage').src = '';
+      document.getElementById('showcaseCategoryTitle').textContent = 'Yüklenemedi';
     });
 }
 
@@ -793,10 +801,26 @@ function renderShowcaseCategories() {
   // İlk kategoriyi göster
   if (showcaseCategoriesData.length > 0) {
     const firstCategory = showcaseCategoriesData[0];
-    showcaseImage.src = firstCategory.image;
-    showcaseImage.alt = firstCategory.name;
+    console.log('📸 İlk kategori görseli yükleniyor:', firstCategory.image);
+    
+    // Görsel yükleme kontrolü
+    const img = new Image();
+    img.onload = function() {
+      showcaseImage.src = firstCategory.image;
+      showcaseImage.alt = firstCategory.name;
+      showcaseImage.style.opacity = '1';
+      console.log('✅ İlk kategori görseli yüklendi:', firstCategory.image);
+    };
+    img.onerror = function() {
+      console.error('❌ İlk kategori görseli yüklenemedi:', firstCategory.image);
+      // Placeholder göster
+      showcaseImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="600"%3E%3Crect fill="%23f0f0f0" width="800" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="24" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EGörsel Bulunamadı%3C/text%3E%3C/svg%3E';
+      showcaseImage.style.opacity = '1';
+    };
+    img.src = firstCategory.image;
+    
     showcaseCategoryTitle.textContent = firstCategory.name;
-    showcaseLink.href = firstCategory.url;
+    showcaseLink.href = firstCategory.url || '#';
   }
 }
 
