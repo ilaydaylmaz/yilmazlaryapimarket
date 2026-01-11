@@ -660,17 +660,20 @@ const CACHE_DURATION = 1 * 60 * 1000; // 1 dakika (memory için azaltıldı)
 
 app.get("/api/public/products", async (req, res) => {
   try {
+    console.log("📥 /api/public/products isteği alındı");
     const now = Date.now();
     const includeDetails = req.query.details === 'true'; // Detay sayfası için
     
     // Cache kontrolü (sadece liste sayfası için)
     if (productsCache && productsCacheTime && (now - productsCacheTime) < CACHE_DURATION && !includeDetails) {
+      console.log("💾 Cache'den ürünler döndürülüyor");
       // Cache'den dönen veriyi de görüntülenme sayısına göre sırala
       const sortedCache = [...productsCache].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
       res.setHeader('Cache-Control', 'public, max-age=60'); // 1 dakika browser cache
       return res.json(sortedCache);
     }
     
+    console.log(`🔍 MongoDB durumu: ${isMongoDBEnabled() ? 'Aktif' : 'Pasif'}`);
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
       
@@ -706,6 +709,9 @@ app.get("/api/public/products", async (req, res) => {
       
       if (products.length === 0) {
         console.warn("⚠️ MongoDB'den hiç ürün gelmedi!");
+        // Boş array döndür
+        res.json([]);
+        return;
       }
       
       const formattedProducts = products.map(p => {
@@ -777,9 +783,16 @@ app.get("/api/public/products", async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache'); // Detay için cache yok
       }
       
+      console.log(`✅ ${sortedProducts.length} ürün başarıyla döndürülüyor`);
       res.json(sortedProducts);
     } else {
       // JSON fallback
+      console.log("📄 JSON fallback kullanılıyor");
+      if (!fs.existsSync(DATA_FILE)) {
+        console.error(`❌ JSON dosyası bulunamadı: ${DATA_FILE}`);
+        res.json([]);
+        return;
+      }
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
       console.log(`📄 JSON'dan ${data.length} ürün çekildi`);
       const formattedData = data.map(p => {
@@ -829,9 +842,20 @@ app.get("/api/public/products", async (req, res) => {
     }
   } catch (error) {
     console.error("❌ Ürün listeleme hatası:", error);
-    console.error("Hata detayı:", error.stack);
+    console.error("❌ Hata detayı:", error.stack);
+    console.error("❌ Hata mesajı:", error.message);
     // Hata durumunda JSON'dan oku
     try {
+      if (!fs.existsSync(DATA_FILE)) {
+        console.error(`❌ JSON dosyası bulunamadı: ${DATA_FILE}`);
+        res.status(500).json({ 
+          success: false, 
+          message: "Sunucu hatası", 
+          error: error.message,
+          products: [] 
+        });
+        return;
+      }
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
       console.log(`📄 Hata durumunda JSON'dan ${data.length} ürün çekildi`);
       const formattedData = data.map(p => {
