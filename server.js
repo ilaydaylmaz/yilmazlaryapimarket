@@ -724,10 +724,26 @@ app.get("/api/public/products", async (req, res) => {
             viewCount: p.viewCount || 0, // Görüntülenme sayısı
           };
           
-          // Detay sayfası için base64 görselleri ekle
+          // Detay sayfası için base64 görselleri ve ek alanlar ekle
           if (includeDetails) {
             baseProduct.resimBase64 = p.resimBase64 || null;
             baseProduct.resimlerBase64 = p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : []);
+            baseProduct.aciklama = p.aciklama;
+            baseProduct.urunKodu = p.urunKodu || "";
+            baseProduct.doku = p.doku || "";
+            baseProduct.kalinlik = p.kalinlik || "";
+            baseProduct.icMekan = p.icMekan || "";
+            baseProduct.disMekan = p.disMekan || "";
+            baseProduct.kullanimAlani = p.kullanimAlani || "";
+            baseProduct.yuzeyGorunumu = p.yuzeyGorunumu || "";
+            baseProduct.kalip = p.kalip || "";
+            baseProduct.bunye = p.bunye || "";
+            baseProduct.urunGrubu = p.urunGrubu || "";
+            baseProduct.vSkalasi = p.vSkalasi || "";
+            baseProduct.m2Kutu = p.m2Kutu || "";
+            baseProduct.m2Palet = p.m2Palet || "";
+            baseProduct.kutuPalet = p.kutuPalet || "";
+            baseProduct.paletAgirligi = p.paletAgirligi || "";
           }
           
           return baseProduct;
@@ -745,29 +761,6 @@ app.get("/api/public/products", async (req, res) => {
             viewCount: 0
           };
         }
-      });
-        
-        // Detay sayfası için ek alanlar
-        if (includeDetails) {
-          baseProduct.aciklama = p.aciklama;
-          baseProduct.urunKodu = p.urunKodu || "";
-          baseProduct.doku = p.doku || "";
-          baseProduct.kalinlik = p.kalinlik || "";
-          baseProduct.icMekan = p.icMekan || "";
-          baseProduct.disMekan = p.disMekan || "";
-          baseProduct.kullanimAlani = p.kullanimAlani || "";
-          baseProduct.yuzeyGorunumu = p.yuzeyGorunumu || "";
-          baseProduct.kalip = p.kalip || "";
-          baseProduct.bunye = p.bunye || "";
-          baseProduct.urunGrubu = p.urunGrubu || "";
-          baseProduct.vSkalasi = p.vSkalasi || "";
-          baseProduct.m2Kutu = p.m2Kutu || "";
-          baseProduct.m2Palet = p.m2Palet || "";
-          baseProduct.kutuPalet = p.kutuPalet || "";
-          baseProduct.paletAgirligi = p.paletAgirligi || "";
-        }
-        
-        return baseProduct;
       });
       
       // Popüler ürünler için görüntülenme sayısına göre sırala
