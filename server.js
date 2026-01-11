@@ -677,13 +677,15 @@ app.get("/api/public/products", async (req, res) => {
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
       
-      // Liste sayfası için projection kullan (sadece gereksiz alanları çıkarma, base64 görselleri çek - görseller için gerekli)
+      // Liste sayfası için projection kullan (base64 görselleri çıkarma - memory ve performans için)
       let mongoFindOptions = {};
       if (!includeDetails) {
         mongoFindOptions = {
           projection: {
-            // Sadece gereksiz alanları çıkar, base64 görselleri tut (görseller için gerekli)
-            // resimBase64 ve resimlerBase64 projection'dan çıkarılmadı - görseller için gerekli
+            // Base64 görselleri çıkar (çok büyük, memory problemi yaratıyor)
+            resimBase64: 0,
+            resimlerBase64: 0,
+            // Gereksiz alanları çıkar
             aciklama: 0,
             urunKodu: 0,
             doku: 0,
@@ -704,8 +706,19 @@ app.get("/api/public/products", async (req, res) => {
         };
       }
       
-      const products = await productsCollection.find({}, mongoFindOptions).toArray();
-      console.log(`📦 MongoDB'den ${products.length} ürün çekildi (${includeDetails ? 'detaylı' : 'liste'})`);
+      console.log("⏳ MongoDB query başlatılıyor...");
+      const startTime = Date.now();
+      
+      // MongoDB query'sine timeout ekle (20 saniye)
+      const products = await Promise.race([
+        productsCollection.find({}, mongoFindOptions).toArray(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('MongoDB query timeout (20s)')), 20000)
+        )
+      ]);
+      
+      const queryTime = Date.now() - startTime;
+      console.log(`📦 MongoDB'den ${products.length} ürün çekildi (${includeDetails ? 'detaylı' : 'liste'}) - ${queryTime}ms`);
       
       if (products.length === 0) {
         console.warn("⚠️ MongoDB'den hiç ürün gelmedi!");
@@ -714,10 +727,25 @@ app.get("/api/public/products", async (req, res) => {
         return;
       }
       
+      console.log("🔄 Ürünler formatlanıyor...");
+      const formatStartTime = Date.now();
+      
       const formattedProducts = products.map(p => {
         try {
-          // Görsel URL'ini oluştur (base64 varsa onu, yoksa dosya yolunu kullan)
-          let imageUrl = getImageUrl(p);
+          // Liste sayfası için base64 görselleri kullanma, sadece dosya yolunu kullan
+          let imageUrl = "";
+          if (p.resim) {
+            // Eğer zaten base64 string ise (data:image ile başlıyorsa) direkt döndür
+            if (typeof p.resim === 'string' && p.resim.startsWith('data:image')) {
+              imageUrl = p.resim;
+            } else {
+              // Dosya yolunu kullan
+              imageUrl = `/uploads/${p.resim}`;
+            }
+          } else if (p.resimBase64 && includeDetails) {
+            // Sadece detay sayfası için base64 kullan
+            imageUrl = p.resimBase64;
+          }
           
           const baseProduct = {
             id: p._id.toString(),
@@ -725,7 +753,7 @@ app.get("/api/public/products", async (req, res) => {
             kategori: p.kategori || "",
             altKategori: p.altKategori || "",
             marka: p.marka || "",
-            resim: imageUrl, // Görsel URL'i (base64 veya dosya yolu)
+            resim: imageUrl, // Görsel URL'i (dosya yolu veya base64 - sadece detay için)
             resimler: p.resimler || (p.resim ? [p.resim] : []),
             viewCount: p.viewCount || 0, // Görüntülenme sayısı
           };
