@@ -710,7 +710,15 @@ app.delete("/api/products/:id", auth, async (req, res) => {
    HEALTH CHECK
 ======================= */
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  res.status(200).json({ 
+    status: "ok", 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: {
+      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
+    }
+  });
 });
 
 /* =======================
