@@ -16,8 +16,9 @@ const app = express();
 /* =======================
    BODY & SESSION
 ======================= */
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true })); // Form data için
+// Body parser limit'lerini optimize et
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' })); // Form data için
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "yapi-market-secret",
@@ -33,8 +34,17 @@ app.use(session({
 /* =======================
    STATIC DOSYALAR
 ======================= */
-app.use(express.static("public"));
-app.use("/admin", express.static("admin"));
+// Static dosyalar için cache headers (1 yıl)
+app.use(express.static("public", {
+  maxAge: '1y',
+  etag: true,
+  lastModified: true
+}));
+app.use("/admin", express.static("admin", {
+  maxAge: '1y',
+  etag: true,
+  lastModified: true
+}));
 
 /* =======================
    MULTER (RESİM VE VİDEO UPLOAD)
@@ -104,6 +114,7 @@ function imageToBase64(filePath) {
 }
 
 // Resim URL'sini döndür (base64 varsa onu, yoksa dosya yolunu)
+// PERFORMANS: fs.existsSync kullanmıyoruz - dosya kontrolü çok yavaş
 function getImageUrl(product) {
   // Önce base64 kontrolü
   if (product.resimBase64) {
@@ -117,14 +128,8 @@ function getImageUrl(product) {
       return product.resim;
     }
     
-    // Dosya sisteminde var mı kontrol et
-    const filePath = path.join("public/uploads", product.resim);
-    if (fs.existsSync(filePath)) {
-      return `/uploads/${product.resim}`;
-    }
-    
-    // Dosya yoksa ve base64 yoksa, boş string döndür
-    console.warn(`Resim dosyası bulunamadı: ${product.resim}`);
+    // Dosya yolu döndür - fs.existsSync kullanmıyoruz (performans)
+    return `/uploads/${product.resim}`;
   }
   
   return "";
