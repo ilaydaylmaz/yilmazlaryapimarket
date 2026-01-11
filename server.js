@@ -379,9 +379,10 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
       mongoProduct.createdAt = new Date();
       const result = await productsCollection.insertOne(mongoProduct);
       
-      // Cache'i temizle
+      // Cache'i temizle (memory temizliği)
       productsCache = null;
       productsCacheTime = null;
+      if (global.gc) global.gc(); // Garbage collection (eğer --expose-gc ile başlatıldıysa)
       console.log('🔄 Ürün eklendi, cache temizlendi');
       
       res.json({ success: true, id: result.insertedId.toString() });
@@ -736,28 +737,56 @@ app.listen(PORT, () => {
 });
 
 /* PUBLIC PRODUCTS */
-// API Cache (5 dakika)
+// API Cache (2 dakika - memory için optimize edildi)
 let productsCache = null;
 let productsCacheTime = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 dakika
+const CACHE_DURATION = 2 * 60 * 1000; // 2 dakika (memory için azaltıldı)
 
 app.get("/api/public/products", async (req, res) => {
   try {
     const now = Date.now();
     const includeDetails = req.query.details === 'true'; // Detay sayfası için
     
-    // Cache kontrolü
+    // Cache kontrolü (sadece liste sayfası için, base64 olmadan)
     if (productsCache && productsCacheTime && (now - productsCacheTime) < CACHE_DURATION && !includeDetails) {
       // Cache'den dönen veriyi de görüntülenme sayısına göre sırala
       const sortedCache = [...productsCache].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
-      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 dakika browser cache
+      res.setHeader('Cache-Control', 'public, max-age=120'); // 2 dakika browser cache
       return res.json(sortedCache);
     }
     
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
-      const products = await productsCollection.find({}).toArray();
-      console.log(`📦 MongoDB'den ${products.length} ürün çekildi`);
+      
+      // Liste sayfası için projection kullan (base64 görselleri çekme - memory tasarrufu)
+      let mongoFindOptions = {};
+      if (!includeDetails) {
+        mongoFindOptions = {
+          projection: {
+            resimBase64: 0,
+            resimlerBase64: 0,
+            aciklama: 0,
+            urunKodu: 0,
+            doku: 0,
+            kalinlik: 0,
+            icMekan: 0,
+            disMekan: 0,
+            kullanimAlani: 0,
+            yuzeyGorunumu: 0,
+            kalip: 0,
+            bunye: 0,
+            urunGrubu: 0,
+            vSkalasi: 0,
+            m2Kutu: 0,
+            m2Palet: 0,
+            kutuPalet: 0,
+            paletAgirligi: 0,
+          },
+        };
+      }
+      
+      const products = await productsCollection.find({}, mongoFindOptions).toArray();
+      console.log(`📦 MongoDB'den ${products.length} ürün çekildi (${includeDetails ? 'detaylı' : 'liste'})`);
       const formattedProducts = products.map(p => {
         const baseProduct = {
           id: p._id.toString(),
@@ -801,11 +830,17 @@ app.get("/api/public/products", async (req, res) => {
       // Popüler ürünler için görüntülenme sayısına göre sırala
       const sortedProducts = formattedProducts.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
       
-      // Cache'e kaydet (sadece liste için)
+      // Cache'e kaydet (sadece liste için, base64 olmadan - memory tasarrufu)
       if (!includeDetails) {
-        productsCache = sortedProducts;
+        // Base64 görselleri cache'den çıkar (memory tasarrufu)
+        const cacheData = sortedProducts.map(p => {
+          const { resimBase64, resimlerBase64, ...rest } = p;
+          return rest;
+        });
+        productsCache = cacheData;
         productsCacheTime = now;
-        res.setHeader('Cache-Control', 'public, max-age=300'); // 5 dakika browser cache
+        res.setHeader('Cache-Control', 'public, max-age=120'); // 2 dakika browser cache
+        console.log(`💾 Cache'e kaydedildi (${cacheData.length} ürün, base64 olmadan)`);
       } else {
         res.setHeader('Cache-Control', 'no-cache'); // Detay için cache yok
       }
@@ -841,11 +876,17 @@ app.get("/api/public/products", async (req, res) => {
       // Popüler ürünler için görüntülenme sayısına göre sırala
       const sortedData = formattedData.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
       
-      // Cache'e kaydet (sadece liste için)
+      // Cache'e kaydet (sadece liste için, base64 olmadan - memory tasarrufu)
       if (!includeDetails) {
-        productsCache = sortedData;
+        // Base64 görselleri cache'den çıkar (memory tasarrufu)
+        const cacheData = sortedData.map(p => {
+          const { resimBase64, resimlerBase64, ...rest } = p;
+          return rest;
+        });
+        productsCache = cacheData;
         productsCacheTime = now;
-        res.setHeader('Cache-Control', 'public, max-age=300');
+        res.setHeader('Cache-Control', 'public, max-age=120'); // 2 dakika browser cache
+        console.log(`💾 Cache'e kaydedildi (${cacheData.length} ürün, base64 olmadan)`);
       } else {
         res.setHeader('Cache-Control', 'no-cache');
       }
