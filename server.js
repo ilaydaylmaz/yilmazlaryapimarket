@@ -28,13 +28,15 @@ app.use(session({
   secret: process.env.SESSION_SECRET || "yapi-market-secret",
   resave: false,
   saveUninitialized: false,
+  name: 'sessionId', // Cookie adı
   store: new MemoryStore({
     checkPeriod: 86400000 // 24 saatte bir eski session'ları temizle (ms cinsinden)
   }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // Production'da HTTPS için true
+    secure: false, // HTTPS yoksa false olmalı
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 saat
+    maxAge: 24 * 60 * 60 * 1000, // 24 saat
+    sameSite: 'lax' // CSRF koruması için
   }
 }));
 
@@ -186,8 +188,13 @@ async function sendEmail(to, subject, html, text) {
    AUTH MIDDLEWARE
 ======================= */
 function auth(req, res, next) {
-  if (req.session && req.session.auth) next();
-  else res.status(401).send("Yetkisiz erişim");
+  console.log(`🔒 Auth kontrolü - Session ID: ${req.sessionID}, Auth: ${req.session?.auth}`);
+  if (req.session && req.session.auth) {
+    next();
+  } else {
+    console.log(`❌ Yetkisiz erişim denemesi`);
+    res.status(401).send("Yetkisiz erişim");
+  }
 }
 
 /* =======================
@@ -195,12 +202,15 @@ function auth(req, res, next) {
 ======================= */
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
+  console.log(`🔐 Login denemesi: ${username}`);
 
   if (username === "admin" && password === "1234") {
     req.session.auth = true;
+    console.log(`✅ Login başarılı, session ID: ${req.sessionID}`);
     res.json({ success: true });
   } else {
-    res.status(401).json({ success: false });
+    console.log(`❌ Login başarısız: ${username}`);
+    res.status(401).json({ success: false, message: "Kullanıcı adı veya şifre hatalı" });
   }
 });
 
