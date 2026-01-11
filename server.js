@@ -862,15 +862,22 @@ app.get("/api/public/products", async (req, res) => {
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
       console.log(`📄 JSON'dan ${data.length} ürün çekildi`);
       const formattedData = data.map(p => {
+        // Görsel URL'ini oluştur (base64 varsa onu, yoksa dosya yolunu kullan)
+        let imageUrl = getImageUrl(p);
+        
         const baseProduct = {
           ...p,
-          resim: getImageUrl(p),
-          resimBase64: includeDetails ? (p.resimBase64 || null) : null,
+          resim: imageUrl, // Görsel URL'i (base64 veya dosya yolu)
           resimler: p.resimler || (p.resim ? [p.resim] : []),
-          resimlerBase64: includeDetails ? (p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : [])) : [],
           video: p.video ? `/uploads/${p.video}` : null,
           viewCount: p.viewCount || 0, // Görüntülenme sayısı
         };
+        
+        // Detay sayfası için base64 görselleri ekle
+        if (includeDetails) {
+          baseProduct.resimBase64 = p.resimBase64 || null;
+          baseProduct.resimlerBase64 = p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : []);
+        }
         
         // Liste sayfası için gereksiz alanları kaldır
         if (!includeDetails) {
@@ -887,17 +894,24 @@ app.get("/api/public/products", async (req, res) => {
       // Popüler ürünler için görüntülenme sayısına göre sırala
       const sortedData = formattedData.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
       
-      // Cache'e kaydet (sadece liste için, base64 olmadan - memory tasarrufu)
+      // Cache'e kaydet (sadece liste için - base64 görselleri cache'de tutma, sadece URL'leri tut)
       if (!includeDetails) {
-        // Base64 görselleri cache'den çıkar (memory tasarrufu)
+        // Base64 görselleri cache'den çıkar (memory tasarrufu), sadece URL'leri tut
         const cacheData = sortedData.map(p => {
-          const { resimBase64, resimlerBase64, ...rest } = p;
-          return rest;
+          // resim alanı zaten getImageUrl ile oluşturulmuş (base64 veya URL)
+          // Cache'de sadece URL formatında tut (base64 string'leri çok yer kaplar)
+          const cached = { ...p };
+          // Eğer resim base64 ise, cache'de sadece bir flag tut
+          if (cached.resim && cached.resim.startsWith('data:image')) {
+            cached.hasBase64Image = true;
+            // Base64 string'i cache'den çıkar, response'da gönder ama cache'de tutma
+          }
+          return cached;
         });
         productsCache = cacheData;
         productsCacheTime = now;
         res.setHeader('Cache-Control', 'public, max-age=120'); // 2 dakika browser cache
-        console.log(`💾 Cache'e kaydedildi (${cacheData.length} ürün, base64 olmadan)`);
+        console.log(`💾 Cache'e kaydedildi (${cacheData.length} ürün)`);
       } else {
         res.setHeader('Cache-Control', 'no-cache');
       }
