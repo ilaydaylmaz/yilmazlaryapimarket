@@ -37,7 +37,7 @@ app.use(session({
     checkPeriod: 86400000 // 24 saatte bir eski session'ları temizle (ms cinsinden)
   }),
   cookie: {
-    secure: process.env.VERCEL ? true : false, // Vercel'de HTTPS var, local'de yok
+    secure: process.env.NODE_ENV === 'production' && (process.env.VERCEL || process.env.RENDER), // Production'da HTTPS varsa true
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 saat
     sameSite: 'lax' // CSRF koruması için
@@ -730,9 +730,8 @@ app.get("/health", (req, res) => {
 ======================= */
 const PORT = process.env.PORT || 3000;
 
-// Vercel için serverless function export
-// Local development için normal server başlatma
-// Vercel'de VERCEL environment variable'ı otomatik olarak eklenir
+// Vercel için serverless function export (sadece Vercel'de çalışır)
+// Render.com ve diğer platformlar için normal server
 if (process.env.VERCEL || process.env.VERCEL_ENV) {
   // Vercel'de serverless function olarak çalış
   module.exports = app;
@@ -750,7 +749,7 @@ if (process.env.VERCEL || process.env.VERCEL_ENV) {
       console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
     });
 } else {
-  // Local development veya diğer platformlar için normal server
+  // Render.com, Railway ve local development için normal server
   app.listen(PORT, () => {
     console.log(`✅ Server çalışıyor → http://localhost:${PORT}`);
     
