@@ -279,12 +279,16 @@ if (typeof document !== "undefined") {
 let products = [];
 let filteredProducts = [];
 let currentView = 'grid';
-const TARGET_CATEGORY = "Hırdavat Ürünleri";
+const TARGET_CATEGORIES = ["Hırdavat Ürünleri", "Hırdavat"];
 
 fetch("/api/public/products")
   .then(r => r.json())
   .then(data => {
-    products = data.filter(p => p.kategori && p.kategori.trim() === TARGET_CATEGORY);
+    // Hem "Hırdavat Ürünleri" hem de "Hırdavat" kategorisindeki ürünleri filtrele
+    products = data.filter(p => {
+      const kategori = (p.kategori || "").trim();
+      return TARGET_CATEGORIES.includes(kategori);
+    });
     filteredProducts = [...products];
     populateFilters();
     listele(filteredProducts);
