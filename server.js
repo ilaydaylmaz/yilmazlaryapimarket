@@ -2062,12 +2062,23 @@ app.get("/api/public/category-showcase", async (req, res) => {
           return cat;
         });
 
-        res.json({ categories });
+        const result = { categories };
+        // Cache'e kaydet
+        categoryShowcaseCache = result;
+        categoryShowcaseCacheTime = now;
+        res.setHeader('Cache-Control', 'public, max-age=600'); // 10 dakika browser cache
+        res.json(result);
       } else {
-        res.json({ categories: defaultCategories });
+        const result = { categories: defaultCategories };
+        // Cache'e kaydet
+        categoryShowcaseCache = result;
+        categoryShowcaseCacheTime = now;
+        res.setHeader('Cache-Control', 'public, max-age=600');
+        res.json(result);
       }
     } else {
       // JSON fallback
+      let result;
       if (fs.existsSync(CATEGORY_SHOWCASE_FILE)) {
         const data = JSON.parse(fs.readFileSync(CATEGORY_SHOWCASE_FILE, 'utf8'));
         
@@ -2083,10 +2094,16 @@ app.get("/api/public/category-showcase", async (req, res) => {
           });
         }
         
-        res.json(data);
+        result = data;
       } else {
-        res.json({ categories: defaultCategories });
+        result = { categories: defaultCategories };
       }
+      
+      // Cache'e kaydet
+      categoryShowcaseCache = result;
+      categoryShowcaseCacheTime = now;
+      res.setHeader('Cache-Control', 'public, max-age=600');
+      res.json(result);
     }
   } catch (error) {
     console.error("Kategori showcase okuma hatası:", error);
