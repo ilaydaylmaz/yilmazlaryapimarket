@@ -2135,11 +2135,11 @@ app.get("/api/public/category-showcase", async (req, res) => {
     console.error("Hata detayı:", error.stack);
     // Hata durumunda da default kategorileri döndür
     const defaultCategories = [
-      { id: "boya", name: "Boya", image: "/uploads/categories/boya.jpg", url: "/boya-urunleri.html" },
+      { id: "boya", name: "Boya", image: "/uploads/categories/boya2.png", url: "/boya-urunleri.html" },
       { id: "hirdavat", name: "Hırdavat", image: "/uploads/categories/Hırdavat.jpeg", url: "/hirdavat-urunleri.html" },
-      { id: "banyo", name: "Banyo", image: "/uploads/categories/banyo.jpg", url: "/banyo-urunleri.html" },
+      { id: "banyo", name: "Banyo", image: "/uploads/categories/banyodolabi.png", url: "/banyo-urunleri.html" },
       { id: "armatur", name: "Armatür", image: "/uploads/categories/armatur.jpg", url: "/armatur-urunleri.html" },
-      { id: "parke", name: "Parke", image: "/uploads/categories/parke.jpg", url: "/parke-urunleri.html" }
+      { id: "parke", name: "Parke", image: "/uploads/categories/parke.JPG", url: "/parke-urunleri.html" }
     ];
     res.status(500).json({ categories: defaultCategories });
   }
