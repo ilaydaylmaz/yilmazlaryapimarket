@@ -1713,6 +1713,10 @@ app.post("/api/category-showcase", auth, async (req, res) => {
       console.log('✅ Kategori showcase JSON dosyasına kaydedildi:', CATEGORY_SHOWCASE_FILE);
     }
     
+    // Cache'i temizle
+    categoryShowcaseCache = null;
+    categoryShowcaseCacheTime = null;
+    
     res.json({ success: true, message: "Kategori showcase ayarları kaydedildi" });
   } catch (error) {
     console.error("❌ Kategori showcase kaydetme hatası:", error);
@@ -1945,6 +1949,10 @@ app.post("/api/category-showcase/image", auth, uploadCategoryImage.single("image
     } catch (gitError) {
       console.warn('⚠️ Git commit hatası (önemli değil):', gitError.message);
     }
+    
+    // Cache'i temizle
+    categoryShowcaseCache = null;
+    categoryShowcaseCacheTime = null;
     
     res.json({ 
       success: true, 
