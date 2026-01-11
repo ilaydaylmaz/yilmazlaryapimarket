@@ -281,14 +281,17 @@ if (typeof document !== "undefined") {
 let products = [];
 let filteredProducts = [];
 let currentView = 'grid';
-const TARGET_CATEGORY = "Boya Ürünleri";
+const TARGET_CATEGORIES = ["Boya Ürünleri", "Boya"];
 
 // Verileri yükle
 fetch("/api/public/products")
   .then(r => r.json())
   .then(data => {
-    // Sadece bu kategorideki ürünleri filtrele
-    products = data.filter(p => p.kategori && p.kategori.trim() === TARGET_CATEGORY);
+    // Hem "Boya Ürünleri" hem de "Boya" kategorisindeki ürünleri filtrele
+    products = data.filter(p => {
+      const kategori = (p.kategori || "").trim();
+      return TARGET_CATEGORIES.includes(kategori);
+    });
     filteredProducts = [...products];
     populateFilters();
     listele(filteredProducts);
