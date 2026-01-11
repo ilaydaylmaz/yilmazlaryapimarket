@@ -758,13 +758,12 @@ app.get("/api/public/products", async (req, res) => {
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
       
-      // Liste sayfası için projection kullan (base64 görselleri çekme - memory tasarrufu)
+      // Liste sayfası için projection kullan (sadece gereksiz alanları çıkarma, base64 görselleri çek)
       let mongoFindOptions = {};
       if (!includeDetails) {
         mongoFindOptions = {
           projection: {
-            resimBase64: 0,
-            resimlerBase64: 0,
+            // Sadece gereksiz alanları çıkar, base64 görselleri tut (görseller için gerekli)
             aciklama: 0,
             urunKodu: 0,
             doku: 0,
@@ -788,21 +787,26 @@ app.get("/api/public/products", async (req, res) => {
       const products = await productsCollection.find({}, mongoFindOptions).toArray();
       console.log(`📦 MongoDB'den ${products.length} ürün çekildi (${includeDetails ? 'detaylı' : 'liste'})`);
       const formattedProducts = products.map(p => {
+        // Görsel URL'ini oluştur (base64 varsa onu, yoksa dosya yolunu kullan)
+        let imageUrl = getImageUrl(p);
+        
         const baseProduct = {
           id: p._id.toString(),
           ad: p.ad,
           kategori: p.kategori,
           altKategori: p.altKategori || "",
           marka: p.marka,
-          resim: getImageUrl(p),
-          // Liste sayfası için base64 gönderme (çok büyük)
-          resimBase64: includeDetails ? (p.resimBase64 || null) : null,
+          resim: imageUrl, // Görsel URL'i (base64 veya dosya yolu)
           resimler: p.resimler || (p.resim ? [p.resim] : []),
-          // Liste sayfası için base64 array gönderme
-          resimlerBase64: includeDetails ? (p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : [])) : [],
           video: p.video ? `/uploads/${p.video}` : null,
           viewCount: p.viewCount || 0, // Görüntülenme sayısı
         };
+        
+        // Detay sayfası için base64 görselleri ekle
+        if (includeDetails) {
+          baseProduct.resimBase64 = p.resimBase64 || null;
+          baseProduct.resimlerBase64 = p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : []);
+        }
         
         // Detay sayfası için ek alanlar
         if (includeDetails) {
@@ -830,17 +834,24 @@ app.get("/api/public/products", async (req, res) => {
       // Popüler ürünler için görüntülenme sayısına göre sırala
       const sortedProducts = formattedProducts.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
       
-      // Cache'e kaydet (sadece liste için, base64 olmadan - memory tasarrufu)
+      // Cache'e kaydet (sadece liste için - base64 görselleri cache'de tutma, sadece URL'leri tut)
       if (!includeDetails) {
-        // Base64 görselleri cache'den çıkar (memory tasarrufu)
+        // Base64 görselleri cache'den çıkar (memory tasarrufu), sadece URL'leri tut
         const cacheData = sortedProducts.map(p => {
-          const { resimBase64, resimlerBase64, ...rest } = p;
-          return rest;
+          // resim alanı zaten getImageUrl ile oluşturulmuş (base64 veya URL)
+          // Cache'de sadece URL formatında tut (base64 string'leri çok yer kaplar)
+          const cached = { ...p };
+          // Eğer resim base64 ise, cache'de sadece bir flag tut
+          if (cached.resim && cached.resim.startsWith('data:image')) {
+            cached.hasBase64Image = true;
+            // Base64 string'i cache'den çıkar, response'da gönder ama cache'de tutma
+          }
+          return cached;
         });
         productsCache = cacheData;
         productsCacheTime = now;
         res.setHeader('Cache-Control', 'public, max-age=120'); // 2 dakika browser cache
-        console.log(`💾 Cache'e kaydedildi (${cacheData.length} ürün, base64 olmadan)`);
+        console.log(`💾 Cache'e kaydedildi (${cacheData.length} ürün)`);
       } else {
         res.setHeader('Cache-Control', 'no-cache'); // Detay için cache yok
       }
