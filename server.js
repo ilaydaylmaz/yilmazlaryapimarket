@@ -691,7 +691,8 @@ app.delete("/api/products/:id", auth, async (req, res) => {
    HEALTH CHECK
 ======================= */
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  // Hızlı health check - MongoDB kontrolü yapmadan
+  res.status(200).send("OK");
 });
 
 /* =======================
@@ -722,6 +723,11 @@ app.listen(PORT, () => {
 let productsCache = null;
 let productsCacheTime = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 dakika
+
+// Category Showcase Cache (10 dakika - daha seyrek değişir)
+let categoryShowcaseCache = null;
+let categoryShowcaseCacheTime = null;
+const CATEGORY_CACHE_DURATION = 10 * 60 * 1000; // 10 dakika
 
 app.get("/api/public/products", async (req, res) => {
   try {
@@ -1992,10 +1998,13 @@ app.use((error, req, res, next) => {
 // Public kategori showcase (ana sayfa için)
 app.get("/api/public/category-showcase", async (req, res) => {
   try {
-    // Cache'i önle
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    const now = Date.now();
+    
+    // Cache kontrolü
+    if (categoryShowcaseCache && categoryShowcaseCacheTime && (now - categoryShowcaseCacheTime) < CATEGORY_CACHE_DURATION) {
+      res.setHeader('Cache-Control', 'public, max-age=600'); // 10 dakika browser cache
+      return res.json(categoryShowcaseCache);
+    }
     
     // Varsayılan kategoriler (Ürün Grupları vitrininde gösterilecekler)
     const defaultCategories = [

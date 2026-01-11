@@ -62,45 +62,55 @@ async function closeDB() {
   }
 }
 
-// Collections
+// Collections - cache'lenmiş db kullan (daha hızlı)
 async function getProductsCollection() {
-  const database = await connectDB();
-  if (!database) {
+  if (!db && !useMongoDB) {
+    await connectDB();
+  }
+  if (!db) {
     throw new Error("MongoDB bağlantısı yok");
   }
-  return database.collection("products");
+  return db.collection("products");
 }
 
 async function getContactsCollection() {
-  const database = await connectDB();
-  if (!database) {
+  if (!db && !useMongoDB) {
+    await connectDB();
+  }
+  if (!db) {
     throw new Error("MongoDB bağlantısı yok");
   }
-  return database.collection("contacts");
+  return db.collection("contacts");
 }
 
 async function getReviewsCollection() {
-  const database = await connectDB();
-  if (!database) {
+  if (!db && !useMongoDB) {
+    await connectDB();
+  }
+  if (!db) {
     throw new Error("MongoDB bağlantısı yok");
   }
-  return database.collection("reviews");
+  return db.collection("reviews");
 }
 
 async function getBlogCollection() {
-  const database = await connectDB();
-  if (!database) {
+  if (!db && !useMongoDB) {
+    await connectDB();
+  }
+  if (!db) {
     throw new Error("MongoDB bağlantısı yok");
   }
-  return database.collection("blog");
+  return db.collection("blog");
 }
 
 async function getCategoryShowcaseCollection() {
-  const database = await connectDB();
-  if (!database) {
+  if (!db && !useMongoDB) {
+    await connectDB();
+  }
+  if (!db) {
     throw new Error("MongoDB bağlantısı yok");
   }
-  return database.collection("category_showcase");
+  return db.collection("category_showcase");
 }
 
 module.exports = {
