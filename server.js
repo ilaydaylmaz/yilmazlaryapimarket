@@ -739,6 +739,7 @@ app.get("/api/public/products", async (req, res) => {
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
       const products = await productsCollection.find({}).toArray();
+      console.log(`📦 MongoDB'den ${products.length} ürün çekildi`);
       const formattedProducts = products.map(p => {
         const baseProduct = {
           id: p._id.toString(),
@@ -795,6 +796,7 @@ app.get("/api/public/products", async (req, res) => {
     } else {
       // JSON fallback
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
+      console.log(`📄 JSON'dan ${data.length} ürün çekildi`);
       const formattedData = data.map(p => {
         const baseProduct = {
           ...p,
@@ -833,17 +835,20 @@ app.get("/api/public/products", async (req, res) => {
       res.json(sortedData);
     }
   } catch (error) {
-    console.error("Ürün listeleme hatası:", error);
+    console.error("❌ Ürün listeleme hatası:", error);
+    console.error("Hata detayı:", error.stack);
     // Hata durumunda JSON'dan oku
     try {
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
+      console.log(`📄 Hata durumunda JSON'dan ${data.length} ürün çekildi`);
       const formattedData = data.map(p => ({
         ...p,
         resim: getImageUrl(p)
       }));
       res.json(formattedData);
     } catch (jsonError) {
-      res.status(500).json({ success: false, message: "Sunucu hatası" });
+      console.error("❌ JSON okuma hatası:", jsonError);
+      res.status(500).json({ success: false, message: "Sunucu hatası", error: error.message });
     }
   }
 });
