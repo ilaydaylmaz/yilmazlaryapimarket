@@ -732,7 +732,8 @@ const PORT = process.env.PORT || 3000;
 
 // Vercel için serverless function export
 // Local development için normal server başlatma
-if (process.env.VERCEL) {
+// Vercel'de VERCEL environment variable'ı otomatik olarak eklenir
+if (process.env.VERCEL || process.env.VERCEL_ENV) {
   // Vercel'de serverless function olarak çalış
   module.exports = app;
   
