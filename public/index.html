@@ -748,37 +748,32 @@ function loadInstagramPosts() {
 let showcaseCategoriesData = [];
 
 function loadShowcaseCategories() {
-  console.log('🔄 Kategori showcase yükleniyor...');
   const categoryList = document.getElementById('categoryList');
   if (!categoryList) {
-    console.error('❌ categoryList elementi bulunamadı!');
+    // Element bulunamadı, biraz bekle ve tekrar dene
+    setTimeout(loadShowcaseCategories, 500);
     return;
   }
   
+  // Yükleniyor mesajını göster
+  categoryList.innerHTML = '<div class="empty-state">Yükleniyor...</div>';
+  
   fetch('/api/public/category-showcase?t=' + Date.now())
     .then(r => {
-      console.log('📡 API yanıtı:', r.status, r.statusText);
       if (!r.ok) {
         throw new Error(`HTTP ${r.status}: ${r.statusText}`);
       }
       return r.json();
     })
     .then(data => {
-      console.log('📦 API verisi:', data);
-      console.log('📦 data.categories:', data.categories);
-      
       if (!data || !data.categories) {
-        console.error('❌ API verisi geçersiz format:', data);
         categoryList.innerHTML = '<div class="empty-state">Kategori verisi alınamadı.</div>';
         return;
       }
       
       showcaseCategoriesData = Array.isArray(data.categories) ? data.categories : [];
-      console.log('✅ Kategori showcase yüklendi:', showcaseCategoriesData.length, 'kategori');
-      console.log('📋 Kategoriler:', showcaseCategoriesData);
       
       if (showcaseCategoriesData.length === 0) {
-        console.warn('⚠️ Hiç kategori bulunamadı!');
         categoryList.innerHTML = '<div class="empty-state">Henüz kategori eklenmemiş.</div>';
         return;
       }
@@ -787,10 +782,9 @@ function loadShowcaseCategories() {
       // initCategoryShowcase'ı setTimeout ile çağır çünkü DOM henüz güncellenmemiş olabilir
       setTimeout(() => {
         initCategoryShowcase();
-      }, 100);
+      }, 200);
     })
     .catch(err => {
-      console.error('❌ Kategori showcase yükleme hatası:', err);
       const categoryList = document.getElementById('categoryList');
       const showcaseImage = document.getElementById('showcaseImage');
       const showcaseCategoryTitle = document.getElementById('showcaseCategoryTitle');
@@ -803,31 +797,31 @@ function loadShowcaseCategories() {
 }
 
 function renderShowcaseCategories() {
-  console.log('🎨 Kategori showcase render ediliyor...');
   const categoryList = document.getElementById('categoryList');
   const showcaseImage = document.getElementById('showcaseImage');
   const showcaseCategoryTitle = document.getElementById('showcaseCategoryTitle');
   const showcaseLink = document.getElementById('showcaseLink');
   
   if (!categoryList || !showcaseImage || !showcaseCategoryTitle || !showcaseLink) {
-    console.error('❌ DOM elementleri bulunamadı:', { categoryList, showcaseImage, showcaseCategoryTitle, showcaseLink });
+    // Elementler bulunamadı, tekrar dene
+    setTimeout(renderShowcaseCategories, 100);
     return;
   }
   
-  if (!showcaseCategoriesData.length) {
-    console.warn('⚠️ Gösterilecek kategori yok');
+  if (!showcaseCategoriesData || !showcaseCategoriesData.length) {
     categoryList.innerHTML = '<div class="empty-state">Henüz kategori eklenmemiş.</div>';
     return;
   }
   
-  console.log('📋 Kategoriler render ediliyor:', showcaseCategoriesData.map(c => c.name));
-  
   // Kategori listesini oluştur
   categoryList.innerHTML = showcaseCategoriesData.map((cat, index) => {
     const isActive = index === 0 ? 'active' : '';
+    const imageUrl = cat.image || '';
+    const categoryName = cat.name || 'Kategori';
+    const categoryUrl = cat.url || '#';
     return `
-      <a href="${cat.url}" class="category-item ${isActive}" data-category="${cat.name}" data-image="${cat.image}" data-url="${cat.url}">
-        <span>${cat.name}</span>
+      <a href="${categoryUrl}" class="category-item ${isActive}" data-category="${categoryName}" data-image="${imageUrl}" data-url="${categoryUrl}">
+        <span>${categoryName}</span>
       </a>
     `;
   }).join('');
@@ -835,25 +829,34 @@ function renderShowcaseCategories() {
   // İlk kategoriyi göster
   if (showcaseCategoriesData.length > 0) {
     const firstCategory = showcaseCategoriesData[0];
-    console.log('🖼️ İlk kategori görseli yükleniyor:', firstCategory.name, firstCategory.image);
+    const imageUrl = firstCategory.image || '';
+    const categoryName = firstCategory.name || 'Kategori';
+    const categoryUrl = firstCategory.url || '#';
     
     // Görsel yükleme kontrolü
-    const img = new Image();
-    img.onload = function() {
-      console.log('✅ İlk kategori görseli yüklendi:', firstCategory.image);
-      showcaseImage.src = firstCategory.image;
-      showcaseImage.alt = firstCategory.name;
+    if (imageUrl) {
+      const img = new Image();
+      img.onload = function() {
+        showcaseImage.src = imageUrl;
+        showcaseImage.alt = categoryName;
+        showcaseImage.style.opacity = '1';
+        showcaseImage.style.display = 'block';
+      };
+      img.onerror = function() {
+        // Görsel yüklenemezse placeholder göster
+        showcaseImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="600"%3E%3Crect fill="%23f0f0f0" width="800" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="24" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EGörsel Bulunamadı%3C/text%3E%3C/svg%3E';
+        showcaseImage.style.opacity = '1';
+        showcaseImage.style.display = 'block';
+      };
+      img.src = imageUrl;
+    } else {
+      showcaseImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="600"%3E%3Crect fill="%23f0f0f0" width="800" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="24" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EGörsel Yok%3C/text%3E%3C/svg%3E';
       showcaseImage.style.opacity = '1';
-    };
-    img.onerror = function() {
-      console.error('❌ İlk kategori görseli yüklenemedi:', firstCategory.image);
-      showcaseImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="600"%3E%3Crect fill="%23f0f0f0" width="800" height="600"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="24" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EGörsel Bulunamadı%3C/text%3E%3C/svg%3E';
-      showcaseImage.style.opacity = '1';
-    };
-    img.src = firstCategory.image;
+      showcaseImage.style.display = 'block';
+    }
     
-    showcaseCategoryTitle.textContent = firstCategory.name;
-    showcaseLink.href = firstCategory.url || '#';
+    showcaseCategoryTitle.textContent = categoryName;
+    showcaseLink.href = categoryUrl;
   }
 }
 
@@ -995,14 +998,24 @@ function initHeroSlider() {
 
 // Sayfa yüklendiğinde popüler ürünleri ve Instagram postlarını yükle
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('📄 DOMContentLoaded çalıştı');
   initHeroSlider();
-  console.log('🔄 loadShowcaseCategories çağrılıyor...');
   loadShowcaseCategories();
   loadPopularProducts();
   loadInstagramPosts();
   initScrollAnimations();
 });
+
+// Eğer DOMContentLoaded zaten geçtiyse, direkt çalıştır
+if (document.readyState === 'loading') {
+  // DOMContentLoaded bekleniyor, yukarıdaki event listener çalışacak
+} else {
+  // DOMContentLoaded zaten geçti, direkt çalıştır
+  initHeroSlider();
+  loadShowcaseCategories();
+  loadPopularProducts();
+  loadInstagramPosts();
+  initScrollAnimations();
+}
 
 // Scroll Animations
 function initScrollAnimations() {
