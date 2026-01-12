@@ -995,7 +995,9 @@ function initHeroSlider() {
 
 // Sayfa yüklendiğinde popüler ürünleri ve Instagram postlarını yükle
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('📄 DOMContentLoaded çalıştı');
   initHeroSlider();
+  console.log('🔄 loadShowcaseCategories çağrılıyor...');
   loadShowcaseCategories();
   loadPopularProducts();
   loadInstagramPosts();
