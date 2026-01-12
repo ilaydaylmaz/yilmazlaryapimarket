@@ -7,7 +7,7 @@ const multer = require("multer");
 const path = require("path");
 const { ObjectId } = require("mongodb");
 const nodemailer = require("nodemailer");
-const { getProductsCollection, getContactsCollection, getReviewsCollection, getBlogCollection, getCategoryShowcaseCollection, connectDB, isMongoDBEnabled } = require("./db");
+const { getProductsCollection, getContactsCollection, getReviewsCollection, getBlogCollection, getCategoryShowcaseCollection, connectDB, isMongoDBEnabled, ensureConnection } = require("./db");
 const https = require("https");
 const { exec } = require("child_process");
 

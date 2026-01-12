@@ -172,6 +172,7 @@ module.exports = {
   getReviewsCollection,
   getBlogCollection,
   getCategoryShowcaseCollection,
-  isMongoDBEnabled
+  isMongoDBEnabled,
+  ensureConnection
 };
 
