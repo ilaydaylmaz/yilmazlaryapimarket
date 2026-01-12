@@ -294,6 +294,19 @@ const uploadProductFiles = upload.fields([
 /* Ekle */
 app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
   try {
+    console.log('📥 Ürün ekleme isteği alındı');
+    console.log('📥 Request body:', {
+      ad: req.body.ad,
+      kategori: req.body.kategori,
+      marka: req.body.marka
+    });
+    console.log('📥 Files:', req.files ? Object.keys(req.files) : 'Yok');
+    
+    // Ürün adı kontrolü
+    if (!req.body.ad || !req.body.ad.trim()) {
+      return res.status(400).json({ success: false, message: "Ürün adı zorunludur!" });
+    }
+    
     let resimData = "";
     let resimBase64 = null;
     let resimlerData = [];
@@ -304,6 +317,7 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
       resimData = req.files.resim[0].filename;
       const filePath = path.join("public/uploads", req.files.resim[0].filename);
       resimBase64 = imageToBase64(filePath);
+      console.log('📸 Tek resim yüklendi:', resimData);
     }
     
     // Birden fazla resim (yeni format)
@@ -321,12 +335,14 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
         resimData = resimlerData[0];
         resimBase64 = resimlerBase64[0];
       }
+      console.log('📸 Çoklu resim yüklendi:', resimlerData.length, 'resim');
     }
     
     // Video dosyası
     let videoData = "";
     if (req.files && req.files.video && req.files.video[0]) {
       videoData = `videos/${req.files.video[0].filename}`;
+      console.log('🎥 Video yüklendi:', videoData);
     }
     
     const urun = {
@@ -360,11 +376,13 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
     };
 
     if (isMongoDBEnabled()) {
+      console.log('💾 MongoDB\'ye kaydediliyor...');
       const productsCollection = await getProductsCollection();
       const mongoProduct = { ...urun };
       delete mongoProduct.id;
       mongoProduct.createdAt = new Date();
       mongoProduct.viewCount = 0; // Yeni ürünler için viewCount başlangıç değeri
+      
       const result = await productsCollection.insertOne(mongoProduct);
       
       // Cache'i temizle
@@ -375,6 +393,7 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
       
       res.json({ success: true, id: result.insertedId.toString() });
     } else {
+      console.log('💾 JSON dosyasına kaydediliyor...');
       // JSON fallback
       const products = JSON.parse(fs.readFileSync(DATA_FILE));
       products.push(urun);
@@ -384,11 +403,14 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
       productsCache = null;
       productsCacheTime = null;
       
+      console.log('✅ Ürün eklendi:', urun.ad, 'ID:', urun.id);
       res.json({ success: true, id: urun.id });
     }
   } catch (error) {
-    console.error("Ürün ekleme hatası:", error);
-    console.error("Hata detayı:", error.stack);
+    console.error("❌ Ürün ekleme hatası:", error);
+    console.error("❌ Hata detayı:", error.stack);
+    console.error("❌ Request body:", req.body);
+    console.error("❌ Request files:", req.files);
     res.status(500).json({ success: false, message: "Sunucu hatası: " + (error.message || "Bilinmeyen hata") });
   }
 });
