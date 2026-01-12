@@ -284,25 +284,41 @@ const TARGET_CATEGORY = "Banyo";
 // Eski verilerde kalan ürünler için eski isimler de kabul edilsin
 const CATEGORY_MATCHES = ["Banyo Dolapları", "Banyo Ürünleri", "Banyo"];
 
-fetch("/api/public/products")
-  .then(r => r.json())
+fetch("/api/public/products?t=" + Date.now(), {
+    cache: 'no-cache'
+  })
+  .then(r => {
+    console.log('📡 Banyo sayfası - API yanıt durumu:', r.status);
+    if (!r.ok) throw new Error(`API hatası: ${r.status}`);
+    return r.json();
+  })
   .then(data => {
+    console.log('📦 Banyo sayfası - API\'den gelen toplam ürün sayısı:', data.length);
+    console.log('📦 Banyo sayfası - İlk 3 ürün:', data.slice(0, 3).map(p => ({ ad: p.ad, kategori: p.kategori, altKategori: p.altKategori })));
+    
     products = data.filter(p => {
       const kat = (p.kategori || "").trim();
       const alt = (p.altKategori || "").trim();
       
+      console.log(`🔍 Filtreleme kontrolü: "${p.ad}" - Kategori: "${kat}", Alt Kategori: "${alt}"`);
+      
       // Yeni yapı: kategori = Banyo, alt kategori = Banyo Dolapları
       if (kat === "Banyo" && (!alt || alt === "Banyo Dolapları")) {
+        console.log(`  ✅ Eşleşti (yeni yapı)`);
         return true;
       }
       
       // Eski kayıtlar için geri uyumluluk
       if (CATEGORY_MATCHES.includes(kat)) {
+        console.log(`  ✅ Eşleşti (eski yapı)`);
         return true;
       }
       
+      console.log(`  ❌ Eşleşmedi`);
       return false;
     });
+    
+    console.log(`📦 Banyo sayfası - Filtrelenmiş ürün sayısı: ${products.length}`);
     filteredProducts = [...products];
     populateFilters();
     listele(filteredProducts);
