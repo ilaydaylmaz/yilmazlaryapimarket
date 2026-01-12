@@ -773,10 +773,15 @@ function loadShowcaseCategories() {
         return;
       }
       
-      // categories array'ini al
-      const categories = data.categories || data || [];
+      // categories array'ini al - API'den { categories: [...] } formatında geliyor
+      let categories = [];
+      if (data.categories && Array.isArray(data.categories)) {
+        categories = data.categories;
+      } else if (Array.isArray(data)) {
+        categories = data;
+      }
       
-      if (!Array.isArray(categories) || categories.length === 0) {
+      if (categories.length === 0) {
         categoryList.innerHTML = '<div class="empty-state">Henüz kategori eklenmemiş.</div>';
         return;
       }
