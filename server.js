@@ -227,12 +227,13 @@ app.get("/api/products", auth, async (req, res) => {
     res.setHeader('Expires', '0');
     
     if (isMongoDBEnabled()) {
-      const productsCollection = await getProductsCollection();
+      try {
+        const productsCollection = await getProductsCollection();
 
-      // Admin paneli için tüm ürünleri çek (filtreleme yok)
-      // Admin panelinde tüm detaylar gerekli olduğu için projection kullanmıyoruz
-      const products = await productsCollection.find({}).toArray();
-      console.log('📦 Admin paneli - MongoDB\'den gelen ürün sayısı:', products.length);
+        // Admin paneli için tüm ürünleri çek (filtreleme yok)
+        // Admin panelinde tüm detaylar gerekli olduğu için projection kullanmıyoruz
+        const products = await productsCollection.find({}).toArray();
+        console.log('📦 Admin paneli - MongoDB\'den gelen ürün sayısı:', products.length);
       const formattedProducts = products.map(p => ({
         id: p._id.toString(),
         ad: p.ad,
@@ -259,6 +260,18 @@ app.get("/api/products", auth, async (req, res) => {
         paletAgirligi: p.paletAgirligi || ""
       }));
       res.json(formattedProducts);
+      } catch (mongoError) {
+        console.error('❌ MongoDB hatası (admin panel):', mongoError.message);
+        // MongoDB hatası durumunda JSON fallback'e geç
+        console.log('⚠️ JSON fallback\'e geçiliyor...');
+        const data = JSON.parse(fs.readFileSync(DATA_FILE));
+        console.log('📦 Admin paneli - JSON\'dan gelen ürün sayısı:', data.length);
+        const formattedData = data.map(p => ({
+          ...p,
+          resim: getImageUrl(p)
+        }));
+        res.json(formattedData);
+      }
     } else {
       // JSON fallback
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
@@ -830,9 +843,10 @@ app.get("/api/public/products", async (req, res) => {
     }
     
     if (isMongoDBEnabled()) {
-      console.log('✅ MongoDB aktif, veriler MongoDB\'den çekiliyor');
-      const productsCollection = await getProductsCollection();
-      let mongoFindOptions = {};
+      try {
+        console.log('✅ MongoDB aktif, veriler MongoDB\'den çekiliyor');
+        const productsCollection = await getProductsCollection();
+        let mongoFindOptions = {};
       if (!includeDetails) {
         // Liste sayfaları için projection - büyük alanları hariç tut
         // ÖNEMLİ: resim field'ını dahil etmeliyiz çünkü getImageUrl() onu kullanıyor
@@ -929,6 +943,37 @@ app.get("/api/public/products", async (req, res) => {
       }
       
       res.json(sortedProducts);
+      } catch (mongoError) {
+        console.error('❌ MongoDB hatası (public API):', mongoError.message);
+        // MongoDB hatası durumunda JSON fallback'e geç
+        console.log('⚠️ JSON fallback\'e geçiliyor...');
+        const data = JSON.parse(fs.readFileSync(DATA_FILE));
+        console.log('📦 Public API - JSON\'dan gelen ürün sayısı:', data.length);
+        const formattedData = data.map(p => {
+          const baseProduct = {
+            ...p,
+            resim: getImageUrl(p),
+            resimBase64: includeDetails ? (p.resimBase64 || null) : null,
+            resimler: p.resimler || (p.resim ? [p.resim] : []),
+            resimlerBase64: includeDetails ? (p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : [])) : [],
+            video: p.video ? `/uploads/${p.video}` : null,
+            viewCount: p.viewCount || 0,
+          };
+          
+          if (!includeDetails) {
+            delete baseProduct.aciklama;
+            delete baseProduct.urunKodu;
+            delete baseProduct.doku;
+            delete baseProduct.kalinlik;
+          }
+          
+          return baseProduct;
+        });
+        
+        const sortedData = formattedData.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.json(sortedData);
+      }
     } else {
       // JSON fallback - MongoDB bağlantısı yok
       console.log('⚠️  MongoDB bağlantısı yok, JSON fallback kullanılıyor');
