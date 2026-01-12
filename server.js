@@ -239,17 +239,7 @@ app.get("/api/products", auth, async (req, res) => {
         // Admin paneli için tüm ürünleri çek (filtreleme yok)
         // Admin panelinde tüm detaylar gerekli olduğu için projection kullanmıyoruz
         // Public endpoint gibi basit sorgu kullan (timeout sorunlarını önlemek için)
-        // Timeout'u kısa tut (15 saniye) - eğer timeout alırsa boş array döndür
-        const products = await Promise.race([
-          productsCollection.find({}).maxTimeMS(15000).toArray(),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('MongoDB query timeout')), 15000)
-          )
-        ]).catch(async (error) => {
-          console.error('⚠️ Admin paneli - MongoDB sorgu timeout, boş array döndürülüyor:', error.message);
-          return []; // Timeout durumunda boş array döndür
-        });
-        
+        const products = await productsCollection.find({}).maxTimeMS(30000).toArray();
         console.log('📦 Admin paneli - MongoDB\'den gelen ürün sayısı:', products.length);
         if (products.length > 0) {
           console.log('📦 Admin paneli - İlk ürün:', { id: products[0]._id?.toString(), ad: products[0].ad, kategori: products[0].kategori });
