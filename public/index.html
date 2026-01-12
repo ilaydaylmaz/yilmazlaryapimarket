@@ -759,13 +759,23 @@ function loadShowcaseCategories() {
     })
     .then(data => {
       console.log('📦 API verisi:', data);
+      console.log('📦 data.categories:', data.categories);
       showcaseCategoriesData = data.categories || [];
       console.log('✅ Kategori showcase yüklendi:', showcaseCategoriesData.length, 'kategori');
+      console.log('📋 Kategoriler:', showcaseCategoriesData);
       if (showcaseCategoriesData.length === 0) {
         console.warn('⚠️ Hiç kategori bulunamadı!');
+        const categoryList = document.getElementById('categoryList');
+        if (categoryList) {
+          categoryList.innerHTML = '<div class="empty-state">Henüz kategori eklenmemiş.</div>';
+        }
+        return;
       }
       renderShowcaseCategories();
-      initCategoryShowcase();
+      // initCategoryShowcase'ı setTimeout ile çağır çünkü DOM henüz güncellenmemiş olabilir
+      setTimeout(() => {
+        initCategoryShowcase();
+      }, 100);
     })
     .catch(err => {
       console.error('❌ Kategori showcase yükleme hatası:', err);
