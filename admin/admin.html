@@ -644,19 +644,47 @@ function showSuccess(message) {
   }, 3000);
 }
 
-function yukle() {
+async function yukle() {
   console.log('🔄 Ürünler yükleniyor...');
-  return fetch("/api/products?t=" + Date.now(), {
-    cache: 'no-cache'
-  })
-    .then(r => {
-      console.log('📡 API yanıt durumu:', r.status, r.statusText);
-      if (!r.ok) {
-        throw new Error(`Ürünler yüklenemedi: ${r.status} ${r.statusText}`);
+  
+  // Retry mekanizması - 3 kez deneme
+  let lastError = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      console.log(`🔄 Deneme ${attempt}/3...`);
+      const response = await fetch("/api/products?t=" + Date.now(), {
+        cache: 'no-cache',
+        signal: AbortSignal.timeout(20000) // 20 saniye timeout
+      });
+      
+      console.log('📡 API yanıt durumu:', response.status, response.statusText);
+      if (!response.ok) {
+        throw new Error(`Ürünler yüklenemedi: ${response.status} ${response.statusText}`);
       }
-      return r.json();
-    })
-    .then(data => {
+      
+      const data = await response.json();
+      console.log('✅ Ürünler başarıyla yüklendi');
+      return processProductsData(data);
+    } catch (error) {
+      console.error(`❌ Deneme ${attempt} başarısız:`, error.message);
+      lastError = error;
+      
+      // Son deneme değilse bekle ve tekrar dene
+      if (attempt < 3) {
+        console.log(`⏳ ${attempt * 2} saniye bekleniyor...`);
+        await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+      }
+    }
+  }
+  
+  // Tüm denemeler başarısız oldu
+  console.error('❌ Tüm denemeler başarısız oldu');
+  throw lastError;
+}
+
+function processProductsData(data) {
+  return new Promise((resolve, reject) => {
+    try {
       console.log('📦 API\'den gelen veri:', data);
       console.log('📦 Veri tipi:', Array.isArray(data) ? 'Array' : typeof data);
       console.log('📦 Toplam ürün sayısı:', data.length);
@@ -1705,7 +1733,7 @@ function silCeramicUrun(id) {
 
 
 // Sayfa yüklendiğinde
-yukle();
+yukleWithErrorHandling();
 
 // Enter tuşu ile form gönderme
 document.getElementById("productForm").addEventListener("keypress", (e) => {
