@@ -24,14 +24,25 @@ async function connectDB() {
       }
       
       client = new MongoClient(MONGODB_URI, {
-        serverSelectionTimeoutMS: 10000, // 10 saniye timeout (daha hızlı)
-        connectTimeoutMS: 10000,
-        socketTimeoutMS: 45000, // 45 saniye socket timeout
+        serverSelectionTimeoutMS: 30000, // 30 saniye timeout (Atlas için daha uzun)
+        connectTimeoutMS: 30000, // 30 saniye bağlantı timeout
+        socketTimeoutMS: 60000, // 60 saniye socket timeout
         maxPoolSize: 10, // Connection pool size
         minPoolSize: 2,
         maxIdleTimeMS: 30000,
         retryWrites: true,
-        retryReads: true
+        retryReads: true,
+        // Retry ayarları
+        retryReads: {
+          retryableErrors: [
+            { code: 6 }, // HostUnreachable
+            { code: 7 }, // HostNotFound
+            { code: 89 }, // NetworkTimeout
+            { code: 91 }, // ShutdownInProgress
+            { code: 189 }, // PrimarySteppedDown
+            { code: 9001 } // SocketException
+          ]
+        }
       });
       
       await client.connect();

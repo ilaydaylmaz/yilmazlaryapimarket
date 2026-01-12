@@ -239,8 +239,17 @@ app.get("/api/products", auth, async (req, res) => {
 
         // Admin paneli için tüm ürünleri çek (filtreleme yok)
         // Admin panelinde tüm detaylar gerekli olduğu için projection kullanmıyoruz
-        // Timeout'u artırmak için maxTimeMS ekle
-        const products = await productsCollection.find({}).maxTimeMS(30000).toArray();
+        // Timeout'u artırmak için maxTimeMS ekle ve retry mekanizması
+        let products;
+        try {
+          products = await productsCollection.find({}).maxTimeMS(45000).toArray();
+        } catch (queryError) {
+          console.error('❌ İlk sorgu başarısız, yeniden deneniyor...', queryError.message);
+          // Bağlantıyı yeniden kontrol et
+          await ensureConnection();
+          const retryCollection = await getProductsCollection();
+          products = await retryCollection.find({}).maxTimeMS(45000).toArray();
+        }
         console.log('📦 Admin paneli - MongoDB\'den gelen ürün sayısı:', products.length);
         if (products.length > 0) {
           console.log('📦 Admin paneli - İlk ürün:', { id: products[0]._id?.toString(), ad: products[0].ad, kategori: products[0].kategori });
