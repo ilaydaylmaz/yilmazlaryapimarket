@@ -383,15 +383,43 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
       mongoProduct.createdAt = new Date();
       mongoProduct.viewCount = 0; // Yeni ürünler için viewCount başlangıç değeri
       
-      const result = await productsCollection.insertOne(mongoProduct);
+      // String alanları temizle (MongoDB validasyon hatalarını önlemek için)
+      Object.keys(mongoProduct).forEach(key => {
+        if (typeof mongoProduct[key] === 'string') {
+          // String alanları trim et ve boş string'leri null yap
+          mongoProduct[key] = mongoProduct[key].trim();
+          if (mongoProduct[key] === '') {
+            mongoProduct[key] = null;
+          }
+        }
+      });
       
-      // Cache'i temizle
-      productsCache = null;
-      productsCacheTime = null;
-      console.log('✅ Ürün eklendi:', mongoProduct.ad, 'ID:', result.insertedId.toString());
-      console.log('🔄 Cache temizlendi');
-      
-      res.json({ success: true, id: result.insertedId.toString() });
+      try {
+        const result = await productsCollection.insertOne(mongoProduct);
+        
+        // Cache'i temizle
+        productsCache = null;
+        productsCacheTime = null;
+        console.log('✅ Ürün eklendi:', mongoProduct.ad, 'ID:', result.insertedId.toString());
+        console.log('🔄 Cache temizlendi');
+        
+        res.json({ success: true, id: result.insertedId.toString() });
+      } catch (mongoError) {
+        console.error('❌ MongoDB insert hatası:', mongoError);
+        console.error('❌ Hata kodu:', mongoError.code);
+        console.error('❌ Hata mesajı:', mongoError.message);
+        console.error('❌ Ürün verisi:', JSON.stringify(mongoProduct, null, 2));
+        
+        // MongoDB validasyon hatası için daha açıklayıcı mesaj
+        if (mongoError.code === 121 || mongoError.message.includes('pattern')) {
+          return res.status(400).json({ 
+            success: false, 
+            message: "Ürün verisi geçersiz format. Lütfen tüm alanları kontrol edin ve tekrar deneyin." 
+          });
+        }
+        
+        throw mongoError; // Diğer hatalar için genel catch bloğuna gönder
+      }
     } else {
       console.log('💾 JSON dosyasına kaydediliyor...');
       // JSON fallback
