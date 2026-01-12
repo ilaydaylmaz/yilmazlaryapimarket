@@ -810,13 +810,13 @@ app.get("/api/public/products", async (req, res) => {
     const now = Date.now();
     const includeDetails = req.query.details === 'true'; // Detay sayfası için
     
-    // Cache kontrolü
-    if (productsCache && productsCacheTime && (now - productsCacheTime) < CACHE_DURATION && !includeDetails) {
-      // Cache'den dönen veriyi de görüntülenme sayısına göre sırala
-      const sortedCache = [...productsCache].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
-      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 dakika browser cache
-      return res.json(sortedCache);
-    }
+    // Cache kontrolü - cache'i geçici olarak devre dışı bırak (debug için)
+    // if (productsCache && productsCacheTime && (now - productsCacheTime) < CACHE_DURATION && !includeDetails) {
+    //   // Cache'den dönen veriyi de görüntülenme sayısına göre sırala
+    //   const sortedCache = [...productsCache].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+    //   res.setHeader('Cache-Control', 'public, max-age=300'); // 5 dakika browser cache
+    //   return res.json(sortedCache);
+    // }
     
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
@@ -849,6 +849,7 @@ app.get("/api/public/products", async (req, res) => {
         };
       }
       const products = await productsCollection.find({}, mongoFindOptions).toArray();
+      console.log('📦 MongoDB\'den gelen ürün sayısı:', products.length);
       const formattedProducts = products.map(p => {
         const baseProduct = {
           id: p._id.toString(),
@@ -892,10 +893,14 @@ app.get("/api/public/products", async (req, res) => {
       // Popüler ürünler için görüntülenme sayısına göre sırala
       const sortedProducts = formattedProducts.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
       
-      // Cache'e kaydet (sadece liste için)
+      console.log('📦 Formatlanmış ürün sayısı:', sortedProducts.length);
+      console.log('📦 İlk 5 ürün:', sortedProducts.slice(0, 5).map(p => ({ id: p.id, ad: p.ad, kategori: p.kategori })));
+      
+      // Cache'i temizle ve yeniden kaydet (sadece liste için)
       if (!includeDetails) {
         productsCache = sortedProducts;
         productsCacheTime = now;
+        console.log('💾 Cache güncellendi:', sortedProducts.length, 'ürün');
         res.setHeader('Cache-Control', 'public, max-age=300'); // 5 dakika browser cache
       } else {
         res.setHeader('Cache-Control', 'no-cache'); // Detay için cache yok
