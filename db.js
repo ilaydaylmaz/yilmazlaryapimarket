@@ -12,40 +12,63 @@ let useMongoDB = false; // MongoDB kullanılıyor mu?
 // MongoDB bağlantısı
 async function connectDB() {
   try {
-    if (!client) {
-      // Eğer MONGODB_URI varsa MongoDB'ye bağlanmayı dene
-      if (process.env.MONGODB_URI && process.env.MONGODB_URI !== "mongodb://localhost:27017") {
+    // Eğer MONGODB_URI varsa MongoDB'ye bağlanmayı dene
+    if (process.env.MONGODB_URI && process.env.MONGODB_URI !== "mongodb://localhost:27017") {
+      // Eski bağlantıyı kapat
+      if (client) {
+        try {
+          await client.close();
+        } catch (closeError) {
+          // Bağlantı zaten kapalı olabilir, sorun değil
+        }
+      }
+      
+      client = new MongoClient(MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000, // 10 saniye timeout (daha hızlı)
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 45000, // 45 saniye socket timeout
+        maxPoolSize: 10, // Connection pool size
+        minPoolSize: 2,
+        maxIdleTimeMS: 30000,
+        retryWrites: true,
+        retryReads: true
+      });
+      
+      await client.connect();
+      db = client.db(DB_NAME);
+      useMongoDB = true;
+      console.log("✅ MongoDB bağlantısı başarılı!");
+      return db;
+    } else {
+      // Local MongoDB'ye bağlanmayı dene
+      try {
+        if (client) {
+          try {
+            await client.close();
+          } catch (closeError) {
+            // Bağlantı zaten kapalı olabilir, sorun değil
+          }
+        }
+        
         client = new MongoClient(MONGODB_URI, {
-          serverSelectionTimeoutMS: 30000, // 30 saniye timeout (yedekleme için)
-          connectTimeoutMS: 30000,
-          socketTimeoutMS: 60000, // 60 saniye socket timeout
-          maxPoolSize: 10, // Connection pool size
-          minPoolSize: 2,
-          maxIdleTimeMS: 30000
+          serverSelectionTimeoutMS: 2000 // 2 saniye timeout
         });
         await client.connect();
         db = client.db(DB_NAME);
         useMongoDB = true;
         console.log("✅ MongoDB bağlantısı başarılı!");
-      } else {
-        // Local MongoDB'ye bağlanmayı dene
-        try {
-          client = new MongoClient(MONGODB_URI);
-          await client.connect({ serverSelectionTimeoutMS: 2000 }); // 2 saniye timeout
-          db = client.db(DB_NAME);
-          useMongoDB = true;
-          console.log("✅ MongoDB bağlantısı başarılı!");
-        } catch (localError) {
-          console.log("⚠️ MongoDB bağlantısı yok, JSON dosyaları kullanılacak");
-          useMongoDB = false;
-          return null;
-        }
+        return db;
+      } catch (localError) {
+        console.log("⚠️ MongoDB bağlantısı yok, JSON dosyaları kullanılacak");
+        useMongoDB = false;
+        return null;
       }
     }
-    return db;
   } catch (error) {
     console.log("⚠️ MongoDB bağlantı hatası, JSON dosyaları kullanılacak:", error.message);
     useMongoDB = false;
+    client = null;
+    db = null;
     return null;
   }
 }
@@ -65,11 +88,38 @@ async function closeDB() {
   }
 }
 
+// Bağlantıyı kontrol et ve gerekirse yeniden bağlan
+async function ensureConnection() {
+  try {
+    // Eğer client yoksa veya bağlantı kopmuşsa yeniden bağlan
+    if (!client || !db) {
+      console.log('🔄 MongoDB bağlantısı yok, yeniden bağlanılıyor...');
+      client = null;
+      db = null;
+      useMongoDB = false;
+      await connectDB();
+    } else {
+      // Bağlantının hala aktif olduğunu kontrol et
+      try {
+        await client.db(DB_NAME).admin().ping();
+      } catch (pingError) {
+        console.log('⚠️ MongoDB bağlantısı kopmuş, yeniden bağlanılıyor...');
+        client = null;
+        db = null;
+        useMongoDB = false;
+        await connectDB();
+      }
+    }
+  } catch (error) {
+    console.error('❌ MongoDB bağlantı hatası:', error.message);
+    useMongoDB = false;
+    throw error;
+  }
+}
+
 // Collections - cache'lenmiş db kullan (daha hızlı)
 async function getProductsCollection() {
-  if (!db && !useMongoDB) {
-    await connectDB();
-  }
+  await ensureConnection();
   if (!db) {
     throw new Error("MongoDB bağlantısı yok");
   }
@@ -77,9 +127,7 @@ async function getProductsCollection() {
 }
 
 async function getContactsCollection() {
-  if (!db && !useMongoDB) {
-    await connectDB();
-  }
+  await ensureConnection();
   if (!db) {
     throw new Error("MongoDB bağlantısı yok");
   }
@@ -87,9 +135,7 @@ async function getContactsCollection() {
 }
 
 async function getReviewsCollection() {
-  if (!db && !useMongoDB) {
-    await connectDB();
-  }
+  await ensureConnection();
   if (!db) {
     throw new Error("MongoDB bağlantısı yok");
   }
@@ -97,9 +143,7 @@ async function getReviewsCollection() {
 }
 
 async function getBlogCollection() {
-  if (!db && !useMongoDB) {
-    await connectDB();
-  }
+  await ensureConnection();
   if (!db) {
     throw new Error("MongoDB bağlantısı yok");
   }
@@ -107,9 +151,7 @@ async function getBlogCollection() {
 }
 
 async function getCategoryShowcaseCollection() {
-  if (!db && !useMongoDB) {
-    await connectDB();
-  }
+  await ensureConnection();
   if (!db) {
     throw new Error("MongoDB bağlantısı yok");
   }
