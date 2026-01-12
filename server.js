@@ -234,14 +234,23 @@ app.get("/api/products", auth, async (req, res) => {
         // Admin panelinde tüm detaylar gerekli olduğu için projection kullanmıyoruz
         const products = await productsCollection.find({}).toArray();
         console.log('📦 Admin paneli - MongoDB\'den gelen ürün sayısı:', products.length);
+        if (products.length > 0) {
+          console.log('📦 Admin paneli - İlk ürün:', { id: products[0]._id?.toString(), ad: products[0].ad, kategori: products[0].kategori });
+        }
       const formattedProducts = products.map(p => ({
         id: p._id.toString(),
         ad: p.ad,
         kategori: p.kategori,
         altKategori: p.altKategori || "",
         marka: p.marka,
-        aciklama: p.aciklama,
+        aciklama: p.aciklama || "",
         resim: getImageUrl(p),
+        resimBase64: p.resimBase64 || null,
+        resimler: p.resimler || (p.resim ? [p.resim] : []),
+        resimlerBase64: p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : []),
+        video: p.video ? `/uploads/${p.video}` : null,
+        viewCount: p.viewCount || 0,
+        createdAt: p.createdAt ? p.createdAt.toISOString() : new Date().toISOString(),
         // Seramik ürünleri için özel alanlar
         urunKodu: p.urunKodu || "",
         doku: p.doku || "",
@@ -259,6 +268,7 @@ app.get("/api/products", auth, async (req, res) => {
         kutuPalet: p.kutuPalet || "",
         paletAgirligi: p.paletAgirligi || ""
       }));
+      console.log('📦 Admin paneli - Formatlanmış ürün sayısı:', formattedProducts.length);
       res.json(formattedProducts);
       } catch (mongoError) {
         console.error('❌ MongoDB hatası (admin panel):', mongoError.message);
