@@ -892,11 +892,12 @@ app.get("/api/public/products", async (req, res) => {
             altKategori: 1, // Alt kategori dahil edilmeli (filtreleme için gerekli)
             marka: 1,
             resim: 1, // Resim field'ını dahil et
+            resimBase64: 1, // İlk resim için base64 (dosya yoksa kullanılacak)
             resimler: 1,
             video: 1,
             viewCount: 1,
             createdAt: 1,
-            // Büyük alanları dahil etme (resimBase64, resimlerBase64, aciklama, seramik alanları)
+            // Büyük alanları dahil etme (resimlerBase64, aciklama, seramik alanları)
           },
         };
       }
