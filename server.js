@@ -403,14 +403,25 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
         if (typeof mongoProduct[key] === 'string') {
           // String alanları trim et
           mongoProduct[key] = mongoProduct[key].trim();
-          // Boş string'leri boş string olarak bırak (null yapma - MongoDB bazı alanlar için null kabul etmeyebilir)
+          // Boş string'leri null yap (MongoDB bazı alanlar için null kabul eder)
+          if (mongoProduct[key] === '') {
+            mongoProduct[key] = null;
+          }
         } else if (Array.isArray(mongoProduct[key])) {
           // Array alanları için boş array kontrolü
           if (mongoProduct[key].length === 0) {
             mongoProduct[key] = [];
           }
+        } else if (mongoProduct[key] === undefined) {
+          // Undefined değerleri null yap
+          mongoProduct[key] = null;
         }
       });
+      
+      // Ürün adı null olamaz
+      if (!mongoProduct.ad) {
+        mongoProduct.ad = '';
+      }
       
       // Ürün adı kontrolü (zorunlu alan)
       if (!mongoProduct.ad || mongoProduct.ad.trim() === '') {
@@ -442,6 +453,8 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
         console.error('❌ MongoDB insert hatası:', mongoError);
         console.error('❌ Hata kodu:', mongoError.code);
         console.error('❌ Hata mesajı:', mongoError.message);
+        console.error('❌ Hata detayları:', JSON.stringify(mongoError, null, 2));
+        console.error('❌ Kaydedilmeye çalışılan ürün verisi:', JSON.stringify(mongoProduct, null, 2));
         
         // MongoDB bağlantı hatası durumunda JSON fallback'e geç
         if (mongoError.message.includes('connection') || mongoError.message.includes('timeout') || mongoError.message.includes('network') || mongoError.message.includes('MongoDB bağlantısı yok')) {
@@ -456,10 +469,17 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
         }
         
         // MongoDB validasyon hatası için daha açıklayıcı mesaj
-        if (mongoError.code === 121 || mongoError.message.includes('pattern')) {
+        if (mongoError.code === 121 || mongoError.message.includes('pattern') || mongoError.message.includes('validation')) {
+          // Hangi alanın sorun olduğunu bul
+          let errorField = 'bilinmeyen alan';
+          if (mongoError.message.includes('ad')) errorField = 'Ürün adı';
+          else if (mongoError.message.includes('kategori')) errorField = 'Kategori';
+          else if (mongoError.message.includes('marka')) errorField = 'Marka';
+          else if (mongoError.message.includes('aciklama')) errorField = 'Açıklama';
+          
           return res.status(400).json({ 
             success: false, 
-            message: "Ürün verisi geçersiz format. Lütfen tüm alanları kontrol edin ve tekrar deneyin." 
+            message: `Ürün verisi geçersiz format. ${errorField} alanında sorun olabilir. Lütfen özel karakterleri kontrol edin ve tekrar deneyin.` 
           });
         }
         
