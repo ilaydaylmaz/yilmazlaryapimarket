@@ -364,12 +364,14 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
       const mongoProduct = { ...urun };
       delete mongoProduct.id;
       mongoProduct.createdAt = new Date();
+      mongoProduct.viewCount = 0; // Yeni ürünler için viewCount başlangıç değeri
       const result = await productsCollection.insertOne(mongoProduct);
       
       // Cache'i temizle
       productsCache = null;
       productsCacheTime = null;
-      console.log('🔄 Ürün eklendi, cache temizlendi');
+      console.log('✅ Ürün eklendi:', mongoProduct.ad, 'ID:', result.insertedId.toString());
+      console.log('🔄 Cache temizlendi');
       
       res.json({ success: true, id: result.insertedId.toString() });
     } else {
