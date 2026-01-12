@@ -830,6 +830,7 @@ app.get("/api/public/products", async (req, res) => {
     }
     
     if (isMongoDBEnabled()) {
+      console.log('✅ MongoDB aktif, veriler MongoDB\'den çekiliyor');
       const productsCollection = await getProductsCollection();
       let mongoFindOptions = {};
       if (!includeDetails) {
