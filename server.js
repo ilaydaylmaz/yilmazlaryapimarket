@@ -386,12 +386,31 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
       // String alanları temizle (MongoDB validasyon hatalarını önlemek için)
       Object.keys(mongoProduct).forEach(key => {
         if (typeof mongoProduct[key] === 'string') {
-          // String alanları trim et ve boş string'leri null yap
+          // String alanları trim et
           mongoProduct[key] = mongoProduct[key].trim();
-          if (mongoProduct[key] === '') {
-            mongoProduct[key] = null;
+          // Boş string'leri boş string olarak bırak (null yapma - MongoDB bazı alanlar için null kabul etmeyebilir)
+        } else if (Array.isArray(mongoProduct[key])) {
+          // Array alanları için boş array kontrolü
+          if (mongoProduct[key].length === 0) {
+            mongoProduct[key] = [];
           }
         }
+      });
+      
+      // Ürün adı kontrolü (zorunlu alan)
+      if (!mongoProduct.ad || mongoProduct.ad.trim() === '') {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Ürün adı zorunludur!" 
+        });
+      }
+      
+      console.log('📦 Kaydedilecek ürün verisi:', {
+        ad: mongoProduct.ad,
+        kategori: mongoProduct.kategori,
+        marka: mongoProduct.marka,
+        resimVar: !!mongoProduct.resim,
+        resimlerSayisi: mongoProduct.resimler ? mongoProduct.resimler.length : 0
       });
       
       try {
