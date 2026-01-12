@@ -428,6 +428,7 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
         resimlerSayisi: mongoProduct.resimler ? mongoProduct.resimler.length : 0
       });
       
+      try {
         const result = await productsCollection.insertOne(mongoProduct);
         
         // Cache'i temizle
