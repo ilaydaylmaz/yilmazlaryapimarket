@@ -683,52 +683,45 @@ async function yukle() {
 }
 
 function processProductsData(data) {
-  return new Promise((resolve, reject) => {
-    try {
-      console.log('📦 API\'den gelen veri:', data);
-      console.log('📦 Veri tipi:', Array.isArray(data) ? 'Array' : typeof data);
-      console.log('📦 Toplam ürün sayısı:', data.length);
-      
-      if (!Array.isArray(data)) {
-        console.error('❌ Veri bir array değil!', data);
-        throw new Error('API\'den gelen veri geçersiz format');
-      }
-      
-      allProducts = data;
-      console.log('✅ allProducts set edildi:', allProducts.length, 'ürün');
-      
-      const sayac = document.getElementById("urun-sayisi");
-      
-      if (sayac) {
-        sayac.textContent = data.length;
-        console.log('✅ Ürün sayacı güncellendi:', data.length);
-      } else {
-        console.error('❌ Ürün sayacı elementi bulunamadı!');
-      }
-      
-      console.log('📦 İlk 5 ürün:', data.slice(0, 5).map(p => ({ id: p.id, ad: p.ad, kategori: p.kategori })));
-      
-      // Filtreleri sıfırla
-      const searchInput = document.getElementById("productSearch");
-      const kategoriSelect = document.getElementById("productFilterKategori");
-      const sortSelect = document.getElementById("productSort");
-      
-      if (searchInput) searchInput.value = "";
-      if (kategoriSelect) kategoriSelect.value = "";
-      if (sortSelect) sortSelect.value = "default";
-      
-      console.log('🔄 Filtreler uygulanıyor...');
-      applyProductFilters();
-      console.log('✅ Filtreler uygulandı');
-    })
-    .catch(error => {
-      console.error("❌ Yükleme hatası:", error);
-      const liste = document.getElementById("liste");
-      if (liste) {
-        liste.innerHTML = '<div class="empty-state">❌ Ürünler yüklenirken bir hata oluştu: ' + error.message + '</div>';
-      }
-      throw error;
-    });
+  try {
+    console.log('📦 API\'den gelen veri:', data);
+    console.log('📦 Veri tipi:', Array.isArray(data) ? 'Array' : typeof data);
+    console.log('📦 Toplam ürün sayısı:', data.length);
+    
+    if (!Array.isArray(data)) {
+      console.error('❌ Veri bir array değil!', data);
+      throw new Error('API\'den gelen veri geçersiz format');
+    }
+    
+    allProducts = data;
+    console.log('✅ allProducts set edildi:', allProducts.length, 'ürün');
+    
+    const sayac = document.getElementById("urun-sayisi");
+    
+    if (sayac) {
+      sayac.textContent = data.length;
+      console.log('✅ Ürün sayacı güncellendi:', data.length);
+    } else {
+      console.error('❌ Ürün sayacı elementi bulunamadı!');
+    }
+    
+    console.log('📦 İlk 5 ürün:', data.slice(0, 5).map(p => ({ id: p.id, ad: p.ad, kategori: p.kategori })));
+    
+    // Filtreleri sıfırla
+    const searchInput = document.getElementById("productSearch");
+    const kategoriSelect = document.getElementById("productFilterKategori");
+    const sortSelect = document.getElementById("productSort");
+    
+    if (searchInput) searchInput.value = "";
+    if (kategoriSelect) kategoriSelect.value = "";
+    if (sortSelect) sortSelect.value = "default";
+    
+    console.log('🔄 Filtreler uygulanıyor...');
+    applyProductFilters();
+    console.log('✅ Filtreler uygulandı');
+  } catch (error) {
+    throw error;
+  }
 }
 
 function renderProducts(list) {
