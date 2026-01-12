@@ -232,6 +232,7 @@ app.get("/api/products", auth, async (req, res) => {
       // Admin paneli için tüm ürünleri çek (filtreleme yok)
       // Admin panelinde tüm detaylar gerekli olduğu için projection kullanmıyoruz
       const products = await productsCollection.find({}).toArray();
+      console.log('📦 Admin paneli - MongoDB\'den gelen ürün sayısı:', products.length);
       const formattedProducts = products.map(p => ({
         id: p._id.toString(),
         ad: p.ad,
@@ -261,6 +262,7 @@ app.get("/api/products", auth, async (req, res) => {
     } else {
       // JSON fallback
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
+      console.log('📦 Admin paneli - JSON\'dan gelen ürün sayısı:', data.length);
       // JSON'daki resimleri de kontrol et
       const formattedData = data.map(p => ({
         ...p,
