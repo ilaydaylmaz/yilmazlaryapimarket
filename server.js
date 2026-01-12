@@ -914,11 +914,11 @@ app.get("/api/public/products", async (req, res) => {
           kategori: p.kategori,
           altKategori: p.altKategori || "",
           marka: p.marka,
-          resim: getImageUrl(p),
-          // Liste sayfası için base64 gönderme (çok büyük)
-          resimBase64: includeDetails ? (p.resimBase64 || null) : null,
+          resim: getImageUrl(p), // getImageUrl resimBase64 varsa onu kullanır
+          // Liste sayfası için de resimBase64 gönder (dosya yoksa kullanılacak)
+          resimBase64: p.resimBase64 || null,
           resimler: p.resimler || (p.resim ? [p.resim] : []),
-          // Liste sayfası için base64 array gönderme
+          // Liste sayfası için base64 array gönderme (çok büyük olabilir)
           resimlerBase64: includeDetails ? (p.resimlerBase64 || (p.resimBase64 ? [p.resimBase64] : [])) : [],
           video: p.video ? `/uploads/${p.video}` : null,
           viewCount: p.viewCount || 0, // Görüntülenme sayısı
