@@ -16,9 +16,9 @@ async function connectDB() {
       // Eğer MONGODB_URI varsa MongoDB'ye bağlanmayı dene
       if (process.env.MONGODB_URI && process.env.MONGODB_URI !== "mongodb://localhost:27017") {
         client = new MongoClient(MONGODB_URI, {
-          serverSelectionTimeoutMS: 5000, // 5 saniye timeout
-          connectTimeoutMS: 5000,
-          socketTimeoutMS: 45000,
+          serverSelectionTimeoutMS: 30000, // 30 saniye timeout (yedekleme için)
+          connectTimeoutMS: 30000,
+          socketTimeoutMS: 60000, // 60 saniye socket timeout
           maxPoolSize: 10, // Connection pool size
           minPoolSize: 2,
           maxIdleTimeMS: 30000
