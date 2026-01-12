@@ -99,19 +99,25 @@ async function ensureConnection() {
       useMongoDB = false;
       await connectDB();
     } else {
-      // Bağlantının hala aktif olduğunu kontrol et
+      // Bağlantının hala aktif olduğunu kontrol et (ping yerine daha basit bir kontrol)
       try {
-        await client.db(DB_NAME).admin().ping();
+        // Ping yerine basit bir işlem yap (daha hızlı)
+        await db.admin().ping();
       } catch (pingError) {
-        console.log('⚠️ MongoDB bağlantısı kopmuş, yeniden bağlanılıyor...');
+        console.log('⚠️ MongoDB bağlantısı kopmuş, yeniden bağlanılıyor...', pingError.message);
         client = null;
         db = null;
         useMongoDB = false;
         await connectDB();
       }
     }
+    
+    // Bağlantı hala yoksa hata fırlat
+    if (!db) {
+      throw new Error("MongoDB bağlantısı kurulamadı");
+    }
   } catch (error) {
-    console.error('❌ MongoDB bağlantı hatası:', error.message);
+    console.error('❌ MongoDB bağlantı hatası (ensureConnection):', error.message);
     useMongoDB = false;
     throw error;
   }

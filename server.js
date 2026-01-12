@@ -856,7 +856,9 @@ app.get("/api/public/products", async (req, res) => {
     if (isMongoDBEnabled()) {
       try {
         console.log('✅ MongoDB aktif, veriler MongoDB\'den çekiliyor');
+        console.log('🔍 MongoDB durumu kontrol ediliyor...');
         const productsCollection = await getProductsCollection();
+        console.log('✅ Products collection alındı');
         let mongoFindOptions = {};
       if (!includeDetails) {
         // Liste sayfaları için projection - büyük alanları hariç tut
@@ -893,8 +895,12 @@ app.get("/api/public/products", async (req, res) => {
           },
         };
       }
+      console.log('🔍 MongoDB\'den ürünler çekiliyor...');
       const products = await productsCollection.find({}, mongoFindOptions).toArray();
       console.log('📦 MongoDB\'den gelen ürün sayısı:', products.length);
+      if (products.length > 0) {
+        console.log('📦 İlk ürün:', { id: products[0]._id?.toString(), ad: products[0].ad, kategori: products[0].kategori });
+      }
       const formattedProducts = products.map(p => {
         const baseProduct = {
           id: p._id.toString(),
@@ -955,7 +961,9 @@ app.get("/api/public/products", async (req, res) => {
       
       res.json(sortedProducts);
       } catch (mongoError) {
-        console.error('❌ MongoDB hatası (public API):', mongoError.message);
+        console.error('❌ MongoDB hatası (public API):', mongoError);
+        console.error('❌ Hata detayı:', mongoError.message);
+        console.error('❌ Hata stack:', mongoError.stack);
         // MongoDB hatası durumunda JSON fallback'e geç
         console.log('⚠️ JSON fallback\'e geçiliyor...');
         const data = JSON.parse(fs.readFileSync(DATA_FILE));
