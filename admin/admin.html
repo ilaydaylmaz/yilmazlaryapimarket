@@ -645,21 +645,35 @@ function showSuccess(message) {
 }
 
 function yukle() {
+  console.log('🔄 Ürünler yükleniyor...');
   return fetch("/api/products?t=" + Date.now(), {
     cache: 'no-cache'
   })
     .then(r => {
-      if (!r.ok) throw new Error("Ürünler yüklenemedi");
+      console.log('📡 API yanıt durumu:', r.status, r.statusText);
+      if (!r.ok) {
+        throw new Error(`Ürünler yüklenemedi: ${r.status} ${r.statusText}`);
+      }
       return r.json();
     })
     .then(data => {
+      console.log('📦 API\'den gelen veri:', data);
+      console.log('📦 Veri tipi:', Array.isArray(data) ? 'Array' : typeof data);
+      console.log('📦 Toplam ürün sayısı:', data.length);
+      
+      if (!Array.isArray(data)) {
+        console.error('❌ Veri bir array değil!', data);
+        throw new Error('API\'den gelen veri geçersiz format');
+      }
+      
       allProducts = data;
       const sayac = document.getElementById("urun-sayisi");
       
-      console.log('📦 Toplam ürün sayısı:', data.length);
-      console.log('📦 Ürünler:', data.map(p => ({ id: p.id, ad: p.ad, kategori: p.kategori })));
+      if (sayac) {
+        sayac.textContent = data.length;
+      }
       
-      sayac.textContent = data.length;
+      console.log('📦 İlk 5 ürün:', data.slice(0, 5).map(p => ({ id: p.id, ad: p.ad, kategori: p.kategori })));
       
       // Filtreleri sıfırla
       const searchInput = document.getElementById("productSearch");
@@ -673,8 +687,11 @@ function yukle() {
       applyProductFilters();
     })
     .catch(error => {
-      console.error("Yükleme hatası:", error);
-      document.getElementById("liste").innerHTML = '<div class="empty-state">❌ Ürünler yüklenirken bir hata oluştu!</div>';
+      console.error("❌ Yükleme hatası:", error);
+      const liste = document.getElementById("liste");
+      if (liste) {
+        liste.innerHTML = '<div class="empty-state">❌ Ürünler yüklenirken bir hata oluştu: ' + error.message + '</div>';
+      }
       throw error;
     });
 }
