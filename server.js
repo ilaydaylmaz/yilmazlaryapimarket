@@ -861,11 +861,12 @@ app.get("/api/public/products", async (req, res) => {
         console.log('✅ Products collection alındı');
         let mongoFindOptions = {};
       if (!includeDetails) {
-        // Liste sayfaları için projection - büyük alanları hariç tut
-        // ÖNEMLİ: resim field'ını dahil etmeliyiz çünkü getImageUrl() onu kullanıyor
+        // Liste sayfaları için projection - sadece gerekli alanları dahil et
+        // MongoDB'de inclusion ve exclusion birlikte kullanılamaz (sadece _id istisna)
+        // Bu yüzden sadece inclusion kullanıyoruz
         mongoFindOptions = {
           projection: {
-            _id: 1, // CRITICAL: _id field'ını dahil et (MongoDB varsayılan olarak dahil eder ama açıkça belirtmek daha iyi)
+            _id: 1,
             ad: 1,
             kategori: 1,
             altKategori: 1,
@@ -874,24 +875,8 @@ app.get("/api/public/products", async (req, res) => {
             resimler: 1,
             video: 1,
             viewCount: 1,
-            resimBase64: 0,
-            resimlerBase64: 0,
-            aciklama: 0,
-            urunKodu: 0,
-            doku: 0,
-            kalinlik: 0,
-            icMekan: 0,
-            disMekan: 0,
-            kullanimAlani: 0,
-            yuzeyGorunumu: 0,
-            kalip: 0,
-            bunye: 0,
-            urunGrubu: 0,
-            vSkalasi: 0,
-            m2Kutu: 0,
-            m2Palet: 0,
-            kutuPalet: 0,
-            paletAgirligi: 0,
+            createdAt: 1,
+            // Büyük alanları dahil etme (resimBase64, resimlerBase64, aciklama, seramik alanları)
           },
         };
       }
