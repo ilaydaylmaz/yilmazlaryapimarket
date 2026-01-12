@@ -797,10 +797,19 @@ app.listen(PORT, () => {
 });
 
 /* PUBLIC PRODUCTS */
-// API Cache (5 dakika)
+// API Cache (5 dakika) - GEÇİCİ OLARAK TAMAMEN DEVRE DIŞI
 let productsCache = null;
 let productsCacheTime = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 dakika
+const CACHE_ENABLED = false; // DEBUG: Cache'i tamamen kapat
+
+// Cache'i temizle endpoint'i (debug için)
+app.get("/api/clear-cache", (req, res) => {
+  productsCache = null;
+  productsCacheTime = null;
+  console.log('🗑️ Cache temizlendi');
+  res.json({ success: true, message: "Cache temizlendi" });
+});
 
 // Category Showcase Cache (10 dakika - daha seyrek değişir)
 let categoryShowcaseCache = null;
@@ -812,13 +821,13 @@ app.get("/api/public/products", async (req, res) => {
     const now = Date.now();
     const includeDetails = req.query.details === 'true'; // Detay sayfası için
     
-    // Cache kontrolü - cache'i geçici olarak devre dışı bırak (debug için)
-    // if (productsCache && productsCacheTime && (now - productsCacheTime) < CACHE_DURATION && !includeDetails) {
-    //   // Cache'den dönen veriyi de görüntülenme sayısına göre sırala
-    //   const sortedCache = [...productsCache].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
-    //   res.setHeader('Cache-Control', 'public, max-age=300'); // 5 dakika browser cache
-    //   return res.json(sortedCache);
-    // }
+    // Cache kontrolü - DEBUG: Cache tamamen devre dışı
+    if (CACHE_ENABLED && productsCache && productsCacheTime && (now - productsCacheTime) < CACHE_DURATION && !includeDetails) {
+      // Cache'den dönen veriyi de görüntülenme sayısına göre sırala
+      const sortedCache = [...productsCache].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 dakika browser cache
+      return res.json(sortedCache);
+    }
     
     if (isMongoDBEnabled()) {
       const productsCollection = await getProductsCollection();
@@ -898,14 +907,16 @@ app.get("/api/public/products", async (req, res) => {
       console.log('📦 Formatlanmış ürün sayısı:', sortedProducts.length);
       console.log('📦 İlk 5 ürün:', sortedProducts.slice(0, 5).map(p => ({ id: p.id, ad: p.ad, kategori: p.kategori })));
       
-      // Cache'i temizle ve yeniden kaydet (sadece liste için)
-      if (!includeDetails) {
+      // Cache'i temizle ve yeniden kaydet (sadece liste için) - DEBUG: Cache devre dışı
+      if (CACHE_ENABLED && !includeDetails) {
         productsCache = sortedProducts;
         productsCacheTime = now;
         console.log('💾 Cache güncellendi:', sortedProducts.length, 'ürün');
         res.setHeader('Cache-Control', 'public, max-age=300'); // 5 dakika browser cache
       } else {
-        res.setHeader('Cache-Control', 'no-cache'); // Detay için cache yok
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // Cache yok
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
       }
       
       res.json(sortedProducts);
