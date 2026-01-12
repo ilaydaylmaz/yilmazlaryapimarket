@@ -31,18 +31,7 @@ async function connectDB() {
         minPoolSize: 2,
         maxIdleTimeMS: 30000,
         retryWrites: true,
-        retryReads: true,
-        // Retry ayarları
-        retryReads: {
-          retryableErrors: [
-            { code: 6 }, // HostUnreachable
-            { code: 7 }, // HostNotFound
-            { code: 89 }, // NetworkTimeout
-            { code: 91 }, // ShutdownInProgress
-            { code: 189 }, // PrimarySteppedDown
-            { code: 9001 } // SocketException
-          ]
-        }
+        retryReads: true
       });
       
       await client.connect();
