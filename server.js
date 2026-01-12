@@ -930,8 +930,10 @@ app.get("/api/public/products", async (req, res) => {
       
       res.json(sortedProducts);
     } else {
-      // JSON fallback
+      // JSON fallback - MongoDB bağlantısı yok
+      console.log('⚠️  MongoDB bağlantısı yok, JSON fallback kullanılıyor');
       const data = JSON.parse(fs.readFileSync(DATA_FILE));
+      console.log('📦 Public API - JSON\'dan gelen ürün sayısı:', data.length);
       const formattedData = data.map(p => {
         const baseProduct = {
           ...p,
