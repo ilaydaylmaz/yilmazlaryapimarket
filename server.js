@@ -428,7 +428,6 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
         resimlerSayisi: mongoProduct.resimler ? mongoProduct.resimler.length : 0
       });
       
-      try {
         const result = await productsCollection.insertOne(mongoProduct);
         
         // Cache'i temizle
@@ -442,7 +441,18 @@ app.post("/api/products", auth, uploadProductFiles, async (req, res) => {
         console.error('❌ MongoDB insert hatası:', mongoError);
         console.error('❌ Hata kodu:', mongoError.code);
         console.error('❌ Hata mesajı:', mongoError.message);
-        console.error('❌ Ürün verisi:', JSON.stringify(mongoProduct, null, 2));
+        
+        // MongoDB bağlantı hatası durumunda JSON fallback'e geç
+        if (mongoError.message.includes('connection') || mongoError.message.includes('timeout') || mongoError.message.includes('network') || mongoError.message.includes('MongoDB bağlantısı yok')) {
+          console.log('⚠️ MongoDB bağlantı hatası, JSON fallback\'e geçiliyor...');
+          const products = JSON.parse(fs.readFileSync(DATA_FILE));
+          products.push(urun);
+          fs.writeFileSync(DATA_FILE, JSON.stringify(products, null, 2));
+          productsCache = null;
+          productsCacheTime = null;
+          console.log('✅ Ürün JSON dosyasına eklendi:', urun.ad, 'ID:', urun.id);
+          return res.json({ success: true, id: urun.id });
+        }
         
         // MongoDB validasyon hatası için daha açıklayıcı mesaj
         if (mongoError.code === 121 || mongoError.message.includes('pattern')) {
