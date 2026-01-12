@@ -889,7 +889,7 @@ app.get("/api/public/products", async (req, res) => {
             _id: 1,
             ad: 1,
             kategori: 1,
-            altKategori: 1,
+            altKategori: 1, // Alt kategori dahil edilmeli (filtreleme için gerekli)
             marka: 1,
             resim: 1, // Resim field'ını dahil et
             resimler: 1,
