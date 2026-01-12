@@ -749,6 +749,12 @@ let showcaseCategoriesData = [];
 
 function loadShowcaseCategories() {
   console.log('🔄 Kategori showcase yükleniyor...');
+  const categoryList = document.getElementById('categoryList');
+  if (!categoryList) {
+    console.error('❌ categoryList elementi bulunamadı!');
+    return;
+  }
+  
   fetch('/api/public/category-showcase?t=' + Date.now())
     .then(r => {
       console.log('📡 API yanıtı:', r.status, r.statusText);
@@ -760,17 +766,23 @@ function loadShowcaseCategories() {
     .then(data => {
       console.log('📦 API verisi:', data);
       console.log('📦 data.categories:', data.categories);
-      showcaseCategoriesData = data.categories || [];
-      console.log('✅ Kategori showcase yüklendi:', showcaseCategoriesData.length, 'kategori');
-      console.log('📋 Kategoriler:', showcaseCategoriesData);
-      if (showcaseCategoriesData.length === 0) {
-        console.warn('⚠️ Hiç kategori bulunamadı!');
-        const categoryList = document.getElementById('categoryList');
-        if (categoryList) {
-          categoryList.innerHTML = '<div class="empty-state">Henüz kategori eklenmemiş.</div>';
-        }
+      
+      if (!data || !data.categories) {
+        console.error('❌ API verisi geçersiz format:', data);
+        categoryList.innerHTML = '<div class="empty-state">Kategori verisi alınamadı.</div>';
         return;
       }
+      
+      showcaseCategoriesData = Array.isArray(data.categories) ? data.categories : [];
+      console.log('✅ Kategori showcase yüklendi:', showcaseCategoriesData.length, 'kategori');
+      console.log('📋 Kategoriler:', showcaseCategoriesData);
+      
+      if (showcaseCategoriesData.length === 0) {
+        console.warn('⚠️ Hiç kategori bulunamadı!');
+        categoryList.innerHTML = '<div class="empty-state">Henüz kategori eklenmemiş.</div>';
+        return;
+      }
+      
       renderShowcaseCategories();
       // initCategoryShowcase'ı setTimeout ile çağır çünkü DOM henüz güncellenmemiş olabilir
       setTimeout(() => {
