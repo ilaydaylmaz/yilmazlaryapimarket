@@ -837,7 +837,15 @@ app.get("/api/public/products", async (req, res) => {
         // ÖNEMLİ: resim field'ını dahil etmeliyiz çünkü getImageUrl() onu kullanıyor
         mongoFindOptions = {
           projection: {
+            _id: 1, // CRITICAL: _id field'ını dahil et (MongoDB varsayılan olarak dahil eder ama açıkça belirtmek daha iyi)
+            ad: 1,
+            kategori: 1,
+            altKategori: 1,
+            marka: 1,
             resim: 1, // Resim field'ını dahil et
+            resimler: 1,
+            video: 1,
+            viewCount: 1,
             resimBase64: 0,
             resimlerBase64: 0,
             aciklama: 0,
