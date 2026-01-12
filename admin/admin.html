@@ -528,6 +528,19 @@ document.addEventListener("DOMContentLoaded", function() {
   // Kategorileri yükle
   loadCategories();
   
+  // Ürünleri yükle
+  (async () => {
+    try {
+      await yukle();
+    } catch (error) {
+      console.error("❌ Yükleme hatası:", error);
+      const liste = document.getElementById("liste");
+      if (liste) {
+        liste.innerHTML = '<div class="empty-state">❌ Ürünler yüklenirken bir hata oluştu: ' + error.message + '<br><br><button onclick="yukle()" class="btn btn-primary">🔄 Tekrar Dene</button></div>';
+      }
+    }
+  })();
+  
   const kategoriSelect = document.getElementById("kategori");
   if (kategoriSelect) {
     kategoriSelect.addEventListener("change", loadSubCategories);
@@ -1725,18 +1738,7 @@ function silCeramicUrun(id) {
 }
 
 
-// Sayfa yüklendiğinde
-(async () => {
-  try {
-    await yukle();
-  } catch (error) {
-    console.error("❌ Yükleme hatası:", error);
-    const liste = document.getElementById("liste");
-    if (liste) {
-      liste.innerHTML = '<div class="empty-state">❌ Ürünler yüklenirken bir hata oluştu: ' + error.message + '<br><br><button onclick="yukle()" class="btn btn-primary">🔄 Tekrar Dene</button></div>';
-    }
-  }
-})();
+// Sayfa yüklendiğinde ürünler DOMContentLoaded event'inde yükleniyor (yukarıda)
 
 // Enter tuşu ile form gönderme
 document.getElementById("productForm").addEventListener("keypress", (e) => {
