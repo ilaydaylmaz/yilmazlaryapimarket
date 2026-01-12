@@ -221,6 +221,9 @@ app.get("/admin.html", auth, (req, res) => {
 /* Liste */
 app.get("/api/products", auth, async (req, res) => {
   try {
+    console.log('🔐 Admin paneli - Authentication başarılı');
+    console.log('🔍 Admin paneli - MongoDB durumu:', isMongoDBEnabled() ? 'Aktif' : 'Pasif');
+    
     // Cache'i önle
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -228,7 +231,9 @@ app.get("/api/products", auth, async (req, res) => {
     
     if (isMongoDBEnabled()) {
       try {
+        console.log('📡 Admin paneli - MongoDB\'den ürünler çekiliyor...');
         const productsCollection = await getProductsCollection();
+        console.log('✅ Admin paneli - Products collection alındı');
 
         // Admin paneli için tüm ürünleri çek (filtreleme yok)
         // Admin panelinde tüm detaylar gerekli olduğu için projection kullanmıyoruz
@@ -236,6 +241,8 @@ app.get("/api/products", auth, async (req, res) => {
         console.log('📦 Admin paneli - MongoDB\'den gelen ürün sayısı:', products.length);
         if (products.length > 0) {
           console.log('📦 Admin paneli - İlk ürün:', { id: products[0]._id?.toString(), ad: products[0].ad, kategori: products[0].kategori });
+        } else {
+          console.log('⚠️ Admin paneli - MongoDB\'de ürün yok!');
         }
       const formattedProducts = products.map(p => ({
         id: p._id.toString(),
@@ -269,18 +276,28 @@ app.get("/api/products", auth, async (req, res) => {
         paletAgirligi: p.paletAgirligi || ""
       }));
       console.log('📦 Admin paneli - Formatlanmış ürün sayısı:', formattedProducts.length);
+      if (formattedProducts.length > 0) {
+        console.log('📦 Admin paneli - İlk formatlanmış ürün:', { id: formattedProducts[0].id, ad: formattedProducts[0].ad, kategori: formattedProducts[0].kategori });
+      }
+      console.log('✅ Admin paneli - JSON yanıtı gönderiliyor...');
       res.json(formattedProducts);
       } catch (mongoError) {
         console.error('❌ MongoDB hatası (admin panel):', mongoError.message);
+        console.error('❌ MongoDB hatası detayları:', mongoError);
         // MongoDB hatası durumunda JSON fallback'e geç
         console.log('⚠️ JSON fallback\'e geçiliyor...');
-        const data = JSON.parse(fs.readFileSync(DATA_FILE));
-        console.log('📦 Admin paneli - JSON\'dan gelen ürün sayısı:', data.length);
-        const formattedData = data.map(p => ({
-          ...p,
-          resim: getImageUrl(p)
-        }));
-        res.json(formattedData);
+        try {
+          const data = JSON.parse(fs.readFileSync(DATA_FILE));
+          console.log('📦 Admin paneli - JSON\'dan gelen ürün sayısı:', data.length);
+          const formattedData = data.map(p => ({
+            ...p,
+            resim: getImageUrl(p)
+          }));
+          res.json(formattedData);
+        } catch (jsonError) {
+          console.error('❌ JSON fallback hatası:', jsonError.message);
+          res.status(500).json({ success: false, message: "Veri yüklenemedi", error: mongoError.message });
+        }
       }
     } else {
       // JSON fallback
