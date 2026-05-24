@@ -1,0 +1,14 @@
+node_modules
+.env
+.env.*
+.git
+.gitignore
+*.log
+.DS_Store
+.vscode
+.idea
+README.md
+RENDER_DEPLOY.md
+MONGODB_*.md
+SETUP_ATLAS.md
+SHOWROOM_*.md
