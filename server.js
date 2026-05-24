@@ -12,6 +12,7 @@ const https = require("https");
 const { exec } = require("child_process");
 
 const app = express();
+app.set("trust proxy", 1);
 
 /* =======================
    BODY & SESSION
@@ -25,7 +26,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // HTTPS için true yapın
+    secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 saat
   }
