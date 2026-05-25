@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: yilmazlar-yapi-market
+    name: yilmazlaryapimarket
     runtime: node
     plan: free
     buildCommand: npm install
