@@ -847,6 +847,29 @@ app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
 
+/* =======================
+   SERVER
+======================= */
+const PORT = process.env.PORT || 3000;
+
+// Server'ı hemen başlat (MongoDB bağlantısı arka planda yapılacak)
+app.listen(PORT, () => {
+  console.log(`✅ Server çalışıyor → http://localhost:${PORT}`);
+  
+  // MongoDB bağlantısını arka planda dene
+  connectDB()
+    .then(() => {
+      if (isMongoDBEnabled()) {
+        console.log("✅ MongoDB bağlantısı aktif");
+      } else {
+        console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
+      }
+    })
+    .catch((error) => {
+      console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
+    });
+});
+
 /* PUBLIC PRODUCTS */
 // API Cache (5 dakika) - GEÇİCİ OLARAK TAMAMEN DEVRE DIŞI
 let productsCache = null;
@@ -2289,29 +2312,4 @@ app.get("/api/public/category-showcase", async (req, res) => {
     res.json({ categories: [] });
   }
 });
-
-/* =======================
-   SERVER START / EXPORT
-======================= */
-connectDB()
-  .then(() => {
-    if (isMongoDBEnabled()) {
-      console.log("✅ MongoDB bağlantısı aktif");
-    } else {
-      console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
-    }
-  })
-  .catch(() => {
-    console.log("📄 JSON dosyaları kullanılıyor (MongoDB bağlantısı yok)");
-  });
-
-const PORT = process.env.PORT || 3000;
-
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`✅ Server çalışıyor → http://localhost:${PORT}`);
-  });
-}
-
-module.exports = app;
   

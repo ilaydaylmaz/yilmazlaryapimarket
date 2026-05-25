@@ -6,13 +6,6 @@ package-lock.json
 .env
 .env.local
 
-# Firebase
-.firebase/
-firebase-debug.log
-firestore-debug.log
-ui-debug.log
-.firebaserc
-
 # Logs
 *.log
 npm-debug.log*
