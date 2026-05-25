@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: yilmazlaryapimarket
+    name: yilmazlaryapimarketvize
     runtime: node
     plan: free
     buildCommand: npm install
